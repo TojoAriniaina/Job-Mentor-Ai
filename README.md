@@ -13,7 +13,7 @@ Plateforme web francophone d'accompagnement à la recherche d'emploi. Elle aide 
 | **Lettre de motivation** | Génération à partir d'un CV + une offre, correction de lettres existantes, score de pertinence **déterministe** (comparaison mots-clés texte/offre), sauvegarde en 2 étapes distinctes (générer, puis enregistrer) |
 | **Entretien simulé** | Questions générées dynamiquement par l'IA avec feedback à chaque réponse, jusqu'à 5 questions par session |
 | **Entraînement oral** | Reconnaissance vocale **100% côté navigateur** (API Web Speech, aucun audio envoyé au serveur), puis analyse du texte transcrit par l'IA avec score et axes d'amélioration |
-| **Administration** | Espace réservé aux comptes `role = admin` : liste des utilisateurs (recherche, filtres par rôle/statut), statistiques d'usage par module, activation/désactivation de compte, promotion/rétrogradation de rôle, suppression de compte. Accessible via un onglet dédié sur la page de connexion |
+| **Administration** | Espace réservé aux comptes `role = admin` : liste des utilisateurs (recherche, filtres par rôle/statut, photo de profil ou initiales en repli), statistiques d'usage par module, activation/désactivation de compte, promotion/rétrogradation de rôle, suppression de compte. Accessible via un onglet dédié sur la page de connexion |
 
 ## Stack technique
 
