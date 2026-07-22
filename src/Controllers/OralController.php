@@ -80,6 +80,7 @@ class OralController {
 
             $this->json(['success' => true, 'data' => $json_data]);
         } catch (\Exception $e) {
+            error_log('[OralController] ' . $e->getMessage());
             $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }

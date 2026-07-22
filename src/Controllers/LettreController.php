@@ -121,6 +121,7 @@ class LettreController {
 
             $this->json(['success' => true, 'data' => $json_data]);
         } catch (\Exception $e) {
+            error_log('[LettreController] ' . $e->getMessage());
             $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
@@ -160,6 +161,7 @@ class LettreController {
 
             $this->json(['success' => true, 'data' => $json_data]);
         } catch (\Exception $e) {
+            error_log('[LettreController] ' . $e->getMessage());
             $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
@@ -178,6 +180,7 @@ class LettreController {
             $this->letterModel->create($userId, $content, $offer, $score);
             $this->json(['success' => true, 'message' => 'Lettre enregistrée !']);
         } catch (\Exception $e) {
+            error_log('[LettreController] ' . $e->getMessage());
             $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }

@@ -98,6 +98,7 @@ Format JSON strict : {
 
             $this->json(['success' => true, 'data' => $json_data]);
         } catch (\Exception $e) {
+            error_log('[CvController] ' . $e->getMessage());
             $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
@@ -149,6 +150,7 @@ Réponds UNIQUEMENT en JSON: {
 
             $this->json(['success' => true, 'data' => $json_data]);
         } catch (\Exception $e) {
+            error_log('[CvController] ' . $e->getMessage());
             $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }

@@ -22,8 +22,10 @@ class LlmService {
                 // uniquement pour les erreurs typiques de quota / clé invalide / rate-limit.
                 $isRetryable = preg_match('/rate.?limit|quota|429|401|403|invalid.*key/i', $e->getMessage());
                 if ($i < count($keys) - 1 && $isRetryable) {
+                    error_log('[LlmService] Clé #' . ($i + 1) . ' en échec (' . $e->getMessage() . '), tentative avec la clé suivante.');
                     continue;
                 }
+                error_log('[LlmService] Échec définitif après ' . ($i + 1) . ' clé(s) testée(s) : ' . $e->getMessage());
                 throw $e;
             }
         }

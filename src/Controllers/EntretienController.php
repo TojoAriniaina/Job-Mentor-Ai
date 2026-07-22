@@ -129,6 +129,7 @@ class EntretienController {
                 "next_question" => $json['next_question'] ?? null
             ]);
         } catch (\Exception $e) {
+            error_log('[EntretienController] ' . $e->getMessage());
             $this->json(["success" => false, "error" => $e->getMessage()], 500);
         }
     }
@@ -165,6 +166,7 @@ class EntretienController {
             $this->noteModel->create($userId, $title, $notes);
             $this->json(["success" => true, "message" => "Notes sauvegardées avec succès !"]);
         } catch (\Exception $e) {
+            error_log('[EntretienController] ' . $e->getMessage());
             $this->json(["success" => false, "error" => $e->getMessage()], 500);
         }
     }

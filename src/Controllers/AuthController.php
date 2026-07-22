@@ -77,6 +77,7 @@ class AuthController {
                 'profile' => $this->buildProfilePayload($user, $email)
             ]);
         } catch (\PDOException $e) {
+            error_log('[AuthController] ' . $e->getMessage());
             $this->json(['success' => false, 'error' => 'Erreur DB : ' . $e->getMessage()], 500);
         }
     }
@@ -259,6 +260,7 @@ class AuthController {
                 'profile' => $this->buildProfilePayload($user)
             ]);
         } catch (\PDOException $e) {
+            error_log('[AuthController] ' . $e->getMessage());
             $this->json(['success' => false, 'error' => 'Erreur DB : ' . $e->getMessage()], 500);
         }
     }
