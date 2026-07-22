@@ -1,0 +1,239 @@
+/* CV TEMPLATE - Professional Design */
+
+.cv-document,
+.cv-document * {
+    box-sizing: border-box;
+}
+
+.cv-document {
+    background: #ffffff;
+    color: #1e293b;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+    min-height: 297mm; /* A4 Ratio */
+    display: flex;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+}
+
+/* Sidebar (Left Column) */
+.cv-sidebar {
+    width: 32%;
+    flex-shrink: 0;
+    background: #2d1b69; /* Deep Purple */
+    color: #ffffff;
+    padding: 40px 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    /* Un email/lien LinkedIn long ne doit jamais pousser la colonne plus
+       large que sa largeur figée (voir downloadCV en JS) : sans ça, le
+       texte déborde silencieusement et peut fausser toute la capture PDF. */
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.cv-photo-container {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.cv-photo-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.cv-section-title-sidebar {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    color: #a78bfa;
+}
+
+.cv-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    min-width: 0; /* autorise l'élément flex à rétrécir sous son contenu */
+}
+
+.cv-contact-item i {
+    width: 18px;
+    flex-shrink: 0;
+    color: #a78bfa;
+    text-align: center;
+}
+
+.cv-contact-item span,
+.cv-contact-item {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.cv-skill-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cv-skill-list li {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.cv-skill-list li::before {
+    content: "•";
+    color: #a78bfa;
+    font-weight: bold;
+}
+
+/* Main Content (Right Column) */
+.cv-main {
+    width: 68%;
+    padding: 40px;
+    background: #ffffff;
+}
+
+.cv-header {
+    margin-bottom: 35px;
+}
+
+.cv-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1e1b4b;
+    line-height: 1.1;
+    margin-bottom: 5px;
+}
+
+.cv-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #7c3aed;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.cv-section {
+    margin-bottom: 30px;
+}
+
+.cv-section-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 8px;
+}
+
+.cv-section-title i {
+    color: #7c3aed;
+    font-size: 1.1rem;
+}
+
+.cv-summary {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #475569;
+    text-align: justify;
+}
+
+/* Timeline Style for Experience/Education */
+.cv-timeline-item {
+    position: relative;
+    padding-left: 0;
+    margin-bottom: 20px;
+}
+
+.cv-timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+}
+
+.cv-job-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.cv-period {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+.cv-company {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #7c3aed;
+    margin-bottom: 8px;
+}
+
+.cv-list {
+    margin-top: 8px;
+    padding-left: 18px;
+    list-style-type: disc;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.cv-list li {
+    margin-bottom: 5px;
+}
+
+/* Languages */
+.cv-lang-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.cv-lang-name { font-weight: 600; }
+.cv-lang-level { color: #a78bfa; font-style: italic; }
+
+/* Print Adjustments */
+@media print {
+    body { background: none !important; }
+    .cv-document {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+    .cv-sidebar {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

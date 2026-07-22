@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Entraînement Oral — My Job Mentor</title>
+  <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
+<meta content="Améliorez votre expression orale avec la reconnaissance vocale et l'IA. Analyse de fluidité, hésitations et prononciation." name="description"/>
+<link href="../css/style.css" rel="stylesheet"/>
+<style>
+    /* ── Language pill buttons ── */
+    .lang-pills { display:flex; gap:4px; }
+    .lang-pill {
+      padding: 0 14px;
+      height: 34px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .lang-pill:hover { border-color: var(--purple); color: var(--purple-light); background: rgba(139,92,246,0.08); }
+    .lang-pill.active {
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(139,92,246,0.35);
+    }
+    /* ── Config toolbar ── */
+    .oral-toolbar { display:flex; align-items:center; }
+    .oral-toolbar-section { display:flex; align-items:center; gap:10px; padding:10px 20px; }
+    .oral-toolbar-divider { width:1px; height:38px; background:var(--glass-border); flex-shrink:0; }
+    .oral-toolbar-label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
+    .poste-input-wrapper { position:relative; display:flex; align-items:center; flex:1; }
+    .poste-input-wrapper > i { position:absolute; left:11px; color:var(--text-muted); font-size:0.8rem; pointer-events:none; }
+    .poste-input-wrapper input { padding-left:32px !important; height:34px; min-width:200px; font-size:0.85rem; margin:0; border-radius:var(--radius-sm); }
+
+    .mic-btn {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      transition: var(--transition);
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+      position: relative;
+    }
+
+    .mic-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 50px rgba(139, 92, 246, 0.6);
+    }
+
+    .mic-btn.recording {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+      animation: pulse-mic 1.5s ease infinite;
+    }
+
+    @keyframes pulse-mic {
+
+      0%,
+      100% {
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+        transform: scale(1);
+      }
+
+      50% {
+        box-shadow: 0 0 60px rgba(239, 68, 68, 0.7);
+        transform: scale(1.04);
+      }
+    }
+
+    .mic-ring {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px solid rgba(139, 92, 246, 0.3);
+      animation: ring-expand 2s ease-in-out infinite;
+      opacity: 0;
+    }
+
+    .mic-ring:nth-child(2) {
+      inset: -16px;
+      animation-delay: 0.5s;
+    }
+
+    .mic-ring:nth-child(3) {
+      inset: -24px;
+      animation-delay: 1s;
+    }
+
+    @keyframes ring-expand {
+      0% {
+        opacity: 0.6;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .mic-btn.recording .mic-ring {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .oral-question-card {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.08));
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .transcript-box {
+      min-height: 100px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      position: relative;
+    }
+
+    .transcript-box.active {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .hesitation-word {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.2);
+      color: #fcd34d;
+      border-radius: 4px;
+      padding: 0 4px;
+      font-weight: 600;
+    }
+  </style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/></head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="bg-mesh"></div>
+<div class="toast-container" id="toast-container"></div>
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique Oral</h2>
+        <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
+      </div>
+      <div id="history-list" style="max-height: 400px; overflow-y: auto; padding: 10px;">
+        <!-- JS filled -->
+      </div>
+    </div>
+  </div>
+<!-- Navbar -->
+<nav class="navbar">
+<a class="nav-logo" href="../index.html">
+<img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+<span class="nav-logo-brand">AI&amp;DEV Academy</span>
+</a>
+<ul class="nav-links" id="nav-links">
+<li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
+<li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file"></i></span> CV</a></li>
+<li><a href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope"></i></span> Lettre</a></li>
+<li><a href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-microphone"></i></span> Entretien</a></li>
+<li><a class="active" href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
+</ul>
+<div class="nav-cta">
+<button class="btn-nav btn-nav-ghost" id="btn-config"><i class="fa-solid fa-gear"></i> API</button>
+<button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+</div>
+</nav>
+<div class="app-wrapper">
+<div class="page-header" style="background-image: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.55) 65%, rgba(10,10,13,0.97) 100%), url('../assets/img/oral-header.jpg'); background-size: cover; background-position: center 35%;">
+<div class="container">
+<span class="badge badge-pink animate-fade-up"><i class="fa-solid fa-microphone-lines"></i> Entraînement Oral</span>
+<h1 class="page-title animate-fade-up delay-1">
+          Maîtrisez votre<br/><span style="background:linear-gradient(90deg,var(--pink),var(--purple-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">expression
+            orale</span>
+</h1>
+<p class="page-subtitle animate-fade-up delay-2">
+          Parlez, et l'IA analyse votre fluidité, vos hésitations et vous guide vers une communication percutante.
+        </p>
+</div>
+</div>
+<div class="container" style="padding-bottom:80px">
+<div class="tabs mb-4 animate-fade-up delay-3" id="oral-tabs">
+<button class="tab-btn active" data-tab="practice"><i class="fa-solid fa-microphone-lines"></i> Pratique vocale</button>
+<button class="tab-btn" data-tab="text"> Analyser un texte</button>
+<button class="tab-btn" data-tab="tips"> Conseils &amp; astuces</button>
+</div>
+<!-- ══ TAB: Pratique vocale ══════════════════════════════ -->
+<div class="tab-content active" id="tab-practice-content">
+
+  <!-- ① Toolbar de config -->
+  <!-- Hidden input gardé pour compatibilité JS -->
+  <input type="hidden" id="o-langue" value="fr-FR" />
+  <div class="glass-card mb-4 animate-fade-up oral-toolbar" style="overflow:hidden;">
+
+    <!-- Poste -->
+    <div class="oral-toolbar-section" style="flex:1;min-width:220px;">
+      <span class="oral-toolbar-label"><i class="fa-solid fa-briefcase"></i></span>
+      <div class="poste-input-wrapper" style="flex:1;">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input class="form-control" id="o-poste" placeholder="Poste visé (ex: Développeur, RH…)" type="text"/>
+      </div>
+    </div>
+
+    <div class="oral-toolbar-divider"></div>
+
+    <!-- Langue pills -->
+    <div class="oral-toolbar-section">
+      <span class="oral-toolbar-label"><i class="fa-solid fa-globe"></i></span>
+      <div class="lang-pills" role="group" aria-label="Langue de reconnaissance">
+        <button class="lang-pill active" data-lang="fr-FR" type="button">🇫🇷 FR</button>
+        <button class="lang-pill" data-lang="en-US" type="button">🇺🇸 EN</button>
+        <button class="lang-pill" data-lang="es-ES" type="button">🇪🇸 ES</button>
+      </div>
+    </div>
+
+    <div class="oral-toolbar-divider" style="margin-left:auto;"></div>
+
+    <!-- Historique -->
+    <div class="oral-toolbar-section">
+      <button class="btn btn-secondary" id="btn-history-oral" title="Historique" style="height:36px;padding:0 14px;font-size:0.85rem;">
+        <i class="fa-solid fa-clock-rotate-left"></i> Historique
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ② Question pleine largeur -->
+  <div class="oral-question-card animate-fade-up delay-1" id="oral-question-display" style="margin-bottom:1.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--purple-light);margin-bottom:0.5rem;">
+          <i class="fa-solid fa-circle-question"></i> Question du recruteur
+        </div>
+        <p id="current-oral-question" style="font-size:1.15rem;font-weight:600;line-height:1.6;margin:0;">
+          Parlez-moi de vous et de votre expérience professionnelle.
+        </p>
+      </div>
+      <button class="btn btn-sm btn-secondary" id="btn-change-question" style="flex-shrink:0;">
+        <i class="fa-solid fa-shuffle"></i> Changer
+      </button>
+    </div>
+  </div>
+
+  <!-- ③ Deux colonnes : Micro+Transcription | Feedback -->
+  <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:1.5rem;align-items:stretch;">
+
+    <!-- Colonne gauche -->
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      <!-- Contrôles micro -->
+      <div class="glass-card p-4 animate-fade-up delay-2" style="text-align:center;">
+        <p class="text-secondary text-sm mb-3" id="mic-status" style="min-height:1.4em;">Cliquez sur le micro pour commencer</p>
+        <div class="waveform paused mb-4" id="waveform" style="justify-content:center;height:28px;">
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+        <div style="position:relative;display:inline-block;">
+          <button class="mic-btn" id="btn-mic">
+            <div class="mic-ring"></div>
+            <div class="mic-ring"></div>
+            <div class="mic-ring"></div>
+            <span id="mic-icon"><i class="fa-solid fa-microphone-lines"></i></span>
+          </button>
+        </div>
+        <div id="recording-timer" style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:700;color:var(--purple-light);margin-top:0.75rem;display:none;">
+          <i class="fa-solid fa-clock"></i> <span id="rec-time">0:00</span>
+        </div>
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:1rem;">
+          <button class="btn btn-sm btn-secondary" id="btn-stop-mic" style="display:none;"><i class="fa-solid fa-stop"></i> Arrêter</button>
+          <button class="btn btn-sm btn-secondary" id="btn-clear-transcript"><i class="fa-solid fa-trash"></i> Effacer</button>
+          <button class="btn btn-sm btn-secondary" id="btn-reset-oral" title="Réinitialiser tout"><i class="fa-solid fa-rotate-right"></i> Réinitialiser</button>
+        </div>
+      </div>
+
+      <!-- Transcription -->
+      <div class="glass-card p-4 animate-fade-up delay-3">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin:0;"><i class="fa-solid fa-pen-nib"></i> Transcription</h3>
+          <span class="badge badge-purple" id="word-count">0 mots</span>
+        </div>
+        <div class="transcript-box" id="transcript-box" style="min-height:120px;">
+          <span style="color:var(--text-muted);font-style:italic;">La transcription apparaîtra ici en temps réel…</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:0.75rem;">
+          <button class="btn btn-primary flex-1" disabled="" id="btn-analyze-oral">
+            <i class="fa-solid fa-magnifying-glass"></i> Analyser ma réponse
+          </button>
+          <button class="btn btn-secondary" id="btn-reset-oral-inline" title="Réinitialiser" style="padding:0 14px;">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+          <button class="btn btn-sm btn-secondary" id="btn-copy-transcript" title="Copier la transcription">
+            <i class="fa-solid fa-clipboard"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colonne droite : Feedback -->
+    <div style="display:flex;flex-direction:column;">
+      <div class="glass-card p-5" id="oral-placeholder" style="text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite;opacity:0.7;"><i class="fa-solid fa-chart-column"></i></div>
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.4rem;">Analyse en attente</h3>
+        <p class="text-secondary text-sm mb-3">Enregistrez votre réponse puis cliquez sur « Analyser »</p>
+        <div class="alert alert-info" style="text-align:left;">
+          <span><i class="fa-solid fa-lightbulb"></i></span>
+          <div style="font-size:0.8rem;">L'analyse couvre : fluidité, structure, vocabulaire, hésitations et clarté du message.</div>
+        </div>
+      </div>
+      <div class="hidden" id="oral-result">
+        <div class="glass-card p-4 mb-3">
+          <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1.5rem;"><i class="fa-solid fa-chart-column"></i> Scores détaillés</h3>
+          <div id="oral-global-ring" style="text-align:center;margin-bottom:1.5rem;"></div>
+          <div id="oral-scores-bars"></div>
+        </div>
+        <div class="glass-card p-4 mb-3" id="oral-hesitations-card" style="display:none;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:1rem;color:#fcd34d;"><i class="fa-solid fa-triangle-exclamation"></i> Hésitations détectées</h3>
+          <div id="oral-hesitations-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+        <div class="glass-card p-4 mb-3" id="oral-strengths" style="display:none;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light);"><i class="fa-solid fa-check"></i> Points forts</h3>
+          <div id="oral-strengths-list"></div>
+        </div>
+        <div class="glass-card p-4 mb-3" id="oral-improvements" style="display:none;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:1rem;color:#fcd34d;"><i class="fa-solid fa-bolt-lightning"></i> Axes d'amélioration</h3>
+          <div id="oral-improvements-list"></div>
+        </div>
+        <div class="glass-card p-4 mb-3" id="oral-reformulation" style="display:none;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:1rem;color:var(--purple-light);"><i class="fa-solid fa-wand-magic-sparkles"></i> Reformulation suggérée</h3>
+          <div class="alert alert-info" id="oral-reformulation-text"></div>
+          <button class="btn btn-sm btn-secondary mt-2" id="btn-copy-reformulation"><i class="fa-solid fa-clipboard"></i> Copier</button>
+        </div>
+        <div class="glass-card p-4" id="oral-conseil" style="display:none;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:0.75rem;"><i class="fa-solid fa-bullseye"></i> Conseil principal</h3>
+          <div id="oral-conseil-text" style="padding:1rem;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(59,130,246,0.08));border-radius:var(--radius-md);border:1px solid rgba(139,92,246,0.2);"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- ══ TAB: Analyser un texte ════════════════════════════ -->
+<div class="tab-content" id="tab-text-content">
+<div class="grid grid-2" style="gap:2rem;align-items:stretch">
+<div class="glass-card p-4 animate-fade-up">
+<h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"><i class="fa-solid fa-pen"></i> Analyser une réponse écrite</h2>
+<div class="alert alert-info mb-3">
+<span><i class="fa-solid fa-lightbulb"></i></span>
+<div style="font-size:0.85rem">Utile si votre micro ne fonctionne pas. Tapez votre réponse comme si vous
+                la parliez.</div>
+</div>
+<div class="form-group">
+<label class="form-label" for="t-poste">Poste visé</label>
+<input class="form-control" id="t-poste" placeholder="Développeur, RH, Commercial..." type="text"/>
+</div>
+<div class="form-group">
+<label class="form-label" for="t-reponse">Votre réponse *</label>
+<textarea class="form-control" id="t-reponse" placeholder="Euh, alors moi j'ai euh, j'ai travaillé pendant 3 ans chez ABC, donc voilà, j'ai fait des trucs en développement web, euh React et Node.js donc, et j'aime bien l'équipe et tout..." rows="10"></textarea>
+</div>
+<div class="form-group">
+<label class="form-label" for="t-question">Question posée (optionnel)</label>
+<input class="form-control" id="t-question" placeholder="Parlez-moi de vous..." type="text"/>
+</div>
+<button class="btn btn-primary btn-full" id="btn-analyze-text"><i class="fa-solid fa-magnifying-glass"></i> Analyser ce texte</button>
+<button class="btn btn-secondary btn-full" id="btn-reset-text" style="margin-top:8px"><i class="fa-solid fa-rotate-left"></i> Réinitialiser</button>
+</div>
+<div style="display:flex;flex-direction:column;">
+<div class="glass-card p-4" id="text-analysis-placeholder" style="text-align:center;padding:3rem 2rem;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+<div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite;opacity:0.7;"><i class="fa-solid fa-pen"></i></div>
+<h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Analysez votre texte</h3>
+<p class="text-secondary text-sm">Tapez ou collez votre réponse et lancez l'analyse</p>
+</div>
+<div class="hidden" id="text-analysis-result"></div>
+</div>
+</div>
+</div>
+<!-- ══ TAB: Conseils ═════════════════════════════════════ -->
+<div class="tab-content" id="tab-tips-content">
+<div class="grid grid-2" style="gap:1.5rem">
+<div class="glass-card p-4 animate-fade-up">
+<div class="icon-box icon-purple mb-3"><i class="fa-solid fa-bullseye"></i></div>
+<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem">La méthode STAR</h3>
+<p class="text-secondary text-sm mb-3" style="line-height:1.7">Utilisez cette méthode pour structurer toutes
+              vos réponses comportementales :</p>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="padding:12px;background:rgba(139,92,246,0.08);border-radius:var(--radius-sm);border-left:3px solid var(--purple)">
+<strong style="color:var(--purple-light)">S — Situation</strong>
+<p class="text-sm text-secondary mt-1">Décrivez le contexte. Quand ? Où ? Quel rôle ?</p>
+</div>
+<div style="padding:12px;background:rgba(59,130,246,0.08);border-radius:var(--radius-sm);border-left:3px solid var(--blue)">
+<strong style="color:var(--blue-light)">T — Tâche</strong>
+<p class="text-sm text-secondary mt-1">Quelle était votre responsabilité ?</p>
+</div>
+<div style="padding:12px;background:rgba(20,184,166,0.08);border-radius:var(--radius-sm);border-left:3px solid var(--teal)">
+<strong style="color:var(--teal-light)">A — Action</strong>
+<p class="text-sm text-secondary mt-1">Qu'avez-vous fait concrètement ?</p>
+</div>
+<div style="padding:12px;background:rgba(245,158,11,0.08);border-radius:var(--radius-sm);border-left:3px solid var(--amber)">
+<strong style="color:#fcd34d">R — Résultat</strong>
+<p class="text-sm text-secondary mt-1">Quel impact mesurable avez-vous obtenu ?</p>
+</div>
+</div>
+</div>
+<div class="glass-card p-4 animate-fade-up delay-1">
+<div class="icon-box icon-teal mb-3"><i class="fa-solid fa-comments"></i>️</div>
+<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem">Langage corporel &amp; voix</h3>
+<div style="display:flex;flex-direction:column;gap:8px">
+              ${['Maintenez un contact visuel naturel (70-80% du temps)', 'Articulez clairement et parlez à 120-150
+              mots/minute', 'Faites des pauses courtes entre les idées (1-2 secondes)', 'Posture droite, légèrement
+              penchée vers l\'avant', 'Gestes naturels pour illustrer vos propos', 'Souriez genuinement — ça s\'entend
+              même au téléphone', 'Évitez les "euh", "donc", "voilà" répétitifs', 'Respirez abdominalement pour une voix
+              assurée'].map(tip =&gt; `
+              <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.03)">
+<span style="color:var(--teal);flex-shrink:0"><i class="fa-solid fa-check"></i></span>
+<span class="text-sm">${tip}</span>
+</div>`).join('')}
+            </div>
+</div>
+<div class="glass-card p-4 animate-fade-up delay-2">
+<div class="icon-box icon-pink mb-3"><i class="fa-solid fa-xmark"></i></div>
+<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem">Erreurs à éviter</h3>
+<div style="display:flex;flex-direction:column;gap:8px">
+              ${['Parler trop vite par nervosité', 'Répondre sans prendre le temps de réfléchir (2-3s ok)', 'Critiquer
+              vos anciens employeurs', 'Réponses trop longues (max 2-3 minutes)', 'Dire "je ne sais pas" sans rebondir',
+              'Mentir sur vos compétences ou expériences', 'Oublier de poser des questions en fin d\'entretien', 'Être
+              négatif sur votre parcours'].map(err =&gt; `
+              <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:var(--radius-sm);background:rgba(239,68,68,0.05)">
+<span style="color:#f87171;flex-shrink:0"><i class="fa-solid fa-xmark"></i></span>
+<span class="text-sm">${err}</span>
+</div>`).join('')}
+            </div>
+</div>
+<div class="glass-card p-4 animate-fade-up delay-3">
+<div class="icon-box icon-amber mb-3"><i class="fa-solid fa-lightbulb"></i></div>
+<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem">Questions à poser au recruteur</h3>
+<p class="text-secondary text-sm mb-3">Posez toujours 2-3 questions pertinentes en fin d'entretien :</p>
+<div style="display:flex;flex-direction:column;gap:8px">
+              ${[
+              'Quelles sont les perspectives d\'évolution pour ce poste ?',
+              'Comment décririez-vous la culture d\'entreprise ?',
+              'Quels sont les principaux défis de cette fonction ?',
+              'Comment se passe l\'intégration des nouveaux collaborateurs ?',
+              'Quelles sont les prochaines étapes du processus de recrutement ?',
+              ].map(q =&gt; `
+              <div onclick="copyToClipboard(this.textContent.trim(), this)" style="padding:10px 14px;border-radius:var(--radius-sm);background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);font-size:0.85rem;cursor:pointer;transition:var(--transition)">
+<i class="fa-solid fa-comment"></i> ${q}
+              </div>`).join('')}
+            </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="../js/config.js"></script>
+<script src="../js/ai.js" type="module"></script>
+<script src="../js/particles.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+    /* ── Tab management ── */
+    document.querySelectorAll('#oral-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#oral-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab + '-content').classList.add('active');
+      });
+    });
+
+    /* ── Questions pool (FR / EN / ES) ── */
+    const oralQuestionsByLang = {
+      'fr-FR': [
+        'Parlez-moi de vous et de votre expérience professionnelle.',
+        'Quelles sont vos principales qualités et vos défauts ?',
+        'Pourquoi souhaitez-vous rejoindre notre entreprise ?',
+        'Décrivez votre plus grande réussite professionnelle.',
+        'Comment gérez-vous le stress et la pression ?',
+        'Décrivez une situation de conflit au travail et comment vous l\'avez résolue.',
+        'Où vous voyez-vous dans 5 ans ?',
+        'Pourquoi avez-vous quitté votre dernier poste ?',
+        'Qu\'est-ce qui vous motive dans ce secteur ?',
+        'Parlez-moi d\'un échec et ce que vous en avez appris.',
+      ],
+      'en-US': [
+        'Tell me about yourself and your professional experience.',
+        'What are your main strengths and weaknesses?',
+        'Why do you want to join our company?',
+        'Describe your greatest professional achievement.',
+        'How do you handle stress and pressure?',
+        'Describe a conflict at work and how you resolved it.',
+        'Where do you see yourself in 5 years?',
+        'Why did you leave your last position?',
+        'What motivates you in this field?',
+        'Tell me about a failure and what you learned from it.',
+      ],
+      'es-ES': [
+        'Hábleme de usted y de su experiencia profesional.',
+        '¿Cuáles son sus principales cualidades y defectos?',
+        '¿Por qué quiere unirse a nuestra empresa?',
+        'Describa su mayor logro profesional.',
+        '¿Cómo maneja el estrés y la presión?',
+        'Describa un conflicto en el trabajo y cómo lo resolvió.',
+        '¿Dónde se ve dentro de 5 años?',
+        '¿Por qué dejó su último puesto?',
+        '¿Qué le motiva en este sector?',
+        'Hábleme de un fracaso y lo que aprendió de él.',
+      ],
+    };
+
+    let currentQuestionLang = document.getElementById('o-langue').value || 'fr-FR';
+    let qIndex = 0;
+    document.getElementById('btn-change-question').addEventListener('click', () => {
+      const pool = oralQuestionsByLang[currentQuestionLang] || oralQuestionsByLang['fr-FR'];
+      qIndex = (qIndex + 1) % pool.length;
+      document.getElementById('current-oral-question').textContent = pool[qIndex];
+    });
+
+    /* ── Language pills ── */
+    document.querySelectorAll('.lang-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        document.getElementById('o-langue').value = pill.dataset.lang;
+        // Mettre à jour la langue de reconnaissance si elle est en cours
+        if (recognition) { try { recognition.lang = pill.dataset.lang; } catch(e) {} }
+        // Basculer aussi la langue de la question affichée
+        currentQuestionLang = pill.dataset.lang;
+        qIndex = 0;
+        const pool = oralQuestionsByLang[currentQuestionLang] || oralQuestionsByLang['fr-FR'];
+        document.getElementById('current-oral-question').textContent = pool[qIndex];
+      });
+    });
+
+    /* ── Speech Recognition ── */
+    let recognition = null;
+    let isRecording = false;
+    let recInterval = null;
+    let recSeconds = 0;
+    let finalTranscript = '';
+    let interimTranscript = '';
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function initRecognition() {
+      if (!SpeechRecognition) {
+        showToast('Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome ou Edge.', 'error');
+        document.getElementById('btn-mic').disabled = true;
+        document.getElementById('mic-status').textContent = '❌ Micro non supporté (utilisez Chrome/Edge)';
+        return null;
+      }
+
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = document.getElementById('o-langue').value;
+      rec.maxAlternatives = 1;
+
+      rec.onstart = () => {
+        isRecording = true;
+        document.getElementById('btn-mic').classList.add('recording');
+        document.getElementById('mic-icon').innerHTML = '⏹';
+        document.getElementById('mic-status').innerHTML = '<i class="fa-solid fa-circle"></i> Enregistrement en cours... Parlez !';
+        document.getElementById('btn-stop-mic').style.display = 'inline-flex';
+        document.getElementById('recording-timer').style.display = 'block';
+        document.getElementById('waveform').classList.remove('paused');
+        document.getElementById('transcript-box').classList.add('active');
+        recSeconds = 0;
+        recInterval = setInterval(() => {
+          recSeconds++;
+          const m = Math.floor(recSeconds / 60);
+          const s = String(recSeconds % 60).padStart(2, '0');
+          document.getElementById('rec-time').textContent = `${m}:${s}`;
+        }, 1000);
+      };
+
+      rec.onresult = (e) => {
+        interimTranscript = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            finalTranscript += e.results[i][0].transcript + ' ';
+          } else {
+            interimTranscript += e.results[i][0].transcript;
+          }
+        }
+        updateTranscriptBox();
+      };
+
+      rec.onend = () => {
+        if (isRecording) stopRecording();
+      };
+
+      rec.onerror = (e) => {
+        if (e.error === 'not-allowed') showToast('Accès micro refusé. Autorisez le micro dans votre navigateur.', 'error');
+        else if (e.error !== 'no-speech') showToast('Erreur micro : ' + e.error, 'warning');
+        stopRecording();
+      };
+
+      return rec;
+    }
+
+    function updateTranscriptBox() {
+      const box = document.getElementById('transcript-box');
+      const words = (finalTranscript + interimTranscript).trim();
+      if (words) {
+        box.innerHTML = `<span style="color:var(--text-primary)">${finalTranscript}</span><span style="color:var(--text-muted);font-style:italic">${interimTranscript}</span>`;
+        const wc = finalTranscript.trim().split(/\s+/).filter(Boolean).length;
+        document.getElementById('word-count').textContent = `${wc} mots`;
+        document.getElementById('btn-analyze-oral').disabled = wc < 5;
+      }
+    }
+
+    function stopRecording() {
+      isRecording = false;
+      if (recognition) try { recognition.stop(); } catch (e) { }
+      clearInterval(recInterval);
+      document.getElementById('btn-mic').classList.remove('recording');
+      document.getElementById('mic-icon').innerHTML = '<i class="fa-solid fa-microphone-lines"></i>';
+      document.getElementById('mic-status').textContent = '✅ Enregistrement terminé. Analysez votre réponse.';
+      document.getElementById('btn-stop-mic').style.display = 'none';
+      document.getElementById('recording-timer').style.display = 'none';
+      document.getElementById('waveform').classList.add('paused');
+      document.getElementById('transcript-box').classList.remove('active');
+      if (finalTranscript.trim()) document.getElementById('btn-analyze-oral').disabled = false;
+    }
+
+    document.getElementById('btn-mic').addEventListener('click', () => {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        finalTranscript = '';
+        interimTranscript = '';
+        document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text-muted);font-style:italic">La transcription apparaîtra ici en temps réel...</span>';
+        document.getElementById('word-count').textContent = '0 mots';
+        document.getElementById('btn-analyze-oral').disabled = true;
+
+        recognition = initRecognition();
+        if (recognition) {
+          recognition.lang = document.getElementById('o-langue').value;
+          try { recognition.start(); } catch (e) { showToast('Erreur démarrage micro', 'error'); }
+        }
+      }
+    });
+
+    document.getElementById('btn-stop-mic').addEventListener('click', stopRecording);
+
+    document.getElementById('btn-clear-transcript').addEventListener('click', () => {
+      finalTranscript = '';
+      interimTranscript = '';
+      document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text-muted);font-style:italic">La transcription apparaîtra ici en temps réel...</span>';
+      document.getElementById('word-count').textContent = '0 mots';
+      document.getElementById('btn-analyze-oral').disabled = true;
+    });
+
+    document.getElementById('btn-copy-transcript').addEventListener('click', () => {
+      const text = finalTranscript.trim();
+      if (text) copyToClipboard(text, document.getElementById('btn-copy-transcript'));
+      else showToast('Aucune transcription à copier', 'warning');
+    });
+
+    document.getElementById('btn-reset-oral').addEventListener('click', () => {
+      if (isRecording) stopRecording();
+      finalTranscript = '';
+      interimTranscript = '';
+      document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text-muted);font-style:italic">La transcription apparaîtra ici en temps réel...</span>';
+      document.getElementById('word-count').textContent = '0 mots';
+      document.getElementById('btn-analyze-oral').disabled = true;
+      document.getElementById('mic-status').textContent = 'Cliquez sur le micro pour commencer';
+      document.getElementById('oral-placeholder').classList.remove('hidden');
+      document.getElementById('oral-result').classList.add('hidden');
+      localStorage.removeItem(jmKey('last_oral'));
+      showToast('Session réinitialisée', 'success');
+    });
+
+    // Bouton réinitialiser inline (à côté de Analyser)
+    document.getElementById('btn-reset-oral-inline').addEventListener('click', () => {
+      document.getElementById('btn-reset-oral').click();
+    });
+
+    /* ── Analyze oral ── */
+    document.getElementById('btn-analyze-oral').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-analyze-oral');
+      const text = finalTranscript.trim();
+      if (!text) { showToast('Aucune transcription à analyser', 'warning'); return; }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Analyse en cours...');
+        try {
+          const result = await window.AI.analyzeOralResponse({
+            transcription: text,
+            poste: document.getElementById('o-poste').value.trim() || 'emploi',
+            langue: document.getElementById('o-langue').value || 'fr-FR',
+          });
+          displayOralResult(result);
+          showToast('Analyse complète !', 'success');
+        } catch (e) {
+          showToast('Erreur: ' + e.message, 'error');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    function displayOralResult(data) {
+      // Sauvegarder pour persistance entre les pages
+      localStorage.setItem(jmKey('last_oral'), JSON.stringify(data));
+
+      document.getElementById('oral-placeholder').classList.add('hidden');
+      document.getElementById('oral-result').classList.remove('hidden');
+
+      const score = data.score_global || 70;
+      const color = scoreColor(score);
+      document.getElementById('oral-global-ring').innerHTML = createScoreRing(score, color, 120, 10);
+
+      // Scores bars
+      const scores = data.scores || {};
+      const labels = { fluidite: '<i class="fa-solid fa-comments"></i> Fluidité', structure: '<i class="fa-solid fa-ruler-combined"></i> Structure', vocabulaire: '<i class="fa-solid fa-book"></i> Vocabulaire', clarte: '<i class="fa-solid fa-lightbulb"></i> Clarté' };
+      document.getElementById('oral-scores-bars').innerHTML = Object.entries(scores).map(([k, v]) => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">${labels[k] || k}</span>
+        <span style="color:${scoreColor(v)};font-weight:600">${v}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div>
+    </div>`).join('');
+
+      // Hésitations
+      if (data.hesitations?.length) {
+        document.getElementById('oral-hesitations-card').style.display = 'block';
+        document.getElementById('oral-hesitations-list').innerHTML = data.hesitations
+          .map(h => `<span class="badge badge-amber">${h}</span>`).join('');
+      }
+
+      // Points forts
+      if (data.points_forts?.length) {
+        document.getElementById('oral-strengths').style.display = 'block';
+        document.getElementById('oral-strengths-list').innerHTML = data.points_forts
+          .map(p => `<div class="feedback-item positive mb-1"><span><i class="fa-solid fa-check"></i></span><span style="font-size:0.85rem">${p}</span></div>`).join('');
+      }
+
+      // Axes amélioration
+      if (data.axes_amelioration?.length) {
+        document.getElementById('oral-improvements').style.display = 'block';
+        document.getElementById('oral-improvements-list').innerHTML = data.axes_amelioration
+          .map(p => `<div class="feedback-item improvement mb-1"><span><i class="fa-solid fa-bolt-lightning"></i></span><span style="font-size:0.85rem">${p}</span></div>`).join('');
+      }
+
+      // Reformulation
+      if (data.reformulation) {
+        document.getElementById('oral-reformulation').style.display = 'block';
+        document.getElementById('oral-reformulation-text').innerHTML = `<span><i class="fa-solid fa-wand-magic-sparkles"></i></span><div>${data.reformulation}</div>`;
+        document.getElementById('btn-copy-reformulation').onclick = () => copyToClipboard(data.reformulation, document.getElementById('btn-copy-reformulation'));
+      }
+
+      // Conseil
+      if (data.conseil_principal) {
+        document.getElementById('oral-conseil').style.display = 'block';
+        document.getElementById('oral-conseil-text').textContent = data.conseil_principal;
+      }
+    }
+
+    /* ── Analyze text ── */
+    document.getElementById('btn-analyze-text').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-analyze-text');
+      const text = document.getElementById('t-reponse').value.trim();
+      if (!text) { showToast('Entrez votre réponse', 'warning'); return; }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Analyse en cours...');
+        try {
+          const result = await window.AI.analyzeOralResponse({
+            transcription: text,
+            poste: document.getElementById('t-poste').value.trim() || 'emploi',
+            langue: document.getElementById('o-langue').value || 'fr-FR',
+          });
+          displayTextResult(result, text);
+          showToast('Analyse prête !', 'success');
+        } catch (e) {
+          showToast('Erreur : ' + e.message, 'error');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    function displayTextResult(data, originalText) {
+      // Sauvegarder pour persistance
+      localStorage.setItem(jmKey('last_oral_text'), JSON.stringify({ data, originalText }));
+
+      document.getElementById('text-analysis-placeholder').classList.add('hidden');
+      const el = document.getElementById('text-analysis-result');
+      el.classList.remove('hidden');
+
+      const score = data.score_global || 70;
+      const col = scoreColor(score);
+      const scores = data.scores || {};
+      const labels = { fluidite: '<i class="fa-solid fa-comments"></i> Fluidité', structure: '<i class="fa-solid fa-ruler-combined"></i> Structure', vocabulaire: '<i class="fa-solid fa-book"></i> Vocabulaire', clarte: '<i class="fa-solid fa-lightbulb"></i> Clarté' };
+
+      // Highlight hesitations in text
+      const hesWords = (data.hesitations || []).map(h => h.replace(/ \(.*\)/, '').trim().toLowerCase());
+      let highlighted = originalText;
+      hesWords.forEach(w => {
+        if (w) highlighted = highlighted.replace(new RegExp(`\\b(${w})\\b`, 'gi'), `<span class="hesitation-word">$1</span>`);
+      });
+
+      el.innerHTML = `
+    <div class="glass-card p-4 mb-3">
+      <div style="display:flex;align-items:center;gap:2rem;margin-bottom:1.5rem">
+        ${createScoreRing(score, col, 90, 7)}
+        <div style="flex:1">
+          ${Object.entries(scores).map(([k, v]) => `
+            <div style="margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:3px">
+                <span class="text-secondary">${labels[k] || k}</span>
+                <span style="color:${scoreColor(v)}">${v}%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    ${hesWords.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-pen"></i> Texte annoté <span class="badge badge-amber" style="margin-left:8px">Hésitations surlignées</span></h3>
+      <div style="line-height:1.8;font-size:0.9rem;padding:1rem;background:rgba(255,255,255,0.03);border-radius:var(--radius-md);border:1px solid var(--glass-border)">${highlighted}</div>
+    </div>` : ''}
+
+    ${data.points_forts?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light)"><i class="fa-solid fa-check"></i> Points forts</h3>
+      ${data.points_forts.map(p => `<div class="feedback-item positive mb-1"><span><i class="fa-solid fa-check"></i></span><span style="font-size:0.85rem">${p}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.axes_amelioration?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1rem;color:#fcd34d"><i class="fa-solid fa-bolt-lightning"></i> Axes d'amélioration</h3>
+      ${data.axes_amelioration.map(p => `<div class="feedback-item improvement mb-1"><span><i class="fa-solid fa-bolt-lightning"></i></span><span style="font-size:0.85rem">${p}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.reformulation ? `
+    <div class="glass-card p-4">
+      <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1rem;color:var(--purple-light)"><i class="fa-solid fa-wand-magic-sparkles"></i> Reformulation suggérée</h3>
+      <div class="alert alert-info"><span><i class="fa-solid fa-wand-magic-sparkles"></i></span><div>${data.reformulation}</div></div>
+    </div>` : ''}`;
+    }
+
+    // Recharger la dernière analyse au chargement de la page pour persistance
+    const lastOral = localStorage.getItem(jmKey('last_oral'));
+    if (lastOral) {
+      try {
+        displayOralResult(JSON.parse(lastOral));
+      } catch (e) {
+        localStorage.removeItem(jmKey('last_oral'));
+      }
+    }
+
+    const lastOralText = localStorage.getItem(jmKey('last_oral_text'));
+    if (lastOralText) {
+      try {
+        const { data, originalText } = JSON.parse(lastOralText);
+        displayTextResult(data, originalText);
+      } catch (e) {
+        localStorage.removeItem(jmKey('last_oral_text'));
+      }
+    }
+
+    // Bouton réinitialiser (onglet texte)
+    document.getElementById('btn-reset-text').addEventListener('click', () => {
+      const reponse = document.getElementById('t-reponse');
+      const question = document.getElementById('t-question');
+      if (reponse) reponse.value = '';
+      if (question) question.value = '';
+      const resultEl = document.getElementById('text-result');
+      if (resultEl) resultEl.innerHTML = '';
+      localStorage.removeItem(jmKey('last_oral_text'));
+      showToast('Formulaire réinitialisé', 'success');
+    });
+
+    /* ── Historique Oral ── */
+    const getHistoryModal = () => document.getElementById('modal-history');
+    const getHistoryList = () => document.getElementById('history-list');
+
+    document.getElementById('btn-history-oral').addEventListener('click', () => {
+      openHistoryModal();
+    });
+
+    window.closeHistoryModal = function() {
+      getHistoryModal().classList.remove('active');
+    }
+
+    window.openHistoryModal = async function () {
+      const modal = getHistoryModal();
+      const list = getHistoryList();
+      modal.classList.add('active');
+      list.innerHTML = `
+        <div class="text-center p-5">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:var(--purple-light); margin-bottom:1rem"></i>
+          <p class="text-secondary">Récupération de vos analyses...</p>
+        </div>`;
+      
+      try {
+        const response = await fetch(`${window.API_BASE}/oral/list`, { credentials: 'include' });
+        const data = await response.json();
+        
+        if (!data.success) throw new Error(data.error);
+        
+        if (data.history.length === 0) {
+          list.innerHTML = `
+            <div class="text-center p-5">
+              <i class="fa-solid fa-microphone-lines" style="font-size:3rem; color:var(--glass-border); margin-bottom:1rem"></i>
+              <p class="text-secondary">Aucune analyse sauvegardée.</p>
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = data.history.map(o => `
+          <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default">
+            <div>
+              <div style="font-weight:600;color:var(--text-primary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.job_title}</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary)">
+                ${new Date(o.created_at).toLocaleDateString('fr-FR')} • Score: ${o.score_global}%
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-primary" onclick="loadSavedOral(${o.id})">
+                <i class="fa-solid fa-folder-open"></i>
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="deleteSavedOral(${o.id})" style="color:#ef4444; border-color:rgba(239,68,68,0.2)">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${e.message}</p>`;
+      }
+    }
+
+    window.loadSavedOral = async function (id) {
+      try {
+        const response = await fetch(`${window.API_BASE}/oral/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          const analysis = JSON.parse(data.data.analysis_json);
+          const transcription = data.data.transcription;
+          
+          // Mettre à jour l'interface
+          document.getElementById('transcript-box').innerHTML = transcription;
+          displayOralResult(analysis);
+          
+          closeHistoryModal();
+          showToast('Analyse chargée depuis l\'historique', 'success');
+        }
+      } catch (e) {
+        showToast('Erreur lors du chargement', 'error');
+      }
+    }
+
+    window.deleteSavedOral = async function (id) {
+      if (!confirm('Supprimer cette analyse définitivement ?')) return;
+      try {
+        const response = await fetch(`${window.API_BASE}/oral/delete/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          showToast('Analyse supprimée', 'success');
+          openHistoryModal();
+        }
+      } catch (e) {
+        showToast('Erreur lors de la suppression', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

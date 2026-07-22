@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Simulation d'Entretien — My Job Mentor</title>
+  <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
+  <meta content="Entraînez-vous avec un recruteur IA interactif." name="description" />
+  <link href="../css/style.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    /* Spécifique à ce module de Chat */
+    .chat-window {
+      width: 100%;
+      height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding-right: 10px;
+      margin-bottom: 2rem;
+    }
+
+    .chat-window::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-window::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .bubble {
+      max-width: 85%;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius-lg);
+      line-height: 1.6;
+      font-size: 0.95rem;
+      animation: slideIn 0.3s ease-out forwards;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .ai-bubble {
+      align-self: flex-start;
+      background: rgba(20, 184, 166, 0.15);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      border-top-left-radius: 4px;
+    }
+
+    .user-bubble {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--glass-border);
+      border-top-right-radius: 4px;
+    }
+
+    .ai-avatar {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--teal), var(--blue));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 1.5rem;
+      box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
+    }
+
+    .btn.recording {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="bg-mesh"></div>
+  <div class="toast-container" id="toast-container"></div>
+  <!-- Navbar -->
+  <nav class="navbar">
+<a class="nav-logo" href="../index.html">
+<img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+<span class="nav-logo-brand">AI&amp;DEV Academy</span>
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
+      <li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file"></i></span> CV</a></li>
+      <li><a href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope"></i></span> Lettre</a></li>
+      <li><a class="active" href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+          Entretien</a></li>
+      <li><a href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
+    </ul>
+    <div class="nav-cta">
+      <button class="btn-nav btn-nav-ghost" id="btn-config"><i class="fa-solid fa-gear"></i> API</button>
+      <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal-container">
+      <div class="modal-header" style="margin-bottom: 1rem;">
+        <h2 class="modal-title"><i class="fa-solid fa-clock-rotate-left"></i> Mes Archives</h2>
+        <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
+      </div>
+
+      <div class="tabs" id="history-tabs" style="margin-bottom: 1.5rem;">
+        <button class="tab-btn active" data-tab="interviews">Entretiens</button>
+        <button class="tab-btn" data-tab="notes">Notes Seules</button>
+      </div>
+
+      <div id="history-list" style="max-height: 400px; overflow-y: auto; padding: 5px;">
+        <!-- JS filled -->
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-transcript">
+    <div class="modal-container" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="transcript-title">Détails de l'entretien</h2>
+        <button class="modal-close"
+          onclick="document.getElementById('modal-transcript').classList.remove('active')">&times;</button>
+      </div>
+      <div id="transcript-body"
+        style="max-height: 500px; overflow-y: auto; padding: 20px; white-space: pre-wrap; line-height: 1.6; font-size: 0.95rem; color: var(--text-secondary);">
+      </div>
+    </div>
+  </div>
+
+  <div class="app-wrapper">
+    <div class="page-header" style="background-image: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.55) 65%, rgba(10,10,13,0.97) 100%), url('../assets/img/entretien-header.jpg'); background-size: cover; background-position: center 30%;">
+      <div class="container">
+        <span class="badge badge-teal animate-fade-up"><i class="fa-solid fa-microphone"></i> Simulation
+          d'Entretien</span>
+        <h1 class="page-title animate-fade-up delay-1">
+          Préparez-vous avec <span class="gradient-text-teal">l'IA Recruteur</span>
+        </h1>
+        <p class="page-subtitle animate-fade-up delay-2">
+          Un échange interactif en temps réel pour tester vos réflexes et structurer vos réponses avant le grand jour.
+        </p>
+      </div>
+    </div>
+    <div class="container" style="padding-bottom:80px">
+      <div
+        style="max-width:900px; margin:0 auto;">
+
+        <!-- ══ Carte Centrale : Conversation IA ══ -->
+        <div class="glass-card p-4 animate-fade-up delay-3"
+          style="display:flex; flex-direction:column; border-top: 2px solid rgba(20,184,166,0.4);">
+          <!-- En-tête -->
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem;">
+            <div class="ai-avatar pulse"
+              style="width:40px; height:40px; font-size:1.1rem; flex-shrink:0; animation:float 4s ease-in-out infinite; margin:0; box-shadow:0 0 14px rgba(20,184,166,0.4);">
+              <i class="fa-solid fa-robot" style="color:#fff"></i>
+            </div>
+            <div>
+              <div
+                style="font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--teal-light);">
+                <i class="fa-solid fa-comments"></i> Conversation avec l'IA
+              </div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:1px;">Recruteur virtuel en temps réel
+              </div>
+            </div>
+          </div>
+          <!-- Fenêtre chat -->
+          <div class="chat-window" id="chat-window" style="flex:1; margin-bottom:0; min-height:450px;">
+            <div class="bubble ai-bubble" id="initial-msg"
+              style="opacity:0.8; background:transparent; border:1px solid var(--glass-border); text-align:center; align-self:center;">
+              <i><i class="fa-solid fa-comment"></i> L'IA recruteur est prête. Cliquez sur "Démarrer l'entretien" pour
+                démarrer l'échange.</i>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ Bouton pour ouvrir les notes ══ -->
+        <div style="text-align:center; margin-top:1.5rem;">
+          <button class="btn btn-secondary" id="btn-toggle-notes" style="background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 3px 12px rgba(20,184,166,0.3);">
+            <i class="fa-solid fa-note-sticky"></i> Mes Notes personnelles
+          </button>
+        </div>
+
+        <!-- ══ Section Notes (cachée par défaut) ══ -->
+        <div class="glass-card p-4 animate-fade-up delay-3 hidden" id="notes-section"
+          style="display:flex; flex-direction:column; border-top: 2px solid rgba(20,184,166,0.4); margin-top:1.5rem;">
+          <!-- En-tête -->
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem;">
+            <div
+              style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--teal), var(--blue)); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; box-shadow:0 0 14px rgba(20,184,166,0.4);">
+              <i class="fa-solid fa-note-sticky" style="color:#fff;"></i>
+            </div>
+            <div>
+              <label for="notes-area" id="notes-area-label"
+                style="font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--teal-light); display:block; margin:0;">
+                Mes Notes personnelles
+              </label>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:1px;">Vos points clés &amp; questions à
+                poser</div>
+            </div>
+          </div>
+          <!-- Zone de texte -->
+          <textarea id="notes-area" class="form-control"
+            placeholder="• Points clés à retenir&#10;• Questions à poser au recruteur&#10;• Vos forces à mettre en avant&#10;• Chiffres et exemples concrets..."
+            style="flex:1; min-height:320px; resize:none; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); font-size:0.9rem; line-height:1.7; margin-bottom:1rem; border-radius:var(--radius-md);"></textarea>
+          <!-- Bouton export -->
+          <button class="btn btn-primary btn-full" id="btn-save-notes-pdf" title="Télécharger mes notes en .pdf"
+            style="background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 3px 12px rgba(20,184,166,0.3);">
+            <i class="fa-solid fa-file-pdf"></i> Enregistrer mes notes (.pdf)
+          </button>
+        </div>
+
+
+      </div>
+
+      <!-- ══ Barre d'actions pleine largeur ══ -->
+      <div class="glass-card p-3 animate-fade-up delay-3" style="max-width:1100px; margin:1.5rem auto 0;">
+
+        <!-- Ligne 1 : Démarrer + Micro -->
+        <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+          <button class="btn btn-primary" id="btn-next"
+            style="flex:1; max-width:300px; background:linear-gradient(135deg, var(--teal), var(--blue)); box-shadow:0 4px 15px rgba(20,184,166,0.3)">
+            <i class="fa-solid fa-play"></i> Démarrer l'entretien
+          </button>
+
+          <button class="btn btn-secondary" id="start-recording-btn" style="flex:1; max-width:300px;">
+            <i class="fa-solid fa-microphone"></i> <span>Répondre (Micro)</span>
+            <div class="waveform paused" id="recording-waves" style="display:none; height:16px;">
+              <div class="wave-bar" style="height:4px; background:#fca5a5;"></div>
+              <div class="wave-bar" style="height:4px; background:#fca5a5;"></div>
+              <div class="wave-bar" style="height:4px; background:#fca5a5;"></div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Ligne 2 : Archives + Effacer + Réinitialiser -->
+        <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="btn-history-interview" title="Historique">
+            <i class="fa-solid fa-clock-rotate-left"></i> Mes Archives
+          </button>
+          <button class="btn btn-secondary" id="btn-delete" style="border-color:rgba(239,68,68,0.3); color:#fca5a5;">
+            <i class="fa-solid fa-rotate-left"></i> <span>Effacer</span>
+          </button>
+          <button class="btn btn-secondary" id="btn-reset" title="Réinitialiser l'entretien"
+            style="border-color:rgba(251,146,60,0.4); color:#fdba74;">
+            <i class="fa-solid fa-arrows-rotate"></i> Réinitialiser
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  </div>
+
+
+  <script src="../js/config.js"></script>
+  <script src="../js/particles.js"></script>
+  <script src="../js/utils.js"></script>
+  <script type="module">
+    import { getQuestion, sendAnswer } from "../js/ai.js";
+    import { callAPI } from "../js/api.js";
+
+    const btnNext = document.querySelector("#btn-next");
+    const btnMicro = document.querySelector("#start-recording-btn");
+    const btnDelete = document.querySelector("#btn-delete");
+    const btnReset = document.querySelector("#btn-reset");
+    const waves = document.querySelector("#recording-waves");
+
+    let recognition = null;
+    let isRecording = false;
+    let finalTranscript = '';
+    let shouldRestart = false;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function initRecognition() {
+      if (!SpeechRecognition) {
+        showToast('Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome.', 'error');
+        return null;
+      }
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = false;
+      rec.lang = 'fr-FR';
+
+      rec.onstart = () => {
+        isRecording = true;
+        btnMicro.classList.add("recording");
+        btnMicro.querySelector("span").textContent = " Je vous écoute...";
+        waves.style.display = "flex";
+        waves.classList.remove("paused");
+        btnNext.disabled = true;
+        btnDelete.disabled = true;
+      };
+
+      rec.onresult = (e) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            finalTranscript += e.results[i][0].transcript + ' ';
+          }
+        }
+      };
+
+      rec.onend = () => {
+        // Si l'utilisateur n'a pas cliqué pour arrêter, on relance automatiquement
+        if (shouldRestart) {
+          try { rec.start(); } catch(e) {}
+          return;
+        }
+
+        isRecording = false;
+        btnMicro.classList.remove("recording");
+        btnMicro.querySelector("span").textContent = "Répondre (Micro)";
+        waves.style.display = "none";
+        waves.classList.add("paused");
+        btnNext.disabled = false;
+        btnDelete.disabled = false;
+
+        if (finalTranscript.trim()) {
+          handleAnswer(finalTranscript.trim());
+        }
+        finalTranscript = '';
+      };
+
+      rec.onerror = (e) => {
+        if (e.error === 'no-speech' && shouldRestart) {
+          // Silence détecté mais on continue d'écouter
+          return;
+        }
+        console.warn('Speech error:', e.error);
+      };
+
+      return rec;
+    }
+
+    async function handleAnswer(text) {
+      btnNext.disabled = true;
+      btnMicro.disabled = true;
+      btnDelete.disabled = true;
+      try {
+        const data = await sendAnswer(text);
+        if (data.end) {
+          btnNext.style.display = "none";
+          btnMicro.style.display = "none";
+          btnDelete.style.display = "none";
+          document.getElementById('btn-save-interview').style.display = "inline-flex";
+        }
+      } catch (e) {
+        showToast("Erreur d'analyse : " + e.message, "error");
+      } finally {
+// Réactive toujours l’UI (sinon l’utilisateur ne peut plus cliquer après analyse)
+        btnNext.disabled = false;
+        btnMicro.disabled = false;
+        btnDelete.disabled = false;
+      }
+    }
+
+    // Clic sur Démarrer / Suivant
+    btnNext.addEventListener("click", async () => {
+      btnNext.disabled = true;
+      btnMicro.disabled = true;
+      btnDelete.disabled = true;
+      const initMsg = document.getElementById("initial-msg");
+      if (initMsg) initMsg.style.display = 'none';
+
+      try {
+        await getQuestion();
+        btnNext.innerHTML = '<i class="fa-solid fa-forward-step"></i> Question suivante';
+      } catch (e) {
+        showToast("Erreur : " + e.message, "error");
+      } finally {
+        btnNext.disabled = false;
+        btnMicro.disabled = false;
+        btnDelete.disabled = false;
+      }
+    });
+
+    // Clic sur Micro
+    btnMicro.addEventListener("click", () => {
+      if (isRecording) {
+        // L'utilisateur veut arrêter → on coupe sans relancer
+        shouldRestart = false;
+        recognition.stop();
+      } else {
+        finalTranscript = '';
+        if (!recognition) recognition = initRecognition();
+        if (recognition) {
+          shouldRestart = true;
+          recognition.start();
+        }
+      }
+    });
+
+    // Clic sur Supprimer
+    btnDelete.addEventListener("click", async () => {
+      if (!confirm("Voulez-vous supprimer votre dernière réponse et recommencer cette question ?")) return;
+
+      btnDelete.disabled = true;
+      btnNext.disabled = true;
+      btnMicro.disabled = true;
+
+      try {
+        const res = await callAPI("entretien/last-answer");
+        if (res && res.success) {
+          const chatWindow = document.getElementById("chat-window");
+          const userBubbles = chatWindow.querySelectorAll(".user-bubble");
+
+          if (userBubbles.length > 0) {
+            const lastUserBubble = userBubbles[userBubbles.length - 1];
+            while (chatWindow.lastChild && chatWindow.lastChild !== lastUserBubble) {
+              chatWindow.removeChild(chatWindow.lastChild);
+            }
+            chatWindow.removeChild(lastUserBubble);
+            showToast("Réponse supprimée. Vous pouvez re-répondre.", "success");
+          } else {
+            showToast("Aucune réponse à supprimer dans l'affichage.", "info");
+          }
+        } else {
+          showToast(res.error || "Erreur lors de la suppression.", "error");
+        }
+      } catch (e) {
+        showToast("Erreur : " + e.message, "error");
+      } finally {
+        btnDelete.disabled = false;
+        btnNext.disabled = false;
+        btnMicro.disabled = false;
+      }
+    });
+
+    // Clic sur Réinitialiser
+    btnReset.addEventListener("click", async () => {
+      if (!confirm("Voulez-vous vraiment réinitialiser l'entretien ? Toute la conversation en cours et vos notes seront effacées.")) return;
+
+      btnReset.disabled = true;
+      btnNext.disabled = true;
+      btnMicro.disabled = true;
+      btnDelete.disabled = true;
+
+      try {
+        const res = await callAPI("entretien/reset");
+        if (res && res.success) {
+          // Vider la fenêtre de chat
+          const chatWindow = document.getElementById("chat-window");
+          chatWindow.innerHTML = `
+            <div class="bubble ai-bubble" id="initial-msg"
+              style="opacity:0.8; background:transparent; border:1px solid var(--glass-border); text-align:center; align-self:center;">
+              <i><i class="fa-solid fa-comment"></i> L'IA recruteur est prête. Cliquez sur "Démarrer l'entretien" pour démarrer l'échange.</i>
+            </div>`;
+          // Réinitialiser le bouton Démarrer
+          btnNext.innerHTML = '<i class="fa-solid fa-play"></i> Démarrer l\'entretien';
+          btnNext.style.display = "";
+          btnMicro.style.display = "";
+          btnDelete.style.display = "";
+          // Effacer le localStorage
+          localStorage.removeItem(jmKey('last_chat'));
+          // Effacer les notes personnelles
+          document.getElementById('notes-area').value = '';
+          localStorage.removeItem(jmKey('last_notes'));
+          showToast("Entretien et notes réinitialisés. Vous pouvez repartir de zéro !", "success");
+        } else {
+          showToast(res?.error || "Erreur lors de la réinitialisation.", "error");
+        }
+      } catch (e) {
+        showToast("Erreur : " + e.message, "error");
+      } finally {
+        btnReset.disabled = false;
+        btnNext.disabled = false;
+        btnMicro.disabled = false;
+        btnDelete.disabled = false;
+      }
+    });
+
+    // --- Persistance de l'entretien ---
+    const chatWindow = document.getElementById("chat-window");
+
+    // Charger l'historique au démarrage
+    const savedChat = localStorage.getItem(jmKey('last_chat'));
+    if (savedChat) {
+      chatWindow.innerHTML = savedChat;
+      const initMsg = document.getElementById("initial-msg");
+      if (initMsg && chatWindow.children.length > 1) initMsg.style.display = 'none';
+      if (chatWindow.children.length > 1) btnNext.innerHTML = '<i class="fa-solid fa-forward-step"></i> Question suivante';
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Observer les changements pour sauvegarder
+    const observer = new MutationObserver(() => {
+      localStorage.setItem(jmKey('last_chat'), chatWindow.innerHTML);
+    });
+    observer.observe(chatWindow, { childList: true, subtree: true });
+
+    // --- Toggle Notes ---
+    document.getElementById('btn-toggle-notes').addEventListener('click', () => {
+      const notesSection = document.getElementById('notes-section');
+      notesSection.classList.toggle('hidden');
+    });
+
+    // --- Persistance des notes ---
+    const notesArea = document.getElementById('notes-area');
+    const savedNotes = localStorage.getItem(jmKey('last_notes'));
+    if (savedNotes) notesArea.value = savedNotes;
+
+    notesArea.addEventListener('input', () => {
+      localStorage.setItem(jmKey('last_notes'), notesArea.value);
+    });
+
+
+    // Enregistrer mes notes — téléchargement .pdf (via impression navigateur)
+
+    document.getElementById('btn-save-notes-pdf').addEventListener('click', () => {
+      const notes = document.getElementById('notes-area').value.trim();
+      if (!notes) {
+        showToast('Vos notes sont vides. Écrivez quelque chose avant d\'enregistrer.', 'warning');
+        return;
+      }
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('fr-FR');
+      const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+      // Ouvrir une fenêtre d'impression dédiée
+      const printWin = window.open('', '_blank', 'width=800,height=600');
+      const escapedNotes = notes
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <title>Notes Entretien — My Job Mentor</title>
+          <style>
+            body { font-family: Georgia, serif; max-width: 720px; margin: 40px auto; color: #1a1a1a; line-height: 1.8; }
+            h1 { font-size: 1.4rem; border-bottom: 2px solid #0d9488; padding-bottom: 8px; color: #0d9488; }
+            .meta { font-size: 0.85rem; color: #555; margin-bottom: 2rem; }
+            .content { font-size: 1rem; white-space: pre-wrap; }
+            @media print { body { margin: 20px; } }
+          </style>
+        </head>
+        <body>
+          <h1>Mes Notes — Entretien My Job Mentor</h1>
+          <div class="meta">Date : ${dateStr} à ${timeStr}</div>
+          <div class="content">${escapedNotes}</div>
+          <script>window.onload = () => { window.print(); window.close(); }<\/script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+      showToast('Fenêtre PDF ouverte — choisissez "Enregistrer en PDF".', 'success');
+    });
+
+    /* ── Historique Entretiens ── */
+    const getHistoryModal = () => document.getElementById('modal-history');
+    const getHistoryList = () => document.getElementById('history-list');
+
+    document.getElementById('btn-history-interview').addEventListener('click', () => {
+      openHistoryModal();
+    });
+
+    window.closeHistoryModal = function () {
+      getHistoryModal().classList.remove('active');
+    }
+
+    let currentTab = 'interviews';
+
+    document.querySelectorAll('#history-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#history-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.tab;
+        loadHistory();
+      });
+    });
+
+    window.openHistoryModal = function () {
+      getHistoryModal().classList.add('active');
+      loadHistory();
+    }
+
+    async function loadHistory() {
+      const list = getHistoryList();
+      list.innerHTML = `
+        <div class="text-center p-5">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:var(--purple-light); margin-bottom:1rem"></i>
+          <p class="text-secondary">Chargement...</p>
+        </div>`;
+
+      try {
+        const action = currentTab === 'interviews' ? 'list' : 'list-notes';
+        const response = await fetch(`${window.API_BASE}/entretien/${action}`, { credentials: 'include' });
+        const data = await response.json();
+
+        if (!data.success) throw new Error(data.error);
+
+        const items = currentTab === 'interviews' ? data.history : data.notes;
+
+        if (!items || items.length === 0) {
+          list.innerHTML = `
+            <div class="text-center p-5">
+              <i class="fa-solid fa-box-open" style="font-size:3rem; color:var(--glass-border); margin-bottom:1rem"></i>
+              <p class="text-secondary">Aucun élément trouvé.</p>
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = items.map(item => {
+          const title = currentTab === 'interviews' ? item.job_title : item.title;
+          const scoreInfo = currentTab === 'interviews' ? ` • Score: ${item.global_score}%` : '';
+          const viewFunc = currentTab === 'interviews' ? `viewInterviewTranscript(${item.id})` : `viewNote(${item.id})`;
+          const delFunc = currentTab === 'interviews' ? `deleteInterviewHistory(${item.id})` : `deleteNote(${item.id})`;
+
+          return `
+            <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default; border-color:rgba(255,255,255,0.05)">
+              <div style="overflow:hidden">
+                <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${title}</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary)">
+                  ${new Date(item.created_at).toLocaleDateString('fr-FR')}${scoreInfo}
+                </div>
+              </div>
+              <div style="display:flex;gap:8px; margin-left:15px">
+                <button class="btn btn-sm btn-primary" onclick="${viewFunc}" title="Voir">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="${delFunc}" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Supprimer">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (e) {
+        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${e.message}</p>`;
+      }
+    }
+
+    window.viewNote = async function (id) {
+      try {
+        const response = await fetch(`${window.API_BASE}/entretien/notes/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('transcript-title').textContent = data.data.title;
+          document.getElementById('transcript-body').textContent = data.data.content;
+          document.getElementById('modal-transcript').classList.add('active');
+        }
+      } catch (e) {
+        showToast('Erreur lors du chargement', 'error');
+      }
+    }
+
+    window.deleteNote = async function (id) {
+      if (!confirm('Supprimer cette note ?')) return;
+      try {
+        const response = await fetch(`${window.API_BASE}/entretien/notes/delete/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          showToast('Note supprimée', 'success');
+          loadHistory();
+        }
+      } catch (e) {
+        showToast('Erreur lors de la suppression', 'error');
+      }
+    }
+
+    window.viewInterviewTranscript = async function (id) {
+      try {
+        const response = await fetch(`${window.API_BASE}/entretien/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('transcript-title').textContent = data.data.job_title;
+          document.getElementById('transcript-body').textContent = data.data.transcript;
+          document.getElementById('modal-transcript').classList.add('active');
+        }
+      } catch (e) {
+        showToast('Erreur lors du chargement', 'error');
+      }
+    }
+
+    window.deleteInterviewHistory = async function (id) {
+      if (!confirm('Supprimer cet entretien définitivement ?')) return;
+      try {
+        const response = await fetch(`${window.API_BASE}/entretien/delete/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          showToast('Entretien supprimé', 'success');
+          openHistoryModal();
+        }
+      } catch (e) {
+        showToast('Erreur lors de la suppression', 'error');
+      }
+    }
+  </script>
+</body>
+
+</html>

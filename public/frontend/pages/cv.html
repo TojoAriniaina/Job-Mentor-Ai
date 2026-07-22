@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Module CV — My Job Mentor</title>
+  <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
+  <meta content="Générez et optimisez votre CV professionnel avec l'IA. Score ATS, mots-clés, adaptation à l'offre."
+    name="description" />
+  <link href="../css/style.css" rel="stylesheet" />
+  <link href="../css/cv-template.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="bg-mesh"></div>
+  <div class="toast-container" id="toast-container"></div>
+  <!-- Navbar -->
+  <nav class="navbar">
+<a class="nav-logo" href="../index.html">
+<img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+<span class="nav-logo-brand">AI&amp;DEV Academy</span>
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
+      <li><a class="active" href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file"></i></span> CV</a></li>
+      <li><a href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope"></i></span> Lettre</a></li>
+      <li><a href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-microphone"></i></span> Entretien</a>
+      </li>
+      <li><a href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
+    </ul>
+    <div class="nav-cta">
+      <button class="btn-nav btn-nav-ghost" id="btn-config"><i class="fa-solid fa-gear"></i> API</button>
+      <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+  <div class="app-wrapper">
+    <!-- Page Header -->
+    <div class="page-header" style="background-image: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.55) 65%, rgba(10,10,13,0.97) 100%), url('../assets/img/cv-header.jpg'); background-size: cover; background-position: center 35%;">
+      <div class="container">
+        <span class="badge badge-purple animate-fade-up"><i class="fa-solid fa-file"></i> Module CV</span>
+        <h1 class="page-title animate-fade-up delay-1">
+          Créez un CV <span class="gradient-text-purple"></span>
+        </h1>
+        <p class="page-subtitle animate-fade-up delay-2">
+          L'IA génère, analyse et optimise votre CV pour maximiser vos chances auprès des recruteurs et des systèmes
+          ATS.
+        </p>
+      </div>
+    </div>
+    <div class="container" style="padding-bottom:80px">
+      <!-- Tabs -->
+      <div class="tabs mb-4 animate-fade-up delay-3" id="cv-tabs">
+        <button class="tab-btn active" data-tab="generate" id="tab-generate">Générer</button>
+        <button class="tab-btn" data-tab="improve" id="tab-improve"><i class="fa-solid fa-magnifying-glass"></i>
+          Analyser &amp; Améliorer</button>
+        <button class="tab-btn" data-tab="adapt" id="tab-adapt">Adapter à l'offre</button>
+      </div>
+      <!-- ══ TAB: Générer ══════════════════════════════════════ -->
+      <div class="tab-content active" id="tab-generate-content">
+        <div class="grid grid-2" style="gap:2rem">
+          <!-- Formulaire -->
+          <div class="glass-card p-4 animate-fade-up h-full" id="cv-form-panel">
+            <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;display:flex;align-items:center;gap:8px">
+              <i class="fa-solid fa-pen"></i> Vos informations
+            </h2>
+            <div class="form-group">
+              <label class="form-label" for="cv-photo">Photo d'identité (optionnel)</label>
+              <div style="display:flex;align-items:center;gap:1rem">
+                <label for="cv-photo" style="
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 16px;
+      background:var(--glass-bg);
+      border:1px dashed var(--glass-border);
+      border-radius:8px;
+      font-size:0.85rem;
+      color:var(--text-secondary);
+      transition:all 0.2s;
+    " onmouseover="this.style.borderColor='var(--purple-light)'"
+                  onmouseout="this.style.borderColor='var(--glass-border)'">
+                  <i class="fa-solid fa-camera"></i> Choisir une photo
+                </label>
+                <input type="file" id="cv-photo" accept="image/*" style="display:none" onchange="previewPhoto(this)" />
+                <!-- Miniature de prévisualisation -->
+                <div id="photo-preview-wrapper" style="display:none">
+                  <img id="photo-preview" src="" alt="Photo" style="
+        width:60px;height:60px;
+        border-radius:50%;
+        object-fit:cover;
+        border:2px solid var(--purple-light);
+      " />
+                  <button type="button" onclick="removePhoto()" style="
+        background:none;border:none;cursor:pointer;
+        color:var(--text-secondary);font-size:0.75rem;
+        display:block;text-align:center;margin-top:4px;
+      ">✕ Retirer</button>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cv-nom">Prénom &amp; Nom *</label>
+              <input class="form-control" id="cv-nom" placeholder="Marie Dupont" type="text" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cv-titre">Titre professionnel *</label>
+              <input class="form-control" id="cv-titre" placeholder="Développeur Full Stack JavaScript" type="text" />
+            </div>
+            <div class="grid grid-2" style="gap:1rem">
+              <div class="form-group">
+                <label class="form-label" for="cv-email">Email *</label>
+                <input class="form-control" id="cv-email" placeholder="marie@email.com" type="email" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cv-tel">Téléphone</label>
+                <input class="form-control" id="cv-tel" placeholder="+33 6 12 34 56 78" type="tel" />
+              </div>
+            </div>
+            <div class="grid grid-2" style="gap:1rem">
+              <div class="form-group">
+                <label class="form-label" for="cv-ville">Ville</label>
+                <input class="form-control" id="cv-ville" placeholder="Paris" type="text" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cv-naissance">Date de naissance (optionnel)</label>
+                <input class="form-control" id="cv-naissance" type="date" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cv-linkedin">LinkedIn / Portfolio (optionnel)</label>
+              <input class="form-control" id="cv-linkedin" placeholder="linkedin.com/in/..." type="text" />
+            </div>
+            <div class="divider"></div>
+            <div class="form-group">
+              <label class="form-label" for="cv-resume">Résumé / Objectifs professionnels</label>
+              <textarea class="form-control" id="cv-resume"
+                placeholder="Développeur passionné avec 3 ans d'expérience..." rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cv-competences">Compétences techniques</label>
+              <input class="form-control" id="cv-competences" placeholder="React, Node.js, Python, SQL, Docker..."
+                type="text" />
+            </div>
+            <div class="divider"></div>
+            
+            <!-- Expériences -->
+            <div class="form-group">
+              <label class="form-label">Expériences professionnelles</label>
+              <div id="experience-rows-container">
+                <div class="dynamic-row mb-2" style="display: flex; gap: 10px;">
+                  <input class="form-control exp-poste" placeholder="Poste (ex: Développeur Web)" style="flex: 1.3;" type="text" />
+                  <input class="form-control exp-entreprise" placeholder="Entreprise (ex: Régie Numérique)" style="flex: 1;" type="text" />
+                  <input class="form-control exp-date" placeholder="Date (ex: 2020-2023)" style="width: 140px;" type="text" />
+                  <button type="button" class="btn btn-sm btn-nav-ghost" onclick="this.closest('.dynamic-row').remove()" style="color:#ef4444; padding: 0 10px;" title="Retirer"><i class="fa-solid fa-times"></i></button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm btn-nav-ghost" onclick="addExperienceRow()" style="margin-top: 5px; font-size: 0.8rem; color: var(--blue-light);">
+                <i class="fa-solid fa-plus"></i> Ajouter une expérience
+              </button>
+            </div>
+
+            <!-- Formation -->
+            <div class="form-group">
+              <label class="form-label">Formation</label>
+              <div id="formation-rows-container">
+                <div class="dynamic-row mb-2" style="display: flex; gap: 10px;">
+                  <input class="form-control edu-diplome" placeholder="Diplôme (ex: Master Info)" style="flex: 1.3;" type="text" />
+                  <input class="form-control edu-etablissement" placeholder="Établissement (ex: Paris Saclay)" style="flex: 1;" type="text" />
+                  <input class="form-control edu-date" placeholder="Date (ex: 2018-2021)" style="width: 140px;" type="text" />
+                  <button type="button" class="btn btn-sm btn-nav-ghost" onclick="this.closest('.dynamic-row').remove()" style="color:#ef4444; padding: 0 10px;" title="Retirer"><i class="fa-solid fa-times"></i></button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm btn-nav-ghost" onclick="addFormationRow()" style="margin-top: 5px; font-size: 0.8rem; color: var(--blue-light);">
+                <i class="fa-solid fa-plus"></i> Ajouter une formation
+              </button>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cv-langues">Langues</label>
+              <input class="form-control" id="cv-langues" placeholder="Français (natif), Anglais (C1), Espagnol (B1)"
+                type="text" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cv-secteur">Secteur d'activité cible</label>
+              <select class="form-control" id="cv-secteur">
+                <option value="tech"><i class="fa-solid fa-laptop"></i> Informatique / Tech</option>
+                <option value="finance"> Finance / Banque</option>
+                <option value="sante"> Santé</option>
+                <option value="marketing"> Marketing / Communication</option>
+                <option value="rh"> Ressources Humaines</option>
+                <option value="ingenierie"><i class="fa-solid fa-gear"></i> Ingénierie</option>
+                <option value="conseil"> Conseil / Consulting</option>
+                <option value="autre"> Autre</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-primary" id="btn-generate-cv" style="flex:2">
+                Générer mon CV avec l'IA
+              </button>
+              <button class="btn btn-secondary" id="btn-history-cv" title="Historique" style="flex:1">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </button>
+              <button class="btn btn-secondary" id="btn-reset-cv" title="Nouveau CV / Réinitialiser" style="flex:1">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+          <!-- Résultat -->
+          <div class="h-full">
+            <!-- Placeholder avant génération -->
+            <div class="glass-card p-4 h-full" id="cv-placeholder" style="text-align:center;padding:3rem 2rem">
+              <div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"><i
+                  class="fa-solid fa-file"></i></div>
+              <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:0.5rem">Votre CV apparaîtra ici</h3>
+              <p class="text-secondary text-sm">Remplissez le formulaire et cliquez sur "Générer"</p>
+            </div>
+            <!-- Skeleton pendant la génération IA -->
+            <div class="glass-card p-4 h-full hidden" id="cv-skeleton">
+              <div class="skeleton-row">
+                <div class="skeleton skeleton-avatar"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:0.5rem">
+                  <div class="skeleton skeleton-line w-60"></div>
+                  <div class="skeleton skeleton-line w-45" style="height:10px"></div>
+                </div>
+              </div>
+              <div class="skeleton-block">
+                <div class="skeleton skeleton-line w-90"></div>
+                <div class="skeleton skeleton-line w-75"></div>
+                <div class="skeleton skeleton-line w-90"></div>
+                <div class="skeleton skeleton-line w-60"></div>
+              </div>
+              <p class="text-secondary text-sm text-center" style="margin-top:0.5rem">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Génération de votre CV en cours...
+              </p>
+            </div>
+            <!-- Résultat après génération -->
+            <div class="hidden" id="cv-result">
+              <!-- Score ATS -->
+              <div class="glass-card p-4 mb-3" id="cv-score-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                  <h3 style="font-size:1rem;font-weight:700">Score ATS</h3>
+                  <div style="display:flex;gap:8px">
+                    <button class="btn btn-sm btn-primary" onclick="downloadCV()"><i class="fa-solid fa-download"></i>
+                      Enregistrer</button>
+                    <button class="btn btn-sm btn-secondary" id="btn-copy-cv" onclick="copyCV()"><i
+                        class="fa-solid fa-clipboard"></i> Copier</button>
+                    <button class="btn btn-sm btn-secondary" onclick="printCV()"><i class="fa-solid fa-print"></i>
+                      Imprimer</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:2rem">
+                  <div id="cv-score-ring"></div>
+                  <div style="flex:1">
+                    <div id="cv-score-labels"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Aperçu CV -->
+              <div class="glass-card p-4 mb-3" id="cv-preview-wrapper">
+                <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem" id="cv-preview-title">Aperçu du CV</h3>
+                <div class="cv-preview" id="cv-preview-content"></div>
+              </div>
+              <!-- Suggestions -->
+              <div class="glass-card p-4 mb-3" id="cv-suggestions-card"></div>
+              <!-- Mots-clés -->
+              <div class="glass-card p-4" id="cv-keywords-card"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ══ TAB: Analyser ════════════════════════════════════ -->
+      <div class="tab-content" id="tab-improve-content">
+        <div class="grid grid-2" style="gap:2rem">
+          <div class="glass-card p-4 animate-fade-up h-full">
+            <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"><i
+                class="fa-solid fa-magnifying-glass"></i> Analysez votre CV existant</h2>
+            <div class="form-group">
+              <label class="form-label" for="cv-existing">Collez le contenu de votre CV *</label>
+              <textarea class="form-control" id="cv-existing" placeholder="Collez ici le texte de votre CV actuel...
+
+Exemple:
+Jean Martin
+Développeur Backend Python | Paris
+jean.martin@email.com
+
+PROFIL
+5 ans d'expérience en Python et Django..." rows="12"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cv-target-job">Offre d'emploi ciblée (optionnel)</label>
+              <textarea class="form-control" id="cv-target-job"
+                placeholder="Collez ici l'offre d'emploi pour obtenir une analyse ciblée..." rows="4"></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" id="btn-analyze-cv">
+              <i class="fa-solid fa-magnifying-glass"></i> Analyser mon CV
+            </button>
+          </div>
+          <div class="h-full">
+            <div class="glass-card p-4 h-full" id="analyze-placeholder" style="text-align:center;padding:3rem 2rem">
+              <div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"><i
+                  class="fa-solid fa-magnifying-glass"></i></div>
+              <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Analyse en attente</h3>
+              <p class="text-secondary text-sm">Collez votre CV et lancez l'analyse</p>
+            </div>
+            <div class="hidden" id="analyze-result"></div>
+          </div>
+        </div>
+      </div>
+      <!-- ══ TAB: Adapter ══════════════════════════════════════ -->
+      <div class="tab-content" id="tab-adapt-content">
+        <div class="glass-card p-4 animate-fade-up mb-3">
+          <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"> Adaptation à une offre spécifique</h2>
+          <div class="grid grid-2" style="gap:1.5rem">
+            <div class="form-group">
+              <label class="form-label" for="adapt-cv">Votre CV actuel *</label>
+              <textarea class="form-control" id="adapt-cv" placeholder="Collez votre CV ici..." rows="8"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="adapt-offer">Offre d'emploi *</label>
+              <textarea class="form-control" id="adapt-offer" placeholder="Collez l'offre d'emploi ici..."
+                rows="8"></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-adapt-cv"> Adapter mon CV à cette offre</button>
+        </div>
+        <div class="hidden" id="adapt-result"></div>
+      </div>
+    </div><!-- .container -->
+  </div><!-- .app-wrapper -->
+  <!-- Print styles -->
+  <style>
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+      }
+
+      .navbar,
+      .tabs,
+      #cv-form-panel,
+      #cv-score-card,
+      #cv-suggestions-card,
+      #cv-keywords-card,
+      #cv-preview-title,
+      .page-header,
+      #bg-canvas,
+      .bg-mesh {
+        display: none !important;
+      }
+
+      /* La grille formulaire/aperçu doit devenir une seule colonne pleine
+         largeur à l'impression : sinon le CV se retrouve compressé dans
+         une demi-page et sa colonne latérale déborde hors de la feuille. */
+      #tab-generate-content .grid.grid-2 {
+        display: block !important;
+      }
+
+      #cv-preview-wrapper {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        background: none !important;
+      }
+
+      .cv-preview {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+
+      #cv-preview-content img {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      #cv-result {
+        display: block;
+      }
+    };
+  </style>
+  <!-- Modal Historique CV -->
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal-container" style="max-width:600px">
+      <div class="modal-header">
+        <h2 style="font-size:1.25rem;font-weight:700"><i class="fa-solid fa-clock-rotate-left"></i> Mes CV sauvegardés</h2>
+        <button class="btn-nav btn-nav-ghost" onclick="closeHistoryModal()" style="font-size:1.2rem">&times;</button>
+      </div>
+      <div id="history-list" style="max-height:400px;overflow-y:auto;padding-right:5px">
+        <!-- Rempli par JS -->
+        <p class="text-secondary text-center p-4">Chargement de l'historique...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/ai.js?v=2.0" type="module"></script>
+  <script src="../js/particles.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    /* ── Photo d'identité ── */
+    let photoBase64 = "";
+    let selectedSecteur = "autre";
+
+    // Gestion des lignes dynamiques
+    window.addExperienceRow = function () {
+      const container = document.getElementById('experience-rows-container');
+      const row = document.createElement('div');
+      row.className = 'dynamic-row mb-2';
+      row.style.display = 'flex';
+      row.style.gap = '10px';
+      row.innerHTML = `
+        <input class="form-control exp-poste" placeholder="Poste (ex: Développeur Web)" style="flex: 1.3;" type="text" />
+        <input class="form-control exp-entreprise" placeholder="Entreprise (ex: Régie Numérique)" style="flex: 1;" type="text" />
+        <input class="form-control exp-date" placeholder="Date (ex: 2020-2023)" style="width: 140px;" type="text" />
+        <button type="button" class="btn btn-sm btn-nav-ghost" onclick="this.closest('.dynamic-row').remove()" style="color:#ef4444; padding: 0 10px;" title="Retirer"><i class="fa-solid fa-times"></i></button>
+      `;
+      container.appendChild(row);
+    };
+
+    window.addFormationRow = function () {
+      const container = document.getElementById('formation-rows-container');
+      const row = document.createElement('div');
+      row.className = 'dynamic-row mb-2';
+      row.style.display = 'flex';
+      row.style.gap = '10px';
+      row.innerHTML = `
+        <input class="form-control edu-diplome" placeholder="Diplôme (ex: Master Info)" style="flex: 1.3;" type="text" />
+        <input class="form-control edu-etablissement" placeholder="Établissement (ex: Paris Saclay)" style="flex: 1;" type="text" />
+        <input class="form-control edu-date" placeholder="Date (ex: 2018-2021)" style="width: 140px;" type="text" />
+        <button type="button" class="btn btn-sm btn-nav-ghost" onclick="this.closest('.dynamic-row').remove()" style="color:#ef4444; padding: 0 10px;" title="Retirer"><i class="fa-solid fa-times"></i></button>
+      `;
+      container.appendChild(row);
+    };
+
+    window.previewPhoto = function (input) {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Photo trop lourde (max 2 Mo)', 'warning');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        photoBase64 = e.target.result; // data:image/...;base64,...
+        document.getElementById('photo-preview').src = photoBase64;
+        document.getElementById('photo-preview-wrapper').style.display = 'flex';
+        document.getElementById('photo-preview-wrapper').style.flexDirection = 'column';
+        document.getElementById('photo-preview-wrapper').style.alignItems = 'center';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    window.removePhoto = function () {
+      photoBase64 = null;
+      document.getElementById('cv-photo').value = '';
+      document.getElementById('photo-preview').src = '';
+      document.getElementById('photo-preview-wrapper').style.display = 'none';
+    }
+
+    /* ── Tab management ── */
+    document.querySelectorAll('#cv-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#cv-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const id = 'tab-' + btn.dataset.tab + '-content';
+        document.getElementById(id).classList.add('active');
+      });
+    });
+
+    /* ── Generate CV ── */
+    document.getElementById('btn-generate-cv').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-generate-cv');
+      const nom = document.getElementById('cv-nom').value.trim();
+      const titre = document.getElementById('cv-titre').value.trim();
+      const email = document.getElementById('cv-email').value.trim();
+
+      if (!nom || !titre || !email) {
+        showToast('Veuillez remplir au minimum Nom, Titre et Email.', 'warning');
+        return;
+      }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Génération en cours...');
+        document.getElementById('cv-placeholder').classList.add('hidden');
+        document.getElementById('cv-result').classList.add('hidden');
+        document.getElementById('cv-skeleton').classList.remove('hidden');
+        try {
+          // Collecter les expériences dynamiques (structuré : poste / entreprise / date)
+          const expRows = Array.from(document.querySelectorAll('#experience-rows-container .dynamic-row'));
+          const experienceList = expRows.map(row => ({
+            poste: row.querySelector('.exp-poste').value.trim(),
+            entreprise: row.querySelector('.exp-entreprise').value.trim(),
+            periode: row.querySelector('.exp-date').value.trim(),
+          })).filter(e => e.poste || e.entreprise);
+
+          // Collecter les formations dynamiques (structuré : diplôme / établissement / date)
+          const eduRows = Array.from(document.querySelectorAll('#formation-rows-container .dynamic-row'));
+          const formationList = eduRows.map(row => ({
+            diplome: row.querySelector('.edu-diplome').value.trim(),
+            etablissement: row.querySelector('.edu-etablissement').value.trim(),
+            annee: row.querySelector('.edu-date').value.trim(),
+          })).filter(f => f.diplome || f.etablissement);
+
+          const info = {
+            nom, titre, email,
+            photo: photoBase64,
+            telephone: document.getElementById('cv-tel').value,
+            ville: document.getElementById('cv-ville').value,
+            date_naissance: document.getElementById('cv-naissance').value,
+            linkedin: document.getElementById('cv-linkedin').value,
+            resume: document.getElementById('cv-resume').value,
+            competences: document.getElementById('cv-competences').value,
+            experience: experienceList,
+            formation: formationList,
+            langues: document.getElementById('cv-langues').value,
+            secteur: document.getElementById('cv-secteur').value,
+          };
+
+          const response = await fetch(`${window.API_BASE}/cv/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ info })
+          });
+          const data = await response.json();
+          if (!data.success) throw new Error(data.error || "Erreur inconnue");
+          displayCV(data.data);
+          showToast('CV généré avec succès !', 'success');
+        } catch (e) {
+          showToast('Erreur : ' + e.message, 'error');
+          document.getElementById('cv-skeleton').classList.add('hidden');
+          document.getElementById('cv-placeholder').classList.remove('hidden');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    function displayCV(data) {
+      // Sauvegarder pour persistance entre les pages
+      localStorage.setItem(jmKey('last_cv'), JSON.stringify(data));
+      
+      document.getElementById('cv-skeleton').classList.add('hidden');
+      document.getElementById('cv-placeholder').classList.add('hidden');
+      document.getElementById('cv-result').classList.remove('hidden');
+
+      // Score ring
+      const score = data.score_ats || 0;
+      const color = scoreColor(score);
+      document.getElementById('cv-score-ring').innerHTML = createScoreRing(score, color, 90, 7);
+
+      // Afficher les détails du score ATS si disponibles
+      let atsDetailsHTML = '';
+      if (data.ats_details) {
+        const details = data.ats_details;
+        if (details.keyword_match !== undefined) {
+          atsDetailsHTML = `
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Matching mots-clés</span><span style="color:${scoreColor(details.keyword_match)}">${details.keyword_match}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${details.keyword_match}" style="width:0;background:${scoreColor(details.keyword_match)}"></div></div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Compétences techniques</span><span style="color:${scoreColor(details.skills_match)}">${details.skills_match}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${details.skills_match}" style="width:0;background:${scoreColor(details.skills_match)}"></div></div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Expérience pertinente</span><span style="color:${scoreColor(details.experience_match)}">${details.experience_match}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${details.experience_match}" style="width:0;background:${scoreColor(details.experience_match)}"></div></div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Structure et format</span><span style="color:${scoreColor(details.structure_score)}">${details.structure_score}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${details.structure_score}" style="width:0;background:${scoreColor(details.structure_score)}"></div></div>
+    </div>`;
+        } else if (details.completeness_score !== undefined) {
+          atsDetailsHTML = `
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Contact</span><span style="color:${scoreColor(details.contact_score)}">${details.contact_score}/20</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${(details.contact_score/20)*100}" style="width:0;background:${scoreColor(details.contact_score)}"></div></div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Profil</span><span style="color:${scoreColor(details.profile_score)}">${details.profile_score}/15</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${(details.profile_score/15)*100}" style="width:0;background:${scoreColor(details.profile_score)}"></div></div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Compétences</span><span style="color:${scoreColor(details.skills_score)}">${details.skills_score}/25</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${(details.skills_score/25)*100}" style="width:0;background:${scoreColor(details.skills_score)}"></div></div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Expérience</span><span style="color:${scoreColor(details.experience_score)}">${details.experience_score}/25</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${(details.experience_score/25)*100}" style="width:0;background:${scoreColor(details.experience_score)}"></div></div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Formation</span><span style="color:${scoreColor(details.education_score)}">${details.education_score}/15</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" data-w="${(details.education_score/15)*100}" style="width:0;background:${scoreColor(details.education_score)}"></div></div>
+    </div>`;
+        }
+      }
+
+      document.getElementById('cv-score-labels').innerHTML = `
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Score ATS Global</span><span style="color:${color}">${score}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="pr-ats" style="width:0;background:${color}"></div></div>
+    </div>
+    ${atsDetailsHTML}`;
+      setTimeout(() => {
+        const a = document.getElementById('pr-ats');
+        if (a) a.style.width = score + '%';
+        document.querySelectorAll('#cv-score-labels .progress-fill[data-w]').forEach(el => {
+          el.style.width = el.dataset.w + '%';
+        });
+      }, 200);
+
+      // CV Preview - Professional Template
+      const c = data.contact || {};
+      const photoSrc = data.photo || photoBase64;
+
+      // Filet de sécurité côté client : au cas où l'IA écrirait encore un
+      // texte de remplacement ("Non renseigné", "N/A"...), on le traite
+      // comme un champ vide plutôt que de l'afficher.
+      const PLACEHOLDER_RE = /^(non[\s-]?renseign[ée]e?|n\/?a|non[\s-]?applicable|non[\s-]?sp[ée]cifi[ée]e?|non[\s-]?communiqu[ée]e?|[àa]\s?d[ée]finir|inconnu(e)?)\.?$/i;
+      const cleanField = (v) => {
+        if (typeof v !== 'string') return v;
+        const t = v.trim();
+        return PLACEHOLDER_RE.test(t) ? '' : t;
+      };
+      
+      let preview = `
+      <div class="cv-document">
+        <!-- Sidebar -->
+        <div class="cv-sidebar">
+          ${photoSrc ? `
+            <div class="cv-photo-container">
+              <img src="${photoSrc}" class="cv-photo-img" alt="Photo" />
+            </div>
+          ` : ''}
+          
+          <div class="cv-contact-section">
+            <h3 class="cv-section-title-sidebar">Contact</h3>
+            ${c.email ? `<div class="cv-contact-item"><i class="fa-solid fa-envelope"></i> ${c.email}</div>` : ''}
+            ${c.tel ? `<div class="cv-contact-item"><i class="fa-solid fa-phone"></i> ${c.tel}</div>` : ''}
+            ${c.age ? `<div class="cv-contact-item"><i class="fa-solid fa-cake-candles"></i> ${c.age} ans</div>` : ''}
+            ${cleanField(c.ville) ? `<div class="cv-contact-item"><i class="fa-solid fa-location-dot"></i> ${cleanField(c.ville)}</div>` : ''}
+            ${cleanField(c.linkedin) ? `<div class="cv-contact-item"><i class="fa-solid fa-link"></i> LinkedIn</div>` : ''}
+          </div>
+
+          ${data.competences ? `
+            <div class="cv-skills-section">
+              <h3 class="cv-section-title-sidebar">Compétences</h3>
+              ${data.competences.techniques?.length ? `
+                <div style="margin-bottom:15px">
+                  <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px;opacity:0.8;color:#a78bfa">TECHNIQUES</div>
+                  <ul class="cv-skill-list">
+                    ${data.competences.techniques.map(t => `<li>${t}</li>`).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+              ${data.competences.soft?.length ? `
+                <div>
+                  <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px;opacity:0.8;color:#a78bfa">SOFT SKILLS</div>
+                  <ul class="cv-skill-list">
+                    ${data.competences.soft.map(s => `<li>${s}</li>`).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
+
+          ${data.langues?.length ? `
+            <div class="cv-languages-section">
+              <h3 class="cv-section-title-sidebar">Langues</h3>
+              ${data.langues.map(l => `
+                <div class="cv-lang-item">
+                  <span class="cv-lang-name">${l.langue}</span>
+                  <span class="cv-lang-level">${l.niveau}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Main Content -->
+        <div class="cv-main">
+          <div class="cv-header">
+            <h1 class="cv-name">${data.nom || ''}</h1>
+            <div class="cv-title">${data.titre || ''}</div>
+          </div>
+
+          ${data.profil ? `
+            <div class="cv-section">
+              <h3 class="cv-section-title"><i class="fa-solid fa-user"></i> Profil</h3>
+              <p class="cv-summary">${data.profil}</p>
+            </div>
+          ` : ''}
+
+          ${data.experience?.length ? `
+            <div class="cv-section">
+              <h3 class="cv-section-title"><i class="fa-solid fa-briefcase"></i> Expériences</h3>
+              ${data.experience.map(exp => `
+                <div class="cv-timeline-item">
+                  <div class="cv-timeline-header">
+                    <div class="cv-job-title">${exp.poste}</div>
+                    <div class="cv-period">${exp.periode}</div>
+                  </div>
+                  ${cleanField(exp.entreprise) ? `<div class="cv-company">${cleanField(exp.entreprise)}</div>` : ''}
+                  ${exp.realisation?.length ? `
+                    <ul class="cv-list">
+                      ${exp.realisation.map(r => `<li>${r}</li>`).join('')}
+                    </ul>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${data.formation?.length ? `
+            <div class="cv-section">
+              <h3 class="cv-section-title"><i class="fa-solid fa-graduation-cap"></i> Formation</h3>
+              ${data.formation.map(f => `
+                <div class="cv-timeline-item">
+                  <div class="cv-timeline-header">
+                    <div class="cv-job-title">${f.diplome}</div>
+                    <div class="cv-period">${f.annee}</div>
+                  </div>
+                  ${cleanField(f.etablissement) ? `<div class="cv-company">${cleanField(f.etablissement)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      </div>`;
+
+      document.getElementById('cv-preview-content').innerHTML = preview;
+
+      // Suggestions
+      if (data.suggestions?.length) {
+        document.getElementById('cv-suggestions-card').innerHTML = `
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Suggestions d'amélioration</h3>
+      ${data.suggestions.map(s => `
+        <div class="feedback-item improvement">
+          <span><i class="fa-solid fa-lightbulb"></i></span><span>${s}</span>
+        </div>`).join('')}`;
+      }
+
+      // Keywords
+      if (data.mots_cles?.length) {
+        document.getElementById('cv-keywords-card').innerHTML = `
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.4rem"><i class="fa-solid fa-key"></i> Mots-clés ATS détectés</h3>
+      <p class="text-secondary text-sm" style="margin-bottom:1rem">Retirez ceux qui ne correspondent pas à votre profil.</p>
+      <div class="chip-row">
+        ${data.mots_cles.map(k => `<span class="chip">${k}<button type="button" class="chip-remove" title="Retirer ce mot-clé" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button></span>`).join('')}
+      </div>`;
+      }
+
+      window._cvData = data;
+      window._cvText = buildCVText(data);
+    }
+
+    function buildCVText(data) {
+      const c = data.contact || {};
+      let text = `${data.nom}\n${data.titre}\n${[c.email, c.tel, c.ville, c.linkedin].filter(Boolean).join(' | ')}\n\n`;
+      if (data.profil) text += `PROFIL\n${data.profil}\n\n`;
+      if (data.competences) {
+        text += `COMPÉTENCES\n`;
+        if (data.competences.techniques?.length) text += `Techniques: ${data.competences.techniques.join(', ')}\n`;
+        if (data.competences.soft?.length) text += `Soft skills: ${data.competences.soft.join(', ')}\n`;
+        text += '\n';
+      }
+      if (data.experience?.length) {
+        text += `EXPÉRIENCE\n`;
+        data.experience.forEach(e => { text += `${e.poste} — ${e.entreprise} (${e.periode})\n${(e.realisation || []).map(r => `• ${r}`).join('\n')}\n\n`; });
+      }
+      if (data.formation?.length) {
+        text += `FORMATION\n`;
+        data.formation.forEach(f => { text += `${f.diplome} — ${f.etablissement} (${f.annee})\n`; });
+        text += '\n';
+      }
+      return text;
+    }
+
+    function copyCV() { if (window._cvText) copyToClipboard(window._cvText, document.getElementById('btn-copy-cv')); }
+    function printCV() { window.print(); }
+
+    window.downloadCV = function () {
+      const cvDoc = document.querySelector('.cv-document');
+      if (!cvDoc) return;
+
+      const nom = document.getElementById('cv-nom').value.trim() || 'Mon_CV';
+
+      // ── Nouvelle approche ────────────────────────────────────────────
+      // Les versions précédentes clonaient le CV et le plaçaient hors-écran
+      // (position:absolute; left:-99999px) avant de figer ses dimensions en
+      // 210mm/pixels pour la capture. Cette technique s'est révélée fragile :
+      // le bug (colonne violette absente, texte tronqué) persistait sur
+      // plusieurs navigateurs Chromium différents malgré plusieurs
+      // correctifs, ce qui pointe vers la technique elle-même plutôt que
+      // vers un détail de configuration.
+      // On capture donc directement l'élément TEL QU'IL EST AFFICHÉ À
+      // L'ÉCRAN (déjà validé visuellement par l'utilisateur dans l'aperçu),
+      // sans clone ni décalage hors-écran. html2canvas est nettement plus
+      // fiable sur un élément réellement visible et normalement mis en
+      // page. La mise à l'échelle vers le format A4 se fait ensuite au
+      // moment de la construction du PDF (voir plus bas), quelle que soit
+      // la largeur d'affichage réelle du CV à l'écran.
+      const waitForImages = Promise.all(
+        Array.from(cvDoc.querySelectorAll('img')).map(function (img) {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise(function (resolve) {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+          });
+        })
+      );
+      const waitForFonts = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+
+      // La fine bande blanche en haut/à gauche venait du fait que la page
+      // pouvait être légèrement défilée au moment de la capture. On
+      // remonte simplement la page tout en haut, sans animation (pour ne
+      // pas capturer en plein milieu d'un défilement), avant de capturer.
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
+      if (typeof showToast === 'function') showToast('Génération du PDF en cours...', 'info');
+
+      // On neutralise temporairement l'ombre/les coins arrondis (visibles à
+      // l'écran dans l'aperçu) pour un export propre, plein cadre — puis on
+      // les restaure juste après la capture.
+      const prevBoxShadow = cvDoc.style.boxShadow;
+      const prevBorderRadius = cvDoc.style.borderRadius;
+      cvDoc.style.boxShadow = 'none';
+      cvDoc.style.borderRadius = '0';
+
+      Promise.all([waitForImages, waitForFonts]).then(function () {
+        // Petit délai de sécurité pour laisser le navigateur stabiliser la
+        // mise en page une fois images/polices chargées.
+        return new Promise(function (resolve) { setTimeout(resolve, 150); });
+      }).then(function () {
+        const html2canvasOpt = {
+          scale: 3,
+          useCORS: true,
+          letterRendering: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        };
+        return html2pdf().set({ html2canvas: html2canvasOpt }).from(cvDoc).toCanvas().get('canvas');
+      }).then(function (canvas) {
+          // On assemble nous-mêmes le PDF plutôt que de laisser le moteur de
+          // pagination interne de html2pdf (context2d/autoPaging) placer
+          // l'image : sur certains navigateurs, ce chemin laissait un fin
+          // liseré blanc sur le bord gauche de la page. En posant nous-mêmes
+          // l'image à x=0/y=0 et en la faisant déborder pleine page, ce
+          // liseré disparaît, quel que soit le nombre de pages.
+          const imgData = canvas.toDataURL('image/jpeg', 1.0);
+          const pageWidthMm = 210;
+          const pageHeightMm = 297;
+          const pxPerMm = canvas.width / pageWidthMm;
+          const pageHeightPx = pageHeightMm * pxPerMm;
+          const fullImgHeightMm = canvas.height / pxPerMm;
+
+          const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+          let renderedPx = 0;
+          let page = 0;
+          while (renderedPx < canvas.height) {
+            if (page > 0) pdf.addPage();
+            const yOffsetMm = -(renderedPx / pxPerMm);
+            pdf.addImage(imgData, 'JPEG', 0, yOffsetMm, pageWidthMm, fullImgHeightMm, undefined, 'FAST');
+            renderedPx += pageHeightPx;
+            page++;
+          }
+          pdf.save(nom.replace(/\s+/g, '_') + '.pdf');
+          cvDoc.style.boxShadow = prevBoxShadow;
+          cvDoc.style.borderRadius = prevBorderRadius;
+          if (typeof showToast === 'function') showToast('CV téléchargé avec succès !', 'success');
+        }).catch(function (err) {
+          cvDoc.style.boxShadow = prevBoxShadow;
+          cvDoc.style.borderRadius = prevBorderRadius;
+          console.error('Erreur export PDF CV :', err);
+          if (typeof showToast === 'function') showToast('Erreur lors de la génération du PDF : ' + err.message, 'error');
+        });
+    }
+
+    /* ── Analyze CV ── */
+    document.getElementById('btn-analyze-cv').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-analyze-cv');
+      const cv = document.getElementById('cv-existing').value.trim();
+      if (!cv) { showToast('Veuillez coller votre CV', 'warning'); return; }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Analyse en cours...');
+        try {
+          const jobOffer = document.getElementById('cv-target-job').value.trim();
+          const response = await fetch(`${window.API_BASE}/cv/improve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ cv, jobOffer })
+          });
+          const data = await response.json();
+          if (!data.success) throw new Error(data.error || "Erreur inconnue");
+          displayAnalysis(data.data);
+          showToast('Analyse terminée !', 'success');
+        } catch (e) {
+          showToast('Erreur : ' + e.message, 'error');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    function displayAnalysis(data) {
+      // Sauvegarder pour persistance
+      localStorage.setItem(jmKey('last_analysis'), JSON.stringify(data));
+      
+      document.getElementById('analyze-placeholder').classList.add('hidden');
+      const el = document.getElementById('analyze-result');
+      el.classList.remove('hidden');
+      const score = data.score_ats || 0;
+      const color = scoreColor(score);
+
+      el.innerHTML = `
+    <div class="glass-card p-4 mb-3">
+      <div style="display:flex;align-items:center;gap:2rem;margin-bottom:1.5rem">
+        ${createScoreRing(score, color, 90, 7)}
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:700">Score ATS : ${score}/100</h3>
+          <p class="text-secondary text-sm">${score >= 80 ? '<i class="fa-solid fa-circle"></i> Excellent !' : score >= 60 ? '<i class="fa-solid fa-circle"></i> Bon, des améliorations possibles' : '<i class="fa-solid fa-circle"></i> À améliorer'}</p>
+        </div>
+      </div>
+    </div>
+
+    ${data.points_forts?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light)"><i class="fa-solid fa-check"></i> Points forts</h3>
+      ${data.points_forts.map(p => `<div class="feedback-item positive"><span><i class="fa-solid fa-check"></i></span><span>${p}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.points_faibles?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:#fcd34d"><i class="fa-solid fa-triangle-exclamation"></i> Points à améliorer</h3>
+      ${data.points_faibles.map(p => `<div class="feedback-item improvement"><span><i class="fa-solid fa-triangle-exclamation"></i></span><span>${p}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.suggestions?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Suggestions</h3>
+      ${data.suggestions.map((s, i) => `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--glass-border)"><span style="color:var(--purple-light);font-weight:600">${i + 1}.</span><span class="text-sm">${s}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.mots_cles_manquants?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-key"></i> Mots-clés manquants</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${data.mots_cles_manquants.map(k => `<span class="badge badge-amber">${k}</span>`).join('')}
+      </div>
+    </div>` : ''}
+
+    ${data.profil_ameliore ? `
+    <div class="glass-card p-4">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-pen-to-square"></i> Profil suggéré</h3>
+      <div class="alert alert-info"><span><i class="fa-solid fa-lightbulb"></i></span><div>${data.profil_ameliore}</div></div>
+      <button class="btn btn-sm btn-secondary mt-2" onclick="copyToClipboard(${JSON.stringify(data.profil_ameliore)}, this)"><i class="fa-solid fa-clipboard"></i> Copier</button>
+    </div>` : ''}`;
+    }
+
+    /* ── Adapt CV ── */
+    document.getElementById('btn-adapt-cv').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-adapt-cv');
+      const cv = document.getElementById('adapt-cv').value.trim();
+      const offer = document.getElementById('adapt-offer').value.trim();
+      if (!cv || !offer) { showToast('Veuillez remplir le CV et l\'offre', 'warning'); return; }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Adaptation en cours...');
+        try {
+          const response = await fetch(`${window.API_BASE}/cv/improve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ cv, jobOffer: offer })
+          });
+          const data = await response.json();
+          if (!data.success) throw new Error(data.error || "Erreur inconnue");
+          displayTextAdaptation(data.data);
+          showToast('Adaptation terminée !', 'success');
+        } catch (e) {
+          showToast('Erreur : ' + e.message, 'error');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    function displayTextAdaptation(result) {
+      // Sauvegarder pour persistance
+      localStorage.setItem(jmKey('last_adaptation'), JSON.stringify(result));
+      
+      const el = document.getElementById('adapt-result');
+      el.classList.remove('hidden');
+      el.innerHTML = `
+        <div class="glass-card p-4">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1.5rem"> Résultat de l'adaptation</h3>
+          ${result.suggestions?.length ? `
+            <h4 style="font-size:0.9rem;font-weight:600;color:var(--purple-light);margin-bottom:1rem">Modifications recommandées :</h4>
+            ${result.suggestions.map(s => `<div class="feedback-item improvement mb-2"><span><i class="fa-solid fa-bullseye"></i></span><span>${s}</span></div>`).join('')}` : ''}
+          ${result.mots_cles_manquants?.length ? `
+            <h4 style="font-size:0.9rem;font-weight:600;margin-top:1.5rem;margin-bottom:0.75rem"><i class="fa-solid fa-key"></i> Mots-clés à ajouter :</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              ${result.mots_cles_manquants.map(k => `<span class="badge badge-amber">${k}</span>`).join('')}
+            </div>` : ''}
+        </div>`;
+    }
+
+    /* ── Historique CV ── */
+    const historyBtn = document.getElementById('btn-history-cv');
+    const historyModal = document.getElementById('modal-history');
+    const historyList = document.getElementById('history-list');
+
+    historyBtn.addEventListener('click', () => {
+      openHistoryModal();
+    });
+
+    // Reset CV view
+    document.getElementById('btn-reset-cv').addEventListener('click', () => {
+      localStorage.removeItem(jmKey('last_cv'));
+      document.getElementById('cv-placeholder').classList.remove('hidden');
+      document.getElementById('cv-result').classList.add('hidden');
+      showToast('Affichage réinitialisé', 'info');
+    });
+
+    window.closeHistoryModal = function() {
+      historyModal.classList.remove('active');
+    }
+
+    async function openHistoryModal() {
+      historyModal.classList.add('active');
+      historyList.innerHTML = '<p class="text-secondary text-center p-4"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</p>';
+      
+      try {
+        const response = await fetch(`${window.API_BASE}/cv/history`, { credentials: 'include' });
+        const data = await response.json();
+        
+        if (!data.success) throw new Error(data.error);
+        
+        if (data.cv_history.length === 0) {
+          historyList.innerHTML = `
+            <div class="text-center p-5">
+              <i class="fa-solid fa-file-circle-plus" style="font-size:3rem; color:var(--glass-border); margin-bottom:1rem"></i>
+              <p class="text-secondary">Aucun CV sauvegardé pour le moment.</p>
+            </div>`;
+          return;
+        }
+
+        historyList.innerHTML = data.cv_history.map(cv => `
+          <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default">
+            <div>
+              <div style="font-weight:600;color:var(--text-primary)">${cv.title}</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary)">
+                ${new Date(cv.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}
+                • Score ATS: <span style="color:${scoreColor(cv.score_ats)}">${cv.score_ats}%</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-primary" onclick="loadSavedCV(${cv.id})">
+                <i class="fa-solid fa-folder-open"></i> Ouvrir
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="deleteSavedCV(${cv.id})" style="color:#ef4444; border-color:rgba(239,68,68,0.2)">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        historyList.innerHTML = `<p class="text-red text-center p-4">Erreur: ${e.message}</p>`;
+      }
+    }
+
+    window.loadSavedCV = async function(id) {
+      try {
+        const response = await fetch(`${window.API_BASE}/cv/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        
+        if (!data.success) throw new Error(data.error);
+        
+        displayCV(data.data);
+        closeHistoryModal();
+        showToast('CV chargé avec succès', 'success');
+        
+        // Scroll to preview
+        document.getElementById('cv-result').scrollIntoView({ behavior: 'smooth' });
+      } catch (e) {
+        showToast('Erreur lors du chargement : ' + e.message, 'error');
+      }
+    }
+
+    window.deleteSavedCV = async function(id) {
+      if (!window._cvDeletePending) {
+        window._cvDeletePending = id;
+        showToast('Cliquez à nouveau sur 🗑 pour confirmer la suppression', 'warning');
+        setTimeout(() => { window._cvDeletePending = null; }, 4000);
+        return;
+      }
+      if (window._cvDeletePending !== id) {
+        window._cvDeletePending = id;
+        showToast('Cliquez à nouveau sur 🗑 pour confirmer la suppression', 'warning');
+        setTimeout(() => { window._cvDeletePending = null; }, 4000);
+        return;
+      }
+      window._cvDeletePending = null;
+      
+      try {
+        const response = await fetch(`${window.API_BASE}/cv/${id}`, { 
+          method: 'DELETE',
+          credentials: 'include' 
+        });
+        const data = await response.json();
+        
+        if (!data.success) throw new Error(data.error);
+        
+        showToast('CV supprimé avec succès', 'success');
+        openHistoryModal(); // Rafraîchir la liste
+      } catch (e) {
+        showToast('Erreur lors de la suppression : ' + e.message, 'error');
+      }
+    };
+
+    // ✅ Auto-remplissage depuis le profil d'inscription
+    (function autoFillFromProfile() {
+      const raw = localStorage.getItem(jmKey('profile'));
+      if (!raw) return;
+      try {
+        const p = JSON.parse(raw);
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+        setVal('cv-nom',   p.nom);
+        setVal('cv-email', p.email);
+        setVal('cv-titre', p.titre);
+        setVal('cv-tel',   p.phone);
+        if (p.secteur) {
+          const sel = document.getElementById('cv-secteur');
+          if (sel) { for (let o of sel.options) { if (o.value === p.secteur) { o.selected = true; break; } } }
+        }
+        if (p.photo) {
+          photoBase64 = p.photo;
+          const img = document.getElementById('photo-preview');
+          const wrapper = document.getElementById('photo-preview-wrapper');
+          if (img) img.src = p.photo;
+          if (wrapper) { wrapper.style.display = 'flex'; wrapper.style.flexDirection = 'column'; wrapper.style.alignItems = 'center'; }
+        }
+      } catch(e) { /* profil invalide, on ignore */ }
+    })();
+
+    // Recharger le dernier CV au chargement de la page pour persistance
+    const lastCV = localStorage.getItem(jmKey('last_cv'));
+    if (lastCV) {
+      try {
+        displayCV(JSON.parse(lastCV));
+      } catch (e) {
+        localStorage.removeItem(jmKey('last_cv'));
+      }
+    }
+
+    const lastAnalysis = localStorage.getItem(jmKey('last_analysis'));
+    if (lastAnalysis) {
+      try { displayAnalysis(JSON.parse(lastAnalysis)); } catch (e) { localStorage.removeItem(jmKey('last_analysis')); }
+    }
+
+    const lastAdaptation = localStorage.getItem(jmKey('last_adaptation'));
+    if (lastAdaptation) {
+      try { displayTextAdaptation(JSON.parse(lastAdaptation)); } catch (e) { localStorage.removeItem(jmKey('last_adaptation')); }
+    }
+  </script>
+</body>
+
+</html>

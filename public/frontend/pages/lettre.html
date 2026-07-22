@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lettre de Motivation — My Job Mentor</title>
+  <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
+<meta content="Générez une lettre de motivation percutante et personnalisée grâce à l'intelligence artificielle." name="description"/>
+<link href="../css/style.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="bg-mesh"></div>
+<div class="toast-container" id="toast-container"></div>
+<!-- Navbar -->
+<nav class="navbar">
+<a class="nav-logo" href="../index.html">
+<img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+<span class="nav-logo-brand">AI&amp;DEV Academy</span>
+</a>
+<ul class="nav-links" id="nav-links">
+<li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
+<li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file"></i></span> CV</a></li>
+<li><a class="active" href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope"></i></span> Lettre</a></li>
+<li><a href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-microphone"></i></span> Entretien</a></li>
+<li><a href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
+</ul>
+<div class="nav-cta">
+<button class="btn-nav btn-nav-ghost" id="btn-config"><i class="fa-solid fa-gear"></i> API</button>
+<button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+</div>
+</nav>
+<div class="app-wrapper">
+<div class="page-header" style="background-image: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.55) 65%, rgba(10,10,13,0.97) 100%), url('../assets/img/lettre-header.jpg'); background-size: cover; background-position: center 40%;">
+<div class="container">
+<span class="badge badge-blue animate-fade-up"><i class="fa-solid fa-envelope"></i> Lettre de Motivation</span>
+<h1 class="page-title animate-fade-up delay-1">
+          Une lettre qui<br/><span class="gradient-text" style="background:linear-gradient(90deg,var(--blue),var(--teal-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Fait
+            la différence</span>
+</h1>
+<p class="page-subtitle animate-fade-up delay-2">
+          Générez, corrigez et personnalisez votre lettre de motivation en quelques secondes avec l'IA.
+        </p>
+</div>
+</div>
+<div class="container" style="padding-bottom:80px">
+<div class="tabs mb-4 animate-fade-up delay-3" id="lettre-tabs">
+<button class="tab-btn active" data-tab="gen"> Générer</button>
+<button class="tab-btn" data-tab="correct"> Corriger</button>
+</div>
+<!-- ══ TAB: Générer ══════════════════════════════════════ -->
+<div class="tab-content active" id="tab-gen-content">
+<div class="grid grid-2" style="gap:2rem">
+<!-- Formulaire -->
+<div class="glass-card p-4 animate-fade-up h-full">
+<h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"><i class="fa-solid fa-pen"></i> Informations</h2>
+<div class="form-group">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+  <label class="form-label" for="l-cv" style="margin-bottom:0">Votre profil / CV (résumé) *</label>
+  <button type="button" id="btn-import-cv" onclick="document.getElementById('cv-file-input').click()"
+    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;font-size:0.78rem;font-weight:600;
+           border:1.5px solid var(--primary,#6c63ff);border-radius:8px;background:transparent;
+           color:var(--primary,#6c63ff);cursor:pointer;white-space:nowrap;transition:all .2s"
+    onmouseover="this.style.background='var(--primary,#6c63ff)';this.style.color='#fff'"
+    onmouseout="this.style.background='transparent';this.style.color='var(--primary,#6c63ff)'">
+    <i class="fa-solid fa-file-arrow-up"></i> Importer un CV
+  </button>
+  <input type="file" id="cv-file-input" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="importCVFile(event)"/>
+</div>
+<textarea class="form-control" id="l-cv" placeholder="Développeur Full Stack avec 3 ans d'expérience en React et Node.js. Diplômé d'un Master Informatique. Maîtrise de Docker, PostgreSQL..." rows="5"></textarea>
+<div id="cv-import-status" style="display:none;font-size:0.8rem;margin-top:5px;color:var(--primary,#6c63ff)">
+  <i class="fa-solid fa-spinner fa-spin"></i> <span id="cv-import-msg">Lecture du fichier...</span>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-offre">Offre d'emploi *</label>
+<textarea class="form-control" id="l-offre" placeholder="Nous recherchons un Développeur Full Stack passionné pour rejoindre notre équipe...
+
+Missions : développement de nouvelles fonctionnalités, code review...
+Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-entreprise">Nom de l'entreprise</label>
+<input class="form-control" id="l-entreprise" placeholder="TechCorp, Google, LVMH..." type="text"/>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-nom">Votre nom complet</label>
+<input class="form-control" id="l-nom" placeholder="Marie Dupont" type="text" autocomplete="off"/>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-adresse">Votre adresse</label>
+<input class="form-control" id="l-adresse" placeholder="Lot II A 47, Antananarivo 101" type="text" autocomplete="off"/>
+</div>
+<div class="form-group" style="display:flex;gap:10px">
+<div style="flex:1">
+  <label class="form-label" for="l-telephone">Téléphone</label>
+  <input class="form-control" id="l-telephone" placeholder="+261 34 00 000 00" type="text" autocomplete="off"/>
+</div>
+<div style="flex:1">
+  <label class="form-label" for="l-ville">Ville</label>
+  <input class="form-control" id="l-ville" placeholder="Antananarivo" type="text" autocomplete="off"/>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-entreprise-adresse">Adresse de l'entreprise <span style="font-size:0.75rem;color:var(--text-secondary)">(optionnel)</span></label>
+<input class="form-control" id="l-entreprise-adresse" placeholder="Rue Ravoninahitriniarivo, Antananarivo" type="text" autocomplete="off"/>
+</div>
+<div class="form-group">
+<label class="form-label">Ton de la lettre</label>
+<div class="tabs" id="ton-tabs" style="margin-top:4px">
+<button class="tab-btn active" data-ton="formel" id="ton-formel"> Formel</button>
+<button class="tab-btn" data-ton="dynamique" id="ton-dynamique"> Dynamique</button>
+</div>
+</div>
+            <div style="display:flex;gap:10px;margin-top:10px">
+              <button class="btn btn-primary" id="btn-gen-lettre" style="flex:4"><i class="fa-solid fa-wand-magic-sparkles"></i> Générer ma lettre</button>
+              <button class="btn btn-secondary" id="btn-history-lettre-form" title="Mes archives" style="flex:1">
+                <i class="fa-solid fa-box-archive"></i>
+              </button>
+              <button class="btn btn-secondary" id="btn-reset-lettre" title="Réinitialiser le formulaire" style="flex:1">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+            </div>
+</div>
+<!-- Résultat -->
+<div class="h-full">
+<div class="glass-card p-4 h-full" id="lettre-placeholder" style="text-align:center;padding:3rem 2rem">
+<div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"><i class="fa-solid fa-envelope"></i></div>
+<h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Votre lettre apparaîtra ici</h3>
+<p class="text-secondary text-sm">Remplissez le formulaire et cliquez sur "Générer"</p>
+</div>
+<div class="glass-card p-4 h-full hidden" id="lettre-skeleton">
+<div class="skeleton-block">
+<div class="skeleton skeleton-line w-45"></div>
+<div class="skeleton skeleton-line w-90" style="margin-top:0.6rem"></div>
+<div class="skeleton skeleton-line w-90"></div>
+<div class="skeleton skeleton-line w-75"></div>
+<div class="skeleton skeleton-line w-90"></div>
+<div class="skeleton skeleton-line w-60"></div>
+</div>
+<p class="text-secondary text-sm text-center" style="margin-top:0.5rem"><i class="fa-solid fa-wand-magic-sparkles"></i> Rédaction de votre lettre en cours...</p>
+</div>
+<div class="hidden" id="lettre-result">
+<!-- Score -->
+<div class="glass-card p-4 mb-3" id="lettre-score-card">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+<h3 style="font-size:1rem;font-weight:700">Score de pertinence</h3>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-sm btn-success" id="btn-save-lettre-db" style="background:var(--teal); border:none"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+                  <button class="btn btn-sm btn-primary" onclick="downloadLettrePDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                  <button class="btn btn-sm btn-secondary" id="btn-copy-lettre" title="Copier"><i class="fa-solid fa-clipboard"></i></button>
+                </div>
+</div>
+<div style="display:flex;align-items:center;gap:2rem">
+<div id="lettre-score-ring"></div>
+<div id="lettre-score-detail" style="flex:1"></div>
+</div>
+</div>
+<!-- Lettre texte -->
+<div class="glass-card p-4 mb-3" id="lettre-text-card">
+<h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-file"></i> Lettre générée</h3>
+<div id="lettre-text" style="line-height:1.9;font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;font-family:'Georgia',serif;">
+</div>
+</div>
+<!-- Points forts -->
+<div class="glass-card p-4 mb-3" id="lettre-strengths" style="display:none"></div>
+<!-- Suggestions -->
+<div class="glass-card p-4" id="lettre-suggestions" style="display:none"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- ══ TAB: Corriger ════════════════════════════════════ -->
+<div class="tab-content" id="tab-correct-content">
+<div class="grid grid-2" style="gap:2rem">
+<div class="glass-card p-4 animate-fade-up h-full">
+<h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"> Correction de votre lettre</h2>
+<div class="form-group">
+<label class="form-label" for="lettre-to-correct">Collez votre lettre de motivation *</label>
+<textarea class="form-control" id="lettre-to-correct" placeholder="Collez ici votre lettre de motivation pour obtenir une correction complète...
+
+Madame, Monsieur,
+
+Je me permets de vous contacter afin de candidater au poste de..." rows="16"></textarea>
+</div>
+<button class="btn btn-primary btn-full" id="btn-correct-lettre"> Corriger ma lettre</button>
+</div>
+<div class="h-full">
+<div class="glass-card p-4 h-full" id="correct-placeholder" style="text-align:center;padding:3rem 2rem">
+<div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"></div>
+<h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Correction en attente</h3>
+<p class="text-secondary text-sm">Collez votre lettre et lancez la correction</p>
+</div>
+<div class="glass-card p-4 h-full hidden" id="correct-skeleton">
+<div class="skeleton-block">
+<div class="skeleton skeleton-line w-60"></div>
+<div class="skeleton skeleton-line w-90" style="margin-top:0.6rem"></div>
+<div class="skeleton skeleton-line w-75"></div>
+<div class="skeleton skeleton-line w-90"></div>
+</div>
+<p class="text-secondary text-sm text-center" style="margin-top:0.5rem"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyse de votre lettre en cours...</p>
+</div>
+<div class="hidden" id="correct-result"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<style>
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+        font-family: Georgia, serif;
+      }
+
+      .navbar,
+      .tabs,
+      #lettre-score-card,
+      #lettre-strengths,
+      #lettre-suggestions,
+      .page-header,
+      #bg-canvas,
+      .bg-mesh {
+        display: none !important;
+      }
+
+      #lettre-text {
+        color: #000;
+        font-size: 11pt;
+        line-height: 1.8;
+      }
+
+      #lettre-result {
+        display: block !important;
+      }
+    }
+  </style>
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fa-solid fa-clock-rotate-left"></i> Mes Archives</h2>
+        <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
+      </div>
+      <div id="history-list" style="max-height: 400px; overflow-y: auto; padding: 5px;">
+        <!-- Sera rempli par JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/ai.js" type="module"></script>
+  <script src="../js/particles.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    let selectedTon = 'formel';
+
+    // Tabs
+    document.querySelectorAll('#lettre-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#lettre-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab + '-content').classList.add('active');
+      });
+    });
+
+    // Ton selector
+    document.querySelectorAll('#ton-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('#ton-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedTon = btn.dataset.ton;
+      });
+    });
+
+    // Generate
+    document.getElementById('btn-gen-lettre').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-gen-lettre');
+      const cv = document.getElementById('l-cv').value.trim();
+      const offre = document.getElementById('l-offre').value.trim();
+      if (!cv || !offre) { showToast('Veuillez renseigner votre profil et l\'offre', 'warning'); return; }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Rédaction en cours...');
+        document.getElementById('lettre-placeholder').classList.add('hidden');
+        document.getElementById('lettre-result').classList.add('hidden');
+        document.getElementById('lettre-skeleton').classList.remove('hidden');
+        try {
+          const result = await window.AI.generateCoverLetter({
+            cv,
+            offre,
+            ton: selectedTon,
+            nom:               document.getElementById('l-nom').value.trim(),
+            adresse:           document.getElementById('l-adresse').value.trim(),
+            telephone:         document.getElementById('l-telephone').value.trim(),
+            ville:             document.getElementById('l-ville').value.trim(),
+            entreprise:        document.getElementById('l-entreprise').value.trim(),
+            entreprise_adresse:document.getElementById('l-entreprise-adresse').value.trim(),
+          });
+          displayLettre(result);
+          showToast('Lettre générée !', 'success');
+        } catch (e) {
+          showToast('Erreur : ' + e.message, 'error');
+          document.getElementById('lettre-skeleton').classList.add('hidden');
+          document.getElementById('lettre-placeholder').classList.remove('hidden');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    document.getElementById('btn-reset-lettre').addEventListener('click', () => {
+      ['l-cv', 'l-offre', 'l-entreprise', 'l-nom', 'l-adresse', 'l-telephone', 'l-ville', 'l-entreprise-adresse'].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.value = '';
+      });
+
+      // Remettre le nom du compte connecté
+      try {
+        const raw = localStorage.getItem(jmKey('profile'));
+        if (raw) {
+          const p = JSON.parse(raw);
+          const nomField = document.getElementById('l-nom');
+          if (nomField && p.nom) nomField.value = p.nom;
+        }
+      } catch(e) {}
+
+      selectedTon = 'formel';
+      document.querySelectorAll('#ton-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.ton === 'formel');
+      });
+
+      document.getElementById('lettre-result').classList.add('hidden');
+      document.getElementById('lettre-skeleton').classList.add('hidden');
+      document.getElementById('lettre-placeholder').classList.remove('hidden');
+      document.getElementById('lettre-score-ring').innerHTML = '';
+      document.getElementById('lettre-score-detail').innerHTML = '';
+      document.getElementById('lettre-text').textContent = '';
+      document.getElementById('lettre-strengths').style.display = 'none';
+      document.getElementById('lettre-strengths').innerHTML = '';
+      document.getElementById('lettre-suggestions').style.display = 'none';
+      document.getElementById('lettre-suggestions').innerHTML = '';
+      localStorage.removeItem(jmKey('last_lettre'));
+      window._lettreText = '';
+      showToast('Formulaire réinitialisé', 'success');
+    });
+
+    function displayLettre(data) {
+      // Sauvegarder pour persistance entre les pages
+      localStorage.setItem(jmKey('last_lettre'), JSON.stringify(data));
+      // Garder les données structurées (objet, corps, destinataire...) pour l'export PDF
+      window._lastLettreData = data;
+
+      document.getElementById('lettre-skeleton').classList.add('hidden');
+      document.getElementById('lettre-placeholder').classList.add('hidden');
+      document.getElementById('lettre-result').classList.remove('hidden');
+
+      const score = typeof data.score_pertinence === 'number' ? data.score_pertinence : 0;
+      const color = scoreColor(score);
+      document.getElementById('lettre-score-ring').innerHTML = createScoreRing(score, color, 90, 7);
+      document.getElementById('lettre-score-detail').innerHTML = `
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
+        <span class="text-secondary">Pertinence</span><span style="color:${color}">${score}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="l-pr1" style="width:0;background:${color}"></div></div>
+    </div>`;
+      setTimeout(() => {
+        const el = document.getElementById('l-pr1');
+        if (el) el.style.width = score + '%';
+      }, 200);
+
+      // Text
+      const lettre = data.lettre || data.raw || '';
+      document.getElementById('lettre-text').textContent = lettre;
+      window._lettreText = lettre;
+
+      // Copy button
+      document.getElementById('btn-copy-lettre').onclick = () =>
+        copyToClipboard(lettre, document.getElementById('btn-copy-lettre'));
+
+      // Points forts
+      const strengthsEl = document.getElementById('lettre-strengths');
+      if (data.points_forts?.length) {
+        strengthsEl.style.display = 'block';
+        strengthsEl.innerHTML = `
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light)"><i class="fa-solid fa-check"></i> Points forts de votre lettre</h3>
+      ${data.points_forts.map(p => `<div class="feedback-item positive"><span><i class="fa-solid fa-check"></i></span><span>${p}</span></div>`).join('')}`;
+      }
+
+      // Suggestions
+      const suggestionsEl = document.getElementById('lettre-suggestions');
+      if (data.suggestions?.length) {
+        suggestionsEl.style.display = 'block';
+        suggestionsEl.innerHTML = `
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Suggestions</h3>
+      ${data.suggestions.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${s}</span></div>`).join('')}`;
+      }
+    }
+
+    // Correct
+    document.getElementById('btn-correct-lettre').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-correct-lettre');
+      const text = document.getElementById('lettre-to-correct').value.trim();
+      if (!text) { showToast('Veuillez coller votre lettre', 'warning'); return; }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Correction en cours...');
+        document.getElementById('correct-placeholder').classList.add('hidden');
+        document.getElementById('correct-result').classList.add('hidden');
+        document.getElementById('correct-skeleton').classList.remove('hidden');
+        try {
+          const result = await window.AI.correctLetter(text);
+          displayCorrection(result);
+          showToast('Correction terminée !', 'success');
+        } catch (e) {
+          showToast('Erreur : ' + e.message, 'error');
+          document.getElementById('correct-skeleton').classList.add('hidden');
+          document.getElementById('correct-placeholder').classList.remove('hidden');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    function displayCorrection(data) {
+      // Sauvegarder pour persistance
+      localStorage.setItem(jmKey('last_lettre_correction'), JSON.stringify(data));
+      
+      document.getElementById('correct-skeleton').classList.add('hidden');
+      document.getElementById('correct-placeholder').classList.add('hidden');
+      const el = document.getElementById('correct-result');
+      el.classList.remove('hidden');
+      const score = typeof data.score === 'number' ? data.score : 0;
+      const color = scoreColor(score);
+      el.innerHTML = `
+    <div class="glass-card p-4 mb-3">
+      <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem">
+        ${createScoreRing(score, color, 80, 7)}
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:700">Qualité : ${score}/100</h3>
+          <p class="text-secondary text-sm">${score >= 80 ? 'Excellente lettre !' : 'Des améliorations ont été apportées.'}</p>
+        </div>
+      </div>
+    </div>
+
+    ${data.erreurs?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;color:#fca5a5;margin-bottom:1rem"><i class="fa-solid fa-circle"></i> Erreurs corrigées (${data.erreurs.length})</h3>
+      ${data.erreurs.map(e => `<div class="feedback-item critical"><span><i class="fa-solid fa-circle"></i></span><span>${e}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.suggestions_style?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;color:#fcd34d;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Suggestions stylistiques</h3>
+      ${data.suggestions_style.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${s}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.texte_corrige ? `
+    <div class="glass-card p-4">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h3 style="font-size:1rem;font-weight:700"><i class="fa-solid fa-check"></i> Version corrigée</h3>
+        <div style="display:flex;gap:8px">
+<button class="btn btn-sm btn-primary" id="btn-download-corrected" onclick="downloadLettre('lettre-corrige-content')"><i class="fa-solid fa-download"></i> Enregistrer</button>
+<button class="btn btn-sm btn-secondary" id="btn-copy-corrected"><i class="fa-solid fa-clipboard"></i> Copier</button>
+</div>
+      </div>
+      <div id="lettre-corrige-content" style="line-height:1.9;font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;font-family:'Georgia',serif;padding:1rem;background:rgba(20,184,166,0.05);border-radius:var(--radius-md);border:1px solid rgba(20,184,166,0.15)">${data.texte_corrige}</div>
+    </div>` : ''}`;
+
+      if (data.texte_corrige) {
+        document.getElementById('btn-copy-corrected').addEventListener('click', function () {
+          copyToClipboard(data.texte_corrige, this);
+        });
+      }
+    }
+
+    window.downloadLettre = function(elementId) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      const nom = document.getElementById('l-nom').value.trim() || 'Ma_Lettre';
+      
+      const opt = {
+        margin: [15, 15],
+        filename: nom.replace(/\s+/g, '_') + '_Lettre.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Style temporaire
+      const originalStyle = element.style.cssText;
+      element.style.background = '#fff';
+      element.style.color = '#000';
+      element.style.padding = '20px';
+      element.style.borderRadius = '0';
+      element.style.fontFamily = 'Georgia, serif';
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.style.cssText = originalStyle;
+      });
+    }
+
+    // Export PDF de la lettre générée : texte vectoriel natif jsPDF
+    // (pas de html2canvas => pas de flou, marges gauche/droite garanties,
+    // en-tête reconstruit à partir des données du formulaire/du profil,
+    // et non du texte libre de l'IA).
+    window.downloadLettrePDF = function () {
+      const data = window._lastLettreData;
+      if (!data) {
+        showToast('Générez d\'abord une lettre avant de l\'exporter.', 'warning');
+        return;
+      }
+      if (!window.jspdf) {
+        showToast('Erreur : librairie PDF non chargée.', 'error');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const marginL = 20;
+      const marginR = 20;
+      const contentW = pageWidth - marginL - marginR;
+      const rightX = pageWidth - marginR;
+
+      const profile = (typeof getStoredProfile === 'function') ? getStoredProfile() : {};
+      const nom       = (data.nom       || document.getElementById('l-nom')?.value       || '').trim();
+      const adresse   = (data.adresse   || document.getElementById('l-adresse')?.value   || '').trim();
+      const telephone = (data.telephone || document.getElementById('l-telephone')?.value || '').trim();
+      const email     = profile.email || '';
+      const titre     = profile.titre || '';
+      const date      = data.date || '';
+      const destLignes = (data.destinataire_lignes && data.destinataire_lignes.length)
+        ? data.destinataire_lignes
+        : ['Madame / Monsieur le Responsable', 'Recrutement', data.entreprise, data.entreprise_adresse].filter(Boolean);
+
+      doc.setTextColor(20, 20, 20);
+
+      // ---- Colonne gauche : expéditeur ----
+      let leftY = 20;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+      doc.text(nom || 'Prénom NOM', marginL, leftY);
+      leftY += 6;
+      if (titre) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+        doc.text(titre, marginL, leftY);
+        leftY += 7;
+      }
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+      [telephone, email, adresse].filter(Boolean).forEach(line => {
+        doc.text(line, marginL, leftY);
+        leftY += 5.5;
+      });
+
+      // ---- Colonne droite : date + destinataire ----
+      let rightY = 20;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+      doc.text(date, rightX, rightY, { align: 'right' });
+      rightY += 10;
+      destLignes.forEach((line, i) => {
+        doc.setFont('helvetica', i === 0 ? 'bold' : 'normal');
+        doc.text(String(line), rightX, rightY, { align: 'right' });
+        rightY += 5.5;
+      });
+
+      let y = Math.max(leftY, rightY) + 12;
+
+      // ---- Objet ----
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
+      const objetLabel = 'Objet : ';
+      doc.text(objetLabel, marginL, y);
+      const objetWidth = doc.getTextWidth(objetLabel);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Candidature au poste de ' + (data.objet || ''), marginL + objetWidth, y);
+      y += 12;
+
+      // ---- Corps ----
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
+      const corps = data.corps || data.lettre || '';
+      const paragraphs = corps.split(/\n\s*\n/).filter(p => p.trim());
+      paragraphs.forEach(paragraph => {
+        const lines = doc.splitTextToSize(paragraph.trim(), contentW);
+        lines.forEach(line => {
+          if (y > pageHeight - 25) { doc.addPage(); y = 20; }
+          doc.text(line, marginL, y);
+          y += 5.8;
+        });
+        y += 4;
+      });
+
+      // ---- Signature ----
+      y += 6;
+      if (y > pageHeight - 25) { doc.addPage(); y = 20; }
+      doc.setFont('helvetica', 'bold');
+      doc.text(nom || '', rightX, y, { align: 'right' });
+
+      const filename = (nom || 'Ma_Lettre').replace(/\s+/g, '_') + '_Lettre.pdf';
+      doc.save(filename);
+    };
+
+    // Recharger la dernière lettre au chargement de la page pour persistance
+    const lastLettre = localStorage.getItem(jmKey('last_lettre'));
+    if (lastLettre) {
+      try {
+        const parsedLettre = JSON.parse(lastLettre);
+        window._lastLettreData = parsedLettre;
+        displayLettre(parsedLettre);
+      } catch (e) {
+        localStorage.removeItem(jmKey('last_lettre'));
+      }
+    }
+
+    const lastCorrection = localStorage.getItem(jmKey('last_lettre_correction'));
+    if (lastCorrection) {
+      try {
+        displayCorrection(JSON.parse(lastCorrection));
+      } catch (e) {
+        localStorage.removeItem(jmKey('last_lettre_correction'));
+      }
+    }
+
+    // ✅ Auto-remplissage du nom depuis le profil de l'utilisateur connecté
+    // On attend que checkAuthStatus() (dans utils.js) ait défini jm_current_user
+    (function autoFillNomFromProfile() {
+      function doFill() {
+        try {
+          // Utiliser jmKey() — lit le profil préfixé par user_id
+          const raw = localStorage.getItem(jmKey('profile'));
+          if (!raw) return;
+          const p = JSON.parse(raw);
+          const nomField = document.getElementById('l-nom');
+          if (nomField && p.nom && !nomField.value) {
+            nomField.value = p.nom;
+          }
+        } catch(e) { /* profil invalide, on ignore */ }
+      }
+      // Lancer immédiatement (cas où utils.js a déjà tout chargé)
+      doFill();
+      // Et aussi après que checkAuthStatus ait fini (petit délai réseau)
+      setTimeout(doFill, 1200);
+    })();
+
+    /* ── Historique Lettres ── */
+    const getHistoryModal = () => document.getElementById('modal-history');
+    const getHistoryList = () => document.getElementById('history-list');
+
+    // Bouton d'archives (toujours visible)
+    document.getElementById('btn-history-lettre-form').addEventListener('click', (e) => {
+      e.preventDefault();
+      openHistoryModal();
+    });
+
+    // Sauvegarde manuelle
+    document.getElementById('btn-save-lettre-db').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-save-lettre-db');
+      const content = document.getElementById('lettre-text').innerText;
+      const offer = document.getElementById('l-offre').value || "Lettre de motivation";
+      const score = parseInt(document.getElementById('lettre-score-ring').innerText) || 0;
+
+      setLoading(btn, true, 'Enregistrement...');
+      try {
+        const response = await fetch(`${window.API_BASE}/lettre/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, offer, score }),
+          credentials: 'include'
+        });
+        const data = await response.json();
+        if (data.success) {
+          showToast('Lettre enregistrée dans vos archives !', 'success');
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (e) {
+        showToast('Erreur : ' + e.message, 'error');
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    window.closeHistoryModal = function() {
+      getHistoryModal().classList.remove('active');
+    }
+
+    window.openHistoryModal = async function () {
+      const modal = getHistoryModal();
+      const list = getHistoryList();
+      modal.classList.add('active');
+      list.innerHTML = `
+        <div class="text-center p-5">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:var(--purple-light); margin-bottom:1rem"></i>
+          <p class="text-secondary">Récupération de vos archives...</p>
+        </div>`;
+      
+      try {
+        const response = await fetch(`${window.API_BASE}/lettre/list`, { credentials: 'include' });
+        const data = await response.json();
+        
+        if (!data.success) throw new Error(data.error);
+        
+        if (!data.history || data.history.length === 0) {
+          list.innerHTML = `
+            <div class="text-center p-5">
+              <i class="fa-solid fa-box-open" style="font-size:3rem; color:var(--glass-border); margin-bottom:1rem"></i>
+              <p class="text-secondary">Aucune lettre enregistrée pour le moment.</p>
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = data.history.map(l => `
+          <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default; border-color:rgba(255,255,255,0.05)">
+            <div style="overflow:hidden">
+              <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${l.job_offer}</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary)">
+                ${new Date(l.created_at).toLocaleDateString('fr-FR')} • Score: ${l.score}%
+              </div>
+            </div>
+            <div style="display:flex;gap:8px; margin-left:15px">
+              <button class="btn btn-sm btn-primary" onclick="loadSavedLettre(${l.id})" title="Ouvrir">
+                <i class="fa-solid fa-folder-open"></i>
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="deleteSavedLettre(${l.id})" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Supprimer">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${e.message}</p>`;
+      }
+    }
+
+    window.loadSavedLettre = async function (id) {
+      try {
+        const response = await fetch(`${window.API_BASE}/lettre/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          displayLettre({
+            lettre: data.data.content,
+            score_pertinence: data.data.score
+          });
+          closeHistoryModal();
+          showToast('Lettre chargée depuis l\'historique', 'success');
+        }
+      } catch (e) {
+        showToast('Erreur lors du chargement', 'error');
+      }
+    }
+
+    window.deleteSavedLettre = async function (id) {
+      if (!confirm('Supprimer cette lettre définitivement ?')) return;
+      try {
+        const response = await fetch(`${window.API_BASE}/lettre/${id}`, { 
+          method: 'POST', // On utilise POST pour delete par convention de l'API existante ou GET ?
+          credentials: 'include' 
+        });
+        // En fait lettre.php n'utilise pas POST pour delete, c'est un paramètre GET ?
+        // Vérifions lettre.php... ah, if action===delete, il prend $_GET['id'].
+        // Mais la méthode doit être POST pour entrer dans le if ($_SERVER['REQUEST_METHOD'] === 'POST').
+        const data = await response.json();
+        if (data.success) {
+          showToast('Lettre supprimée', 'success');
+          openHistoryModal();
+        }
+      } catch (e) {
+        showToast('Erreur lors de la suppression', 'error');
+      }
+    }
+  </script>
+
+  <!-- Import CV depuis l'appareil (PDF.js + Tesseract.js fallback OCR) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    async function pdfPageToCanvas(page, scale = 2) {
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      return canvas;
+    }
+
+    async function importCVFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = '';
+
+      const status = document.getElementById('cv-import-status');
+      const msg    = document.getElementById('cv-import-msg');
+      status.style.display = 'block';
+      msg.textContent = 'Lecture du fichier…';
+
+      try {
+        let text = '';
+
+        if (file.type === 'text/plain') {
+          text = await file.text();
+
+        } else if (file.name.match(/\.docx?$/i)) {
+          msg.textContent = 'Extraction du texte Word…';
+          const buf = await file.arrayBuffer();
+          if (typeof mammoth !== 'undefined') {
+            const result = await mammoth.extractRawText({ arrayBuffer: buf });
+            text = result.value;
+          } else {
+            showToast('Pour les fichiers Word, utilisez de préférence un PDF.', 'warning');
+            status.style.display = 'none';
+            return;
+          }
+
+        } else if (file.type === 'application/pdf' || file.name.match(/\.pdf$/i)) {
+          msg.textContent = 'Extraction du texte PDF…';
+          const buf = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+
+          // Essai extraction texte natif
+          const pages = [];
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            pages.push(content.items.map(it => it.str).join(' '));
+          }
+          text = pages.join('\n');
+
+          // Si texte vide → PDF scanné → OCR Tesseract sur toutes les pages
+          if (!text.trim()) {
+            msg.textContent = 'PDF scanné détecté — OCR en cours (patience…)';
+            const worker = await Tesseract.createWorker('fra+eng');
+            const ocrPages = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+              msg.textContent = `OCR page ${i}/${pdf.numPages}…`;
+              const page = await pdf.getPage(i);
+              const canvas = await pdfPageToCanvas(page, 2);
+              const { data: { text: ocrText } } = await worker.recognize(canvas);
+              ocrPages.push(ocrText);
+            }
+            await worker.terminate();
+            text = ocrPages.join('\n');
+          }
+
+        } else {
+          showToast('Format non supporté. Utilisez PDF, DOCX ou TXT.', 'warning');
+          status.style.display = 'none';
+          return;
+        }
+
+        text = text.replace(/\s+/g, ' ').trim();
+        if (!text) {
+          showToast('Impossible d\'extraire le texte de ce fichier.', 'error');
+        } else {
+          document.getElementById('l-cv').value = text;
+          showToast('CV importé avec succès ✓', 'success');
+        }
+
+      } catch (err) {
+        console.error('Import CV error:', err);
+        showToast('Erreur lors de l\'import : ' + err.message, 'error');
+      } finally {
+        status.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

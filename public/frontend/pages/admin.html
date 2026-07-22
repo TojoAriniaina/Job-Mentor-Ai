@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Administration — My Job Mentor</title>
+  <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
+  <meta content="Panneau d'administration : gestion des utilisateurs et statistiques d'usage."
+    name="description" />
+  <link href="../css/style.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    /* ── Stats ─────────────────────────────────────────────── */
+    .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .admin-stat-card { padding: 1.25rem; display: flex; align-items: flex-start; gap: 0.9rem; }
+    .admin-stat-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .admin-stat-value { font-size: 1.6rem; font-weight: 800; line-height: 1.15; }
+    .admin-stat-label { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
+
+    /* ── Répartition d'usage (signature visuelle) ────────────── */
+    .usage-bar-wrap { margin-bottom: 1.75rem; }
+    .usage-bar-title { font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
+    .usage-bar { display: flex; width: 100%; height: 10px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.05); margin-bottom: 0.85rem; }
+    .usage-bar-seg { height: 100%; transition: width .4s ease; }
+    .usage-legend { display: flex; flex-wrap: wrap; gap: 1.1rem; font-size: 0.8rem; color: var(--text-secondary); }
+    .usage-legend-item { display: flex; align-items: center; gap: 6px; }
+    .usage-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Barre d'outils table ─────────────────────────────────── */
+    .admin-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem; }
+    .admin-search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .admin-search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.85rem; }
+    .admin-search-wrap input { width: 100%; padding: 0.55rem 0.75rem 0.55rem 2.1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem; }
+    .admin-search-wrap input:focus { outline: none; border-color: var(--purple-light); }
+    .admin-filter-select { padding: 0.55rem 0.7rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.82rem; cursor: pointer; }
+    .admin-refresh-btn { padding: 0.55rem 0.8rem; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary); border-radius: var(--radius-sm); font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; }
+    .admin-refresh-btn:hover { border-color: var(--glass-border-hov); }
+    .admin-refresh-btn.spinning i { animation: adminSpin .6s linear infinite; }
+    @keyframes adminSpin { to { transform: rotate(360deg); } }
+    .admin-count-badge { font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap; }
+
+    /* ── Table ─────────────────────────────────────────────── */
+    .admin-table-wrap { overflow-x: auto; }
+    table.admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    table.admin-table th, table.admin-table td { padding: 0.7rem 0.85rem; text-align: left; border-bottom: 1px solid var(--glass-border); white-space: nowrap; }
+    table.admin-table th { color: var(--text-secondary); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    table.admin-table tbody tr { transition: background .12s; }
+    table.admin-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    table.admin-table tr:last-child td { border-bottom: none; }
+
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; color: #fff; }
+    .user-name-col .user-email-sub { font-size: 0.76rem; color: var(--text-secondary); font-weight: 400; }
+
+    .role-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .role-pill.admin { background: rgba(99,102,241,0.14); color: var(--purple-light); }
+    .role-pill.user { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .status-dot.active { background: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    .status-dot.inactive { background: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,0.12); }
+
+    .admin-actions { display: flex; gap: 6px; }
+    .admin-actions button { border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary); border-radius: var(--radius-sm); width: 30px; height: 30px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: all .15s; }
+    .admin-actions button:hover { border-color: var(--glass-border-hov); transform: translateY(-1px); }
+    .admin-actions button.danger:hover { border-color: var(--red); color: var(--red); }
+
+    .admin-empty-row td { text-align: center; padding: 2.5rem 1rem !important; color: var(--text-secondary); }
+    .admin-empty-row i { font-size: 1.6rem; display: block; margin-bottom: 0.6rem; opacity: 0.6; }
+
+    /* ── Modale de confirmation ───────────────────────────────── */
+    .admin-modal-overlay { position: fixed; inset: 0; background: rgba(5,5,8,0.7); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 999; padding: 1rem; }
+    .admin-modal-overlay.show { display: flex; }
+    .admin-modal { max-width: 380px; width: 100%; padding: 1.5rem; text-align: center; }
+    .admin-modal i.modal-icon { font-size: 1.6rem; color: var(--red); margin-bottom: 0.75rem; display: block; }
+    .admin-modal p { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.25rem; line-height: 1.5; }
+    .admin-modal-actions { display: flex; gap: 0.6rem; }
+    .admin-modal-actions button { flex: 1; padding: 0.65rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid var(--glass-border); }
+    .admin-modal-cancel { background: transparent; color: var(--text-primary); }
+    .admin-modal-confirm { background: var(--red); color: #fff; border-color: var(--red); }
+
+    .admin-guard { display: none; }
+  </style>
+</head>
+
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="bg-mesh"></div>
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="nav-logo" href="../index.html">
+      <img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+      <span class="nav-logo-brand">AI&amp;DEV Academy</span>
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
+      <li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file"></i></span> CV</a></li>
+      <li><a href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope"></i></span> Lettre</a></li>
+      <li><a href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-microphone"></i></span> Entretien</a></li>
+      <li><a href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
+    </ul>
+    <div class="nav-cta">
+      <button class="btn-nav btn-nav-ghost" id="btn-config"><i class="fa-solid fa-gear"></i> API</button>
+      <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <div class="app-wrapper">
+    <!-- Page Header -->
+    <div class="page-header" style="background: linear-gradient(180deg, rgba(10,10,13,0.7) 0%, rgba(10,10,13,0.97) 100%);">
+      <div class="container">
+        <span class="badge badge-purple animate-fade-up"><i class="fa-solid fa-shield-halved"></i> Administration</span>
+        <h1 class="page-title animate-fade-up delay-1">
+          Panneau d'<span class="gradient-text-purple">administration</span>
+        </h1>
+        <p class="page-subtitle animate-fade-up delay-2">
+          Gestion des utilisateurs et vue d'ensemble de l'usage de la plateforme.
+        </p>
+      </div>
+    </div>
+
+    <div class="container" style="padding-bottom:80px">
+
+      <!-- Zone visible uniquement si non-admin -->
+      <div class="glass-card p-4 admin-guard" id="admin-denied" style="text-align:center">
+        <i class="fa-solid fa-lock" style="font-size:1.8rem;color:var(--text-secondary);margin-bottom:0.75rem;display:block"></i>
+        <p style="color:var(--text-secondary)">Cette page est réservée aux administrateurs.</p>
+      </div>
+
+      <div id="admin-content" style="display:none">
+        <!-- Stats -->
+        <div class="admin-stats" id="admin-stats"></div>
+
+        <!-- Répartition d'usage par module -->
+        <div class="glass-card p-4 animate-fade-up usage-bar-wrap">
+          <div class="usage-bar-title">Répartition de l'usage par module</div>
+          <div class="usage-bar" id="usage-bar"></div>
+          <div class="usage-legend" id="usage-legend"></div>
+        </div>
+
+        <!-- Table utilisateurs -->
+        <div class="glass-card p-4 animate-fade-up">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.1rem">
+            <h2 style="font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px;margin:0">
+              <i class="fa-solid fa-users"></i> Utilisateurs
+            </h2>
+            <span class="admin-count-badge" id="admin-count-badge"></span>
+          </div>
+
+          <div class="admin-toolbar">
+            <div class="admin-search-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="admin-search" placeholder="Rechercher par nom ou email..." />
+            </div>
+            <select class="admin-filter-select" id="admin-filter-role">
+              <option value="">Tous les rôles</option>
+              <option value="admin">Admin</option>
+              <option value="user">Utilisateur</option>
+            </select>
+            <select class="admin-filter-select" id="admin-filter-status">
+              <option value="">Tous les statuts</option>
+              <option value="active">Actifs</option>
+              <option value="inactive">Désactivés</option>
+            </select>
+            <button class="admin-refresh-btn" id="admin-refresh-btn" title="Actualiser">
+              <i class="fa-solid fa-rotate"></i> Actualiser
+            </button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table" id="admin-users-table">
+              <thead>
+                <tr>
+                  <th>Utilisateur</th>
+                  <th>Secteur</th>
+                  <th>Rôle</th>
+                  <th>Statut</th>
+                  <th>Inscrit le</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-tbody">
+                <tr><td colspan="6" style="color:var(--text-secondary)">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modale de confirmation (suppression) -->
+  <div class="admin-modal-overlay" id="admin-confirm-overlay">
+    <div class="glass-card admin-modal">
+      <i class="fa-solid fa-triangle-exclamation modal-icon"></i>
+      <h3 style="font-weight:700;margin-bottom:0.5rem" id="admin-confirm-title">Supprimer ce compte ?</h3>
+      <p id="admin-confirm-text">Cette action est irréversible.</p>
+      <div class="admin-modal-actions">
+        <button class="admin-modal-cancel" id="admin-confirm-cancel">Annuler</button>
+        <button class="admin-modal-confirm" id="admin-confirm-ok">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/particles.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+
+</html>

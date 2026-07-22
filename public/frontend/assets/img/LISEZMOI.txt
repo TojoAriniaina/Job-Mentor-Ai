@@ -1,0 +1,10 @@
+Ce dossier doit contenir 5 photos a telecharger manuellement (liens dans le chat),
+puis renommees exactement comme indique ci-dessous :
+
+1. hero-accueil.jpg      -> page d'accueil (index.html)
+2. cv-header.jpg         -> module CV (pages/cv.html)
+3. lettre-header.jpg     -> module Lettre (pages/lettre.html)
+4. entretien-header.jpg  -> module Entretien (pages/entretien.html)
+5. oral-header.jpg       -> module Oral (pages/oral.html)
+
+Une fois les 5 fichiers places ici avec ces noms exacts, le site les affichera automatiquement.

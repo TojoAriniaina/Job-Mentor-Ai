@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Connexion — My Job Mentor</title>
+  <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
+<meta content="Connectez-vous pour sauvegarder vos CV, lettres de motivation et simulations d'entretien." name="description"/>
+<link href="../css/style.css" rel="stylesheet"/>
+<style>
+    .auth-container {
+      max-width: 440px;
+      margin: 0 auto;
+    }
+    #register-card {
+      max-width: 640px;
+    }
+    .auth-container:has(#register-card:not(.hidden)) {
+      max-width: 660px;
+    }
+    @media (max-width: 560px) {
+      #register-card .form-group { margin-bottom: 0.6rem; }
+      #register-card [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    }
+
+    /* ═══════════════ ÉCRAN D'ACCUEIL (intro) ═══════════════ */
+    .auth-intro {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .auth-intro.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .auth-intro-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+    }
+    .auth-intro-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 35%, rgba(99,102,241,0.22), transparent),
+        linear-gradient(180deg, rgba(8,8,11,0.35) 0%, rgba(8,8,11,0.92) 100%);
+    }
+    .auth-intro-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 560px;
+      padding: 2rem;
+      animation: introUp 0.7s ease-out;
+    }
+    @keyframes introUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .auth-intro-content .nav-logo {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 3rem;
+    }
+    .auth-intro-content .nav-logo-img {
+      height: 76px;
+      filter:
+        drop-shadow(0 0 2px rgba(0,0,0,0.95))
+        drop-shadow(0 0 6px rgba(0,0,0,0.9))
+        drop-shadow(0 0 16px rgba(0,0,0,0.75))
+        drop-shadow(0 4px 14px rgba(0,0,0,0.6));
+    }
+    .auth-intro-content .nav-logo-brand {
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+      opacity: 0.9;
+    }
+    .auth-intro-content h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(2rem, 4.5vw, 2.9rem);
+      font-weight: 700;
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.35);
+    }
+    .auth-intro-content p {
+      color: rgba(255,255,255,0.78);
+      font-size: 1.05rem;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+    .auth-intro-actions {
+      display: flex;
+      gap: 0.85rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .auth-intro-actions .btn {
+      padding: 0.9rem 1.9rem;
+    }
+
+    /* ═══════════════ SPLIT-SCREEN (formulaire) ═══════════════ */
+    .auth-page-layout {
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      min-height: 100vh;
+      width: 100%;
+      opacity: 0;
+      transform: scale(0.99);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .auth-page-layout.is-visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .auth-decor-panel {
+      display: none;
+      position: relative;
+      flex: 1 1 46%;
+      max-width: 640px;
+      overflow: hidden;
+    }
+    .auth-decor-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 18%;
+    }
+    .auth-decor-photo-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.15) 30%, rgba(10,10,13,0.92) 100%);
+    }
+    .auth-decor-logo {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 2.25rem 2.5rem;
+    }
+    .auth-decor-logo .nav-logo-brand {
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+      opacity: 0.9;
+    }
+    .auth-decor-logo .nav-logo-img {
+      height: 58px;
+      filter:
+        drop-shadow(0 0 2px rgba(0,0,0,0.95))
+        drop-shadow(0 0 5px rgba(0,0,0,0.9))
+        drop-shadow(0 0 12px rgba(0,0,0,0.7))
+        drop-shadow(0 4px 14px rgba(0,0,0,0.6));
+    }
+    .auth-decor-quote {
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+      padding: 0 2.5rem 3rem;
+    }
+    .auth-decor-quote p {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      line-height: 1.5;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    }
+    .auth-form-side {
+      flex: 1 1 54%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+      position: relative;
+    }
+    .auth-back-link {
+      position: absolute;
+      top: 1.75rem;
+      right: 1.75rem;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .auth-back-link:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.08);
+    }
+    @media (min-width: 992px) {
+      .auth-decor-panel {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  </style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/></head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="bg-mesh"></div>
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ═══════════════ ÉCRAN D'ACCUEIL ═══════════════ -->
+<div class="auth-intro" id="auth-intro">
+  <img src="../assets/img/oral-header.jpg" alt="" class="auth-intro-photo"/>
+  <div class="auth-intro-overlay"></div>
+  <div class="auth-intro-content">
+    <a href="../index.html" class="nav-logo">
+      <img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+      <span class="nav-logo-brand">AI&amp;DEV Academy</span>
+    </a>
+    <h1>Préparez-vous à<br/><span class="gradient-text-teal">décrocher ce poste</span></h1>
+    <p>Connectez-vous pour reprendre votre CV, votre lettre ou votre prochaine simulation d'entretien.</p>
+    <div class="auth-intro-actions">
+      <button class="btn btn-primary btn-lg" id="btn-show-login"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
+      <button class="btn btn-secondary btn-lg" id="btn-show-register"><i class="fa-solid fa-user-plus"></i> Créer un compte</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-wrapper">
+<div class="auth-page-layout" id="auth-page-layout">
+<button class="auth-back-link" id="btn-back-intro"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+<div class="auth-decor-panel">
+  <img src="../assets/img/oral-header.jpg" alt="" class="auth-decor-photo"/>
+  <div class="auth-decor-photo-overlay"></div>
+
+  <a href="../index.html" class="nav-logo auth-decor-logo">
+    <img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+    <span class="nav-logo-brand">AI&amp;DEV Academy</span>
+  </a>
+  <div class="auth-decor-quote">
+    <p>« Décrochez l'entretien de vos rêves, accompagné par l'IA à chaque étape. »</p>
+  </div>
+</div>
+<div class="auth-form-side">
+<div class="container auth-container">
+<!-- LOGIN -->
+<div class="glass-card p-4 animate-fade-up" id="login-card">
+<div class="text-center mb-4">
+<div class="icon-box icon-box-lg icon-purple" style="margin:0 auto 1rem" id="login-icon-box"><i class="fa-solid fa-user-lock" id="login-icon"></i></div>
+<h1 style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800" id="login-title">Bienvenue</h1>
+<p class="text-secondary text-sm" id="login-subtitle">Connectez-vous pour retrouver vos données</p>
+</div>
+<div class="tabs" id="login-mode-tabs" style="margin-bottom:1.5rem">
+  <button type="button" class="tab-btn active" id="tab-login-user" onclick="setLoginMode('user')">
+    <i class="fa-solid fa-user"></i> Utilisateur
+  </button>
+  <button type="button" class="tab-btn" id="tab-login-admin" onclick="setLoginMode('admin')">
+    <i class="fa-solid fa-shield-halved"></i> Administrateur
+  </button>
+</div>
+<div class="form-group">
+<!-- ✅ FIX: for="login-email" associé à id="login-email" -->
+<label class="form-label" for="login-email">Adresse email</label>
+<input class="form-control" id="login-email" name="login-email" autocomplete="off" placeholder="marie@exemple.com" type="email"/>
+</div>
+<div class="form-group mb-4">
+  <label class="form-label" for="login-password">Mot de passe</label>
+  <div style="position:relative">
+    <input class="form-control" id="login-password" name="login-password" autocomplete="off"
+           placeholder="••••••••" type="password" 
+           style="padding-right:44px"/>
+    <button type="button" onclick="togglePassword('login-password', this)"
+      style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+             background:none;border:none;cursor:pointer;color:var(--text-secondary);
+             font-size:1rem;padding:4px;transition:color 0.2s"
+      title="Afficher/Masquer">
+      <i class="fa-solid fa-eye" id="eye-login"></i>
+    </button>
+  </div>
+</div>
+<button class="btn btn-primary btn-full mb-3" id="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
+<div class="text-center text-sm text-secondary">
+          Pas encore de compte ? <a href="#" onclick="toggleAuth('register')" style="color:var(--blue-light)">S'inscrire</a>
+<br/><br/>
+<a href="#" onclick="toggleAuth('reset')" style="color:var(--purple-light)">Mot de passe oublié ?</a>
+</div>
+</div>
+<!-- REGISTER -->
+<div class="glass-card p-4 animate-fade-up hidden" id="register-card">
+
+  <!-- Photo + titre en haut au centre -->
+  <div class="text-center mb-4">
+    <!-- Zone photo cliquable qui remplace l'icône -->
+    <div style="position:relative;display:inline-block;margin:0 auto 1rem">
+      <input type="file" id="reg-photo" accept="image/*" style="display:none" onchange="previewRegPhoto(this)"/>
+      <!-- Avatar par défaut (icône) -->
+      <div id="reg-avatar-default" onclick="document.getElementById('reg-photo').click()" style="
+        width:80px;height:80px;border-radius:50%;
+        background:linear-gradient(135deg,var(--teal),var(--purple));
+        display:flex;align-items:center;justify-content:center;
+        cursor:pointer;margin:0 auto;
+        border:3px solid transparent;
+        box-shadow:0 0 0 3px rgba(20,184,166,0.3);
+        transition:all 0.25s;font-size:2rem;color:#fff;
+      " onmouseover="this.style.boxShadow='0 0 0 4px rgba(20,184,166,0.6)'" onmouseout="this.style.boxShadow='0 0 0 3px rgba(20,184,166,0.3)'">
+        <i class="fa-solid fa-user-plus"></i>
+      </div>
+      <!-- Avatar avec photo -->
+      <img id="reg-photo-preview" src="" alt="Photo"
+        onclick="document.getElementById('reg-photo').click()"
+        style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;
+               border:3px solid var(--teal-light);cursor:pointer;
+               box-shadow:0 0 0 3px rgba(20,184,166,0.3)"/>
+      <!-- Petit badge caméra -->
+      <span onclick="document.getElementById('reg-photo').click()" style="
+        position:absolute;bottom:2px;right:2px;
+        width:24px;height:24px;border-radius:50%;
+        background:var(--teal);color:#fff;
+        display:flex;align-items:center;justify-content:center;
+        font-size:0.65rem;cursor:pointer;
+        border:2px solid var(--bg-primary, #0f172a);
+      "><i class="fa-solid fa-camera"></i></span>
+    </div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:1.7rem;font-weight:800">Créer un compte</h1>
+    <p class="text-secondary text-sm">Préparez vos entretiens avec l'IA</p>
+    <!-- Bouton retirer photo (affiché seulement si photo choisie) -->
+    <button id="reg-remove-photo-btn" type="button" onclick="removeRegPhoto()"
+      style="display:none;background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.72rem;margin-top:2px">
+      ✕ Retirer la photo
+    </button>
+  </div>
+
+  <!-- Grille 2 colonnes : 3 champs à gauche, 3 à droite -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+
+    <!-- COLONNE GAUCHE -->
+    <div>
+      <div class="form-group">
+        <label class="form-label" for="reg-name">Prénom &amp; Nom *</label>
+        <input class="form-control" id="reg-name" name="name" autocomplete="name" placeholder="Marie Dupont" type="text"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reg-email">Adresse email *</label>
+        <input class="form-control" id="reg-email" name="email" autocomplete="email" placeholder="marie@exemple.com" type="email"/>
+      </div>
+      <div class="form-group mb-0">
+        <label class="form-label" for="reg-password">Mot de passe *</label>
+        <div style="position:relative">
+          <input class="form-control" id="reg-password" name="new-password" autocomplete="new-password" placeholder="••••••••" type="password" style="padding-right:40px"/>
+          <button type="button" onclick="togglePassword('reg-password', this)"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.9rem;padding:4px">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLONNE DROITE -->
+    <div>
+      <div class="form-group">
+        <label class="form-label" for="reg-titre">Titre professionnel *</label>
+        <input class="form-control" id="reg-titre" name="organization-title" autocomplete="organization-title" placeholder="Ex : Développeur, Manager…" type="text"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reg-phone">Téléphone</label>
+        <input class="form-control" id="reg-phone" name="tel" autocomplete="tel" placeholder="+261 34 00 000 00" type="tel"/>
+      </div>
+      <div class="form-group mb-0">
+        <label class="form-label" for="reg-secteur">Secteur d'activité</label>
+        <select class="form-control" id="reg-secteur">
+          <option value="">— Choisir —</option>
+          <option value="tech">Informatique / Tech</option>
+          <option value="finance">Finance / Banque</option>
+          <option value="sante">Santé</option>
+          <option value="marketing">Marketing / Com.</option>
+          <option value="rh">Ressources Humaines</option>
+          <option value="ingenierie">Ingénierie</option>
+          <option value="conseil">Conseil / Consulting</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouton S'inscrire centré en bas -->
+  <div style="text-align:center;margin-top:1.25rem">
+    <button class="btn btn-teal" id="btn-register" style="min-width:220px;padding:0.7rem 2.5rem;font-size:1rem">
+      <i class="fa-solid fa-pen"></i> S'inscrire
+    </button>
+    <p class="text-center text-sm text-secondary" style="margin-top:0.75rem">
+      Déjà un compte ? <a href="#" onclick="toggleAuth('login')" style="color:var(--teal-light)">Se connecter</a>
+    </p>
+  </div>
+</div>
+<!-- RESET PASSWORD -->
+<div class="glass-card p-4 animate-fade-up hidden" id="reset-card">
+<div class="text-center mb-4">
+<div class="icon-box icon-box-lg icon-purple" style="margin:0 auto 1rem"><i class="fa-solid fa-key"></i></div>
+<h1 style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800">Réinitialiser</h1>
+<p class="text-secondary text-sm" id="reset-subtitle">Entrez votre adresse email pour recevoir un code</p>
+</div>
+
+<!-- Étape 1 : email -->
+<div id="reset-step-1">
+  <div class="form-group mb-4">
+    <label class="form-label" for="reset-email">Adresse email</label>
+    <input class="form-control" id="reset-email" name="email" autocomplete="email" placeholder="marie@exemple.com" type="email"/>
+  </div>
+  <button class="btn btn-primary btn-full mb-3" id="btn-request-reset">
+    <i class="fa-solid fa-paper-plane"></i> Envoyer le code
+  </button>
+</div>
+
+<!-- Étape 2 : code + nouveau mot de passe (masqué au départ) -->
+<div id="reset-step-2" style="display:none">
+  <div class="form-group">
+    <label class="form-label" for="reset-code">Code de vérification (6 chiffres)</label>
+    <input class="form-control" id="reset-code" name="reset-code" autocomplete="one-time-code"
+           placeholder="123456" type="text" maxlength="6" inputmode="numeric"/>
+  </div>
+  <div class="form-group mb-4">
+    <label class="form-label" for="reset-new-password">Nouveau mot de passe</label>
+    <div style="position:relative">
+      <input class="form-control" id="reset-new-password" name="new-password" autocomplete="new-password"
+             placeholder="••••••••" type="password"
+             style="padding-right:44px"/>
+      <button type="button" onclick="togglePassword('reset-new-password', this)"
+        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+               background:none;border:none;cursor:pointer;color:var(--text-secondary);
+               font-size:1rem;padding:4px">
+        <i class="fa-solid fa-eye"></i>
+      </button>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-full mb-3" id="btn-reset">
+    <i class="fa-solid fa-rotate"></i> Mettre à jour
+  </button>
+</div>
+
+<div class="text-center text-sm text-secondary">
+<a href="#" onclick="toggleAuth('login')" style="color:var(--purple-light)">Retour à la connexion</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="../js/config.js"></script>
+<script src="../js/ai.js" type="module"></script>
+<script src="../js/particles.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+    /* ── Révélation du formulaire depuis l'écran d'accueil ── */
+    (function() {
+      const intro = document.getElementById('auth-intro');
+      const layout = document.getElementById('auth-page-layout');
+      const btnLogin = document.getElementById('btn-show-login');
+      const btnRegister = document.getElementById('btn-show-register');
+      const btnBack = document.getElementById('btn-back-intro');
+
+      function reveal(targetForm) {
+        intro.classList.add('is-hidden');
+        layout.classList.add('is-visible');
+        if (targetForm && typeof toggleAuth === 'function') {
+          toggleAuth(targetForm);
+        }
+      }
+      btnLogin && btnLogin.addEventListener('click', () => reveal('login'));
+      btnRegister && btnRegister.addEventListener('click', () => reveal('register'));
+      btnBack && btnBack.addEventListener('click', () => {
+        layout.classList.remove('is-visible');
+        intro.classList.remove('is-hidden');
+      });
+    })();
+</script>
+<script>
+    function getLoginStoredProfile() {
+      try {
+        // Utiliser jmKey si disponible (utils.js chargé), sinon fallback
+        if (typeof jmKey === 'function') {
+          return JSON.parse(localStorage.getItem(jmKey('profile')) || '{}');
+        }
+        return JSON.parse(localStorage.getItem('jm_profile') || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function saveLoginProfile(user, profile, fallbackProfile = {}) {
+      // ── Détection changement d'utilisateur : purge de l'ancien ──
+      const previousUser = JSON.parse(localStorage.getItem('jm_current_user') || 'null');
+      const newUserId = String(user.id);
+      if (previousUser && String(previousUser.id) !== newUserId) {
+        // Nouveau compte différent → purger toutes les données du précédent
+        if (typeof _purgeUserData === 'function') _purgeUserData(String(previousUser.id));
+        if (typeof _purgeAllAppData === 'function') _purgeAllAppData();
+      }
+
+      // Stocker l'identité du nouvel utilisateur courant
+      localStorage.setItem('jm_current_user', JSON.stringify({
+        id: user.id, name: user.name, email: user.email
+      }));
+
+      const existingProfile = getLoginStoredProfile();
+      const nextProfile = {
+        nom:     profile?.name || fallbackProfile.nom || user?.name || existingProfile.nom || '',
+        email:   profile?.email || fallbackProfile.email || user?.email || existingProfile.email || '',
+        titre:   profile?.titre || fallbackProfile.titre || existingProfile.titre || '',
+        phone:   profile?.phone || fallbackProfile.phone || existingProfile.phone || '',
+        secteur: profile?.secteur || fallbackProfile.secteur || existingProfile.secteur || '',
+        photo:   fallbackProfile.photo || existingProfile.photo || ''
+      };
+
+      // Écriture sous clé préfixée par user_id
+      const profileKey = typeof jmKey === 'function' ? jmKey('profile') : `jm_u${user.id}_profile`;
+      localStorage.setItem(profileKey, JSON.stringify(nextProfile));
+      // Compatibilité (lecture par utils.js après rechargement)
+      localStorage.setItem('jm_user', JSON.stringify({
+        id: user.id, name: user.name || nextProfile.nom, email: user.email || nextProfile.email
+      }));
+    }
+
+    function clearLoginAutofill() {
+      const emailInput = document.getElementById('login-email');
+      const passwordInput = document.getElementById('login-password');
+      if (emailInput) {
+        emailInput.value = '';
+      }
+      if (passwordInput) {
+        passwordInput.value = '';
+      }
+    }
+
+    /* ── Toggle mot de passe (œil) ── */
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+        btn.style.color = 'var(--purple-light)';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+        btn.style.color = 'var(--text-secondary)';
+      }
+    }
+
+    /* ── Toggle entre login / register / reset ── */
+    function toggleAuth(mode) {
+      document.getElementById('login-card').classList.add('hidden');
+      document.getElementById('register-card').classList.add('hidden');
+      document.getElementById('reset-card').classList.add('hidden');
+      document.getElementById(mode + '-card').classList.remove('hidden');
+    }
+
+    /* ── Mode de connexion : Utilisateur / Administrateur ── */
+    let loginMode = 'user';
+    function setLoginMode(mode) {
+      loginMode = mode;
+      document.getElementById('tab-login-user').classList.toggle('active', mode === 'user');
+      document.getElementById('tab-login-admin').classList.toggle('active', mode === 'admin');
+
+      const icon = document.getElementById('login-icon');
+      const title = document.getElementById('login-title');
+      const subtitle = document.getElementById('login-subtitle');
+      const btn = document.getElementById('btn-login');
+
+      if (mode === 'admin') {
+        icon.className = 'fa-solid fa-shield-halved';
+        title.textContent = 'Espace Administrateur';
+        subtitle.textContent = 'Connectez-vous avec un compte administrateur';
+        btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Connexion admin';
+      } else {
+        icon.className = 'fa-solid fa-user-lock';
+        title.textContent = 'Bienvenue';
+        subtitle.textContent = 'Connectez-vous pour retrouver vos données';
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Se connecter';
+      }
+    }
+
+    /* ── LOGIN ── */
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-login');
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) { showToast('Remplissez tous les champs', 'warning'); return; }
+
+      setLoading(btn, true, 'Connexion...');
+      try {
+        const res = await fetch(`${window.API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Identifiants incorrects');
+
+        // Si l'onglet "Administrateur" est actif, on exige que le compte soit bien admin
+        if (loginMode === 'admin' && data.user.role !== 'admin') {
+          await fetch(`${window.API_BASE}/auth/logout`, { credentials: 'include' });
+          throw new Error("Ce compte n'a pas les droits administrateur.");
+        }
+
+        // ✅ Sauvegarde du profil pour auto-remplissage CV
+        saveLoginProfile(data.user, data.profile, { email });
+
+        showToast('Bienvenue ' + data.user.name + ' !', 'success');
+        const destination = (loginMode === 'admin') ? 'admin.html' : '../index.html';
+        setTimeout(() => { window.location.href = destination; }, 900);
+      } catch(e) {
+        showToast('Erreur : ' + e.message, 'error');
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    /* ── Photo d'identité (formulaire inscription) ── */
+    let regPhotoBase64 = '';
+    function previewRegPhoto(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        regPhotoBase64 = e.target.result;
+        // Afficher la photo, cacher l'icône par défaut
+        const preview = document.getElementById('reg-photo-preview');
+        const defaultAvatar = document.getElementById('reg-avatar-default');
+        const removeBtn = document.getElementById('reg-remove-photo-btn');
+        preview.src = regPhotoBase64;
+        preview.style.display = 'block';
+        defaultAvatar.style.display = 'none';
+        removeBtn.style.display = 'inline-block';
+      };
+      reader.readAsDataURL(file);
+    }
+    function removeRegPhoto() {
+      regPhotoBase64 = '';
+      document.getElementById('reg-photo').value = '';
+      document.getElementById('reg-photo-preview').src = '';
+      document.getElementById('reg-photo-preview').style.display = 'none';
+      document.getElementById('reg-avatar-default').style.display = 'flex';
+      document.getElementById('reg-remove-photo-btn').style.display = 'none';
+    }
+
+    /* ── REGISTER ── */
+    document.getElementById('btn-register').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-register');
+      const name     = document.getElementById('reg-name').value.trim();
+      const titre    = document.getElementById('reg-titre').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const phone    = document.getElementById('reg-phone').value.trim();
+      const secteur  = document.getElementById('reg-secteur').value;
+      const password = document.getElementById('reg-password').value;
+      if (!name || !titre || !email || !password) { showToast('Remplissez les champs obligatoires (*)', 'warning'); return; }
+      if (password.length < 8) { showToast('Mot de passe : 8 caractères minimum', 'warning'); return; }
+
+      setLoading(btn, true, 'Inscription...');
+      try {
+        const res = await fetch(`${window.API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, email, password, titre, phone, secteur, photo: regPhotoBase64 })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Erreur inscription');
+
+        // ✅ Sauvegarde des données du profil pour auto-remplissage CV
+        saveLoginProfile(data.user, data.profile, {
+          nom: name,
+          email,
+          titre,
+          phone,
+          secteur,
+          photo: regPhotoBase64
+        });
+
+        showToast('Compte créé avec succès !', 'success');
+        setTimeout(() => { window.location.href = '../index.html'; }, 900);
+      } catch(e) {
+        showToast('Erreur : ' + e.message, 'error');
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    /* ── RESET PASSWORD — étape 1 : demander le code ── */
+    document.getElementById('btn-request-reset').addEventListener('click', async () => {
+      const btn   = document.getElementById('btn-request-reset');
+      const email = document.getElementById('reset-email').value.trim();
+      if (!email) { showToast('Entrez votre adresse email', 'warning'); return; }
+
+      setLoading(btn, true, 'Envoi en cours...');
+      try {
+        const res = await fetch(`${window.API_BASE}/auth/request-reset`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Erreur');
+
+        // Passer à l'étape 2
+        document.getElementById('reset-step-1').style.display = 'none';
+        document.getElementById('reset-step-2').style.display = 'block';
+        document.getElementById('reset-subtitle').textContent = 'Entrez le code reçu et votre nouveau mot de passe';
+
+        // En dev : afficher le code dans le toast
+        if (data.dev_code) {
+          showToast('DEV — Code : ' + data.dev_code, 'info');
+        } else {
+          showToast('Code envoyé par email', 'success');
+        }
+      } catch(e) {
+        showToast('Erreur : ' + e.message, 'error');
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    /* ── RESET PASSWORD — étape 2 : valider le code ── */
+    document.getElementById('btn-reset').addEventListener('click', async () => {
+      const btn     = document.getElementById('btn-reset');
+      const email   = document.getElementById('reset-email').value.trim();
+      const code    = document.getElementById('reset-code').value.trim();
+      const newPass = document.getElementById('reset-new-password').value;
+      if (!code || !newPass) { showToast('Remplissez le code et le nouveau mot de passe', 'warning'); return; }
+
+      setLoading(btn, true, 'Réinitialisation...');
+      try {
+        const res = await fetch(`${window.API_BASE}/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, code, new_password: newPass })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Code invalide ou expiré');
+
+        showToast('Mot de passe modifié ! Connectez-vous.', 'success');
+        setTimeout(() => {
+          // Réinitialiser le formulaire pour une prochaine utilisation
+          document.getElementById('reset-step-1').style.display = 'block';
+          document.getElementById('reset-step-2').style.display = 'none';
+          document.getElementById('reset-subtitle').textContent = 'Entrez votre adresse email pour recevoir un code';
+          toggleAuth('login');
+        }, 1500);
+      } catch(e) {
+        showToast('Erreur : ' + e.message, 'error');
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      clearLoginAutofill();
+      setTimeout(clearLoginAutofill, 300);
+      setTimeout(clearLoginAutofill, 800);
+    });
+  </script>
+</body>
+</html>

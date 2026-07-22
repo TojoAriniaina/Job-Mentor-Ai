@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# ── Pas de cache sur les assets (évite les anciens utils.js/api.js en cache) ──
+<FilesMatch "\.(js|css|html)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+</FilesMatch>
+
+# ── Static files : servir directement ───────────────────────────
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# ── Tout le reste → front controller ───────────────────────────
+RewriteRule ^(.*)$ public/index.php [QSA,L]

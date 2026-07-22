@@ -1,0 +1,3 @@
+# Pas de rewrite ici — le .htaccess à la racine gère tout
+# Ce fichier empêche uniquement le listing des fichiers
+Options -Indexes

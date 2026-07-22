@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Page introuvable — My Job Mentor</title>
+<meta content="La page que vous cherchez n'existe pas ou a été déplacée." name="description"/>
+<meta name="robots" content="noindex"/>
+<link rel="icon" type="image/png" href="assets/img/logo-icon-square.png"/>
+<link href="css/style.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<script src="js/config.js"></script>
+<style>
+  .error-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+  .error-code {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(5rem, 16vw, 9rem);
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(90deg, var(--purple-light), var(--teal-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+  .error-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  .error-text {
+    color: var(--text-secondary);
+    max-width: 420px;
+    margin: 0 auto 2rem;
+  }
+  .error-actions {
+    display: flex;
+    gap: 0.85rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="bg-mesh"></div>
+
+<div class="error-wrap">
+  <div>
+    <div class="error-code">404</div>
+    <h1 class="error-title">Page introuvable</h1>
+    <p class="error-text">Le lien est peut-être cassé, ou la page a été déplacée. Repartons d'une base solide.</p>
+    <div class="error-actions">
+      <a href="#" id="link-home" class="btn btn-primary"><i class="fa-solid fa-house"></i> Retour à l'accueil</a>
+      <a href="#" id="link-login" class="btn btn-secondary"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Liens calculés dynamiquement — fonctionnent peu importe le sous-dossier de déploiement
+  var base = window.FRONTEND_BASE || '.';
+  document.getElementById('link-home').href = base + '/index.html';
+  document.getElementById('link-login').href = base + '/pages/login.html';
+</script>
+<script src="js/particles.js"></script>
+</body>
+</html>
