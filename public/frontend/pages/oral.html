@@ -558,6 +558,7 @@
     let recSeconds = 0;
     let finalTranscript = '';
     let interimTranscript = '';
+    let shouldRestart = false;
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -606,13 +607,30 @@
       };
 
       rec.onend = () => {
+        // Le moteur de reconnaissance du navigateur coupe parfois la session
+        // tout seul après un silence, même avec continuous=true. Si
+        // l'utilisateur n'a pas cliqué sur "Arrêter", on relance discrètement
+        // au lieu de considérer l'enregistrement terminé (ce qui, avant,
+        // coupait la transcription en pleine phrase).
+        if (shouldRestart) {
+          try { rec.start(); } catch (e) {}
+          return;
+        }
         if (isRecording) stopRecording();
       };
 
       rec.onerror = (e) => {
-        if (e.error === 'not-allowed') showToast('Accès micro refusé. Autorisez le micro dans votre navigateur.', 'error');
-        else if (e.error !== 'no-speech') showToast('Erreur micro : ' + e.error, 'warning');
-        stopRecording();
+        if (e.error === 'not-allowed') {
+          showToast('Accès micro refusé. Autorisez le micro dans votre navigateur.', 'error');
+          shouldRestart = false;
+          stopRecording();
+        } else if (e.error === 'no-speech') {
+          // Silence détecté : on ne coupe pas, onend gèrera le redémarrage
+        } else {
+          showToast('Erreur micro : ' + e.error, 'warning');
+          shouldRestart = false;
+          stopRecording();
+        }
       };
 
       return rec;
@@ -622,7 +640,7 @@
       const box = document.getElementById('transcript-box');
       const words = (finalTranscript + interimTranscript).trim();
       if (words) {
-        box.innerHTML = `<span style="color:var(--text-primary)">${finalTranscript}</span><span style="color:var(--text-muted);font-style:italic">${interimTranscript}</span>`;
+        box.innerHTML = `<span style="color:var(--text-primary)">${escHtml(finalTranscript)}</span><span style="color:var(--text-muted);font-style:italic">${escHtml(interimTranscript)}</span>`;
         const wc = finalTranscript.trim().split(/\s+/).filter(Boolean).length;
         document.getElementById('word-count').textContent = `${wc} mots`;
         document.getElementById('btn-analyze-oral').disabled = wc < 5;
@@ -630,6 +648,7 @@
     }
 
     function stopRecording() {
+      shouldRestart = false;
       isRecording = false;
       if (recognition) try { recognition.stop(); } catch (e) { }
       clearInterval(recInterval);
@@ -655,6 +674,7 @@
 
         recognition = initRecognition();
         if (recognition) {
+          shouldRestart = true;
           recognition.lang = document.getElementById('o-langue').value;
           try { recognition.start(); } catch (e) { showToast('Erreur démarrage micro', 'error'); }
         }
@@ -737,7 +757,7 @@
       document.getElementById('oral-scores-bars').innerHTML = Object.entries(scores).map(([k, v]) => `
     <div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
-        <span class="text-secondary">${labels[k] || k}</span>
+        <span class="text-secondary">${escHtml(labels[k] || k)}</span>
         <span style="color:${scoreColor(v)};font-weight:600">${v}%</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div>
@@ -747,27 +767,27 @@
       if (data.hesitations?.length) {
         document.getElementById('oral-hesitations-card').style.display = 'block';
         document.getElementById('oral-hesitations-list').innerHTML = data.hesitations
-          .map(h => `<span class="badge badge-amber">${h}</span>`).join('');
+          .map(h => `<span class="badge badge-amber">${escHtml(h)}</span>`).join('');
       }
 
       // Points forts
       if (data.points_forts?.length) {
         document.getElementById('oral-strengths').style.display = 'block';
         document.getElementById('oral-strengths-list').innerHTML = data.points_forts
-          .map(p => `<div class="feedback-item positive mb-1"><span><i class="fa-solid fa-check"></i></span><span style="font-size:0.85rem">${p}</span></div>`).join('');
+          .map(p => `<div class="feedback-item positive mb-1"><span><i class="fa-solid fa-check"></i></span><span style="font-size:0.85rem">${escHtml(p)}</span></div>`).join('');
       }
 
       // Axes amélioration
       if (data.axes_amelioration?.length) {
         document.getElementById('oral-improvements').style.display = 'block';
         document.getElementById('oral-improvements-list').innerHTML = data.axes_amelioration
-          .map(p => `<div class="feedback-item improvement mb-1"><span><i class="fa-solid fa-bolt-lightning"></i></span><span style="font-size:0.85rem">${p}</span></div>`).join('');
+          .map(p => `<div class="feedback-item improvement mb-1"><span><i class="fa-solid fa-bolt-lightning"></i></span><span style="font-size:0.85rem">${escHtml(p)}</span></div>`).join('');
       }
 
       // Reformulation
       if (data.reformulation) {
         document.getElementById('oral-reformulation').style.display = 'block';
-        document.getElementById('oral-reformulation-text').innerHTML = `<span><i class="fa-solid fa-wand-magic-sparkles"></i></span><div>${data.reformulation}</div>`;
+        document.getElementById('oral-reformulation-text').innerHTML = `<span><i class="fa-solid fa-wand-magic-sparkles"></i></span><div>${escHtml(data.reformulation)}</div>`;
         document.getElementById('btn-copy-reformulation').onclick = () => copyToClipboard(data.reformulation, document.getElementById('btn-copy-reformulation'));
       }
 
@@ -817,9 +837,9 @@
 
       // Highlight hesitations in text
       const hesWords = (data.hesitations || []).map(h => h.replace(/ \(.*\)/, '').trim().toLowerCase());
-      let highlighted = originalText;
+      let highlighted = escHtml(originalText);
       hesWords.forEach(w => {
-        if (w) highlighted = highlighted.replace(new RegExp(`\\b(${w})\\b`, 'gi'), `<span class="hesitation-word">$1</span>`);
+        if (w) highlighted = highlighted.replace(new RegExp(`\\b(${escHtml(w)})\\b`, 'gi'), `<span class="hesitation-word">$1</span>`);
       });
 
       el.innerHTML = `
@@ -830,7 +850,7 @@
           ${Object.entries(scores).map(([k, v]) => `
             <div style="margin-bottom:8px">
               <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:3px">
-                <span class="text-secondary">${labels[k] || k}</span>
+                <span class="text-secondary">${escHtml(labels[k] || k)}</span>
                 <span style="color:${scoreColor(v)}">${v}%</span>
               </div>
               <div class="progress-bar"><div class="progress-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div>
@@ -848,19 +868,19 @@
     ${data.points_forts?.length ? `
     <div class="glass-card p-4 mb-3">
       <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light)"><i class="fa-solid fa-check"></i> Points forts</h3>
-      ${data.points_forts.map(p => `<div class="feedback-item positive mb-1"><span><i class="fa-solid fa-check"></i></span><span style="font-size:0.85rem">${p}</span></div>`).join('')}
+      ${data.points_forts.map(p => `<div class="feedback-item positive mb-1"><span><i class="fa-solid fa-check"></i></span><span style="font-size:0.85rem">${escHtml(p)}</span></div>`).join('')}
     </div>` : ''}
 
     ${data.axes_amelioration?.length ? `
     <div class="glass-card p-4 mb-3">
       <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1rem;color:#fcd34d"><i class="fa-solid fa-bolt-lightning"></i> Axes d'amélioration</h3>
-      ${data.axes_amelioration.map(p => `<div class="feedback-item improvement mb-1"><span><i class="fa-solid fa-bolt-lightning"></i></span><span style="font-size:0.85rem">${p}</span></div>`).join('')}
+      ${data.axes_amelioration.map(p => `<div class="feedback-item improvement mb-1"><span><i class="fa-solid fa-bolt-lightning"></i></span><span style="font-size:0.85rem">${escHtml(p)}</span></div>`).join('')}
     </div>` : ''}
 
     ${data.reformulation ? `
     <div class="glass-card p-4">
       <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1rem;color:var(--purple-light)"><i class="fa-solid fa-wand-magic-sparkles"></i> Reformulation suggérée</h3>
-      <div class="alert alert-info"><span><i class="fa-solid fa-wand-magic-sparkles"></i></span><div>${data.reformulation}</div></div>
+      <div class="alert alert-info"><span><i class="fa-solid fa-wand-magic-sparkles"></i></span><div>${escHtml(data.reformulation)}</div></div>
     </div>` : ''}`;
     }
 
@@ -936,7 +956,7 @@
         list.innerHTML = data.history.map(o => `
           <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default">
             <div>
-              <div style="font-weight:600;color:var(--text-primary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.job_title}</div>
+              <div style="font-weight:600;color:var(--text-primary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(o.job_title)}</div>
               <div style="font-size:0.75rem;color:var(--text-secondary)">
                 ${new Date(o.created_at).toLocaleDateString('fr-FR')} • Score: ${o.score_global}%
               </div>
@@ -952,7 +972,7 @@
           </div>
         `).join('');
       } catch (e) {
-        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${e.message}</p>`;
+        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${escHtml(e.message)}</p>`;
       }
     }
 
@@ -965,7 +985,7 @@
           const transcription = data.data.transcription;
           
           // Mettre à jour l'interface
-          document.getElementById('transcript-box').innerHTML = transcription;
+          document.getElementById('transcript-box').textContent = transcription;
           displayOralResult(analysis);
           
           closeHistoryModal();

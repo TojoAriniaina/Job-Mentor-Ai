@@ -88,3 +88,16 @@ CREATE TABLE IF NOT EXISTS oral_analyses (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Limitation des tentatives de connexion (anti brute-force sur /api/auth/login)
+-- NB : cette table est aussi créée automatiquement au premier login par
+-- App\Models\LoginAttempt (même pattern que User::addColumnsIfMissing()).
+-- Elle est documentée ici pour que le schéma officiel reste complet.
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    identifier VARCHAR(191) NOT NULL, -- email + IP
+    attempts INT NOT NULL DEFAULT 0,
+    first_attempt_at DATETIME NOT NULL,
+    last_attempt_at DATETIME NOT NULL,
+    UNIQUE KEY idx_identifier (identifier)
+);
+

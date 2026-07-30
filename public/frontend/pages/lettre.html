@@ -391,7 +391,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         strengthsEl.style.display = 'block';
         strengthsEl.innerHTML = `
       <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light)"><i class="fa-solid fa-check"></i> Points forts de votre lettre</h3>
-      ${data.points_forts.map(p => `<div class="feedback-item positive"><span><i class="fa-solid fa-check"></i></span><span>${p}</span></div>`).join('')}`;
+      ${data.points_forts.map(p => `<div class="feedback-item positive"><span><i class="fa-solid fa-check"></i></span><span>${escHtml(p)}</span></div>`).join('')}`;
       }
 
       // Suggestions
@@ -400,7 +400,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         suggestionsEl.style.display = 'block';
         suggestionsEl.innerHTML = `
       <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Suggestions</h3>
-      ${data.suggestions.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${s}</span></div>`).join('')}`;
+      ${data.suggestions.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${escHtml(s)}</span></div>`).join('')}`;
       }
     }
 
@@ -432,6 +432,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
     function displayCorrection(data) {
       // Sauvegarder pour persistance
       localStorage.setItem(jmKey('last_lettre_correction'), JSON.stringify(data));
+      window._lastCorrectionData = data;
       
       document.getElementById('correct-skeleton').classList.add('hidden');
       document.getElementById('correct-placeholder').classList.add('hidden');
@@ -453,13 +454,13 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
     ${data.erreurs?.length ? `
     <div class="glass-card p-4 mb-3">
       <h3 style="font-size:1rem;font-weight:700;color:#fca5a5;margin-bottom:1rem"><i class="fa-solid fa-circle"></i> Erreurs corrigées (${data.erreurs.length})</h3>
-      ${data.erreurs.map(e => `<div class="feedback-item critical"><span><i class="fa-solid fa-circle"></i></span><span>${e}</span></div>`).join('')}
+      ${data.erreurs.map(e => `<div class="feedback-item critical"><span><i class="fa-solid fa-circle"></i></span><span>${escHtml(e)}</span></div>`).join('')}
     </div>` : ''}
 
     ${data.suggestions_style?.length ? `
     <div class="glass-card p-4 mb-3">
       <h3 style="font-size:1rem;font-weight:700;color:#fcd34d;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Suggestions stylistiques</h3>
-      ${data.suggestions_style.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${s}</span></div>`).join('')}
+      ${data.suggestions_style.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${escHtml(s)}</span></div>`).join('')}
     </div>` : ''}
 
     ${data.texte_corrige ? `
@@ -471,7 +472,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 <button class="btn btn-sm btn-secondary" id="btn-copy-corrected"><i class="fa-solid fa-clipboard"></i> Copier</button>
 </div>
       </div>
-      <div id="lettre-corrige-content" style="line-height:1.9;font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;font-family:'Georgia',serif;padding:1rem;background:rgba(20,184,166,0.05);border-radius:var(--radius-md);border:1px solid rgba(20,184,166,0.15)">${data.texte_corrige}</div>
+      <div id="lettre-corrige-content" style="line-height:1.9;font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;font-family:'Georgia',serif;padding:1rem;background:rgba(20,184,166,0.05);border-radius:var(--radius-md);border:1px solid rgba(20,184,166,0.15)">${escHtml(data.texte_corrige)}</div>
     </div>` : ''}`;
 
       if (data.texte_corrige) {
@@ -481,30 +482,75 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       }
     }
 
-    window.downloadLettre = function(elementId) {
-      const element = document.getElementById(elementId);
-      if (!element) return;
-      const nom = document.getElementById('l-nom').value.trim() || 'Ma_Lettre';
-      
-      const opt = {
-        margin: [15, 15],
-        filename: nom.replace(/\s+/g, '_') + '_Lettre.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+    // Export PDF de la lettre corrigée : texte vectoriel natif jsPDF.
+    // (L'ancienne version utilisait html2canvas sur la carte HTML, ce qui
+    // produisait un PDF blanc à cause du fond en verre dépoli/backdrop-filter
+    // du thème sombre. Même technique que downloadLettrePDF ci-dessus.)
+    window.downloadLettre = function() {
+      const data = window._lastCorrectionData;
+      if (!data || !data.texte_corrige) {
+        showToast('Aucune lettre corrigée à exporter.', 'warning');
+        return;
+      }
+      if (!window.jspdf) {
+        showToast('Erreur : librairie PDF non chargée. Vérifiez votre connexion internet.', 'error');
+        return;
+      }
 
-      // Style temporaire
-      const originalStyle = element.style.cssText;
-      element.style.background = '#fff';
-      element.style.color = '#000';
-      element.style.padding = '20px';
-      element.style.borderRadius = '0';
-      element.style.fontFamily = 'Georgia, serif';
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-      html2pdf().set(opt).from(element).save().then(() => {
-        element.style.cssText = originalStyle;
-      });
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const marginL = 20;
+        const marginR = 20;
+        const contentW = pageWidth - marginL - marginR;
+
+        doc.setTextColor(20, 20, 20);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
+
+        // Pas de titre "Lettre de motivation corrigée" imprimé sur le document :
+        // c'est un libellé interne à l'interface, pas un texte destiné au recruteur.
+        let y = 20;
+
+        // texte_corrige peut arriver sous forme d'une seule chaîne (cas normal)
+        // ou, plus rarement, d'un tableau de paragraphes selon ce que renvoie
+        // l'IA — on gère les deux pour ne jamais se retrouver avec un
+        // document.text() appelé sur autre chose qu'une chaîne.
+        const texteBrut = Array.isArray(data.texte_corrige)
+          ? data.texte_corrige.join('\n\n')
+          : String(data.texte_corrige || '');
+
+        let paragraphs = texteBrut.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+        // Filet de sécurité : si le split ne donne rien d'exploitable
+        // (texte sans double saut de ligne, ou format inattendu),
+        // on retombe sur le texte entier comme un seul bloc plutôt que
+        // de produire un PDF vide.
+        if (paragraphs.length === 0 && texteBrut.trim()) {
+          paragraphs = [texteBrut.trim()];
+        }
+
+        if (paragraphs.length === 0) {
+          throw new Error('Le texte de la lettre corrigée est vide.');
+        }
+
+        paragraphs.forEach(paragraph => {
+          const lines = doc.splitTextToSize(paragraph, contentW);
+          lines.forEach(line => {
+            if (y > pageHeight - 25) { doc.addPage(); y = 20; }
+            doc.text(line, marginL, y);
+            y += 5.8;
+          });
+          y += 4;
+        });
+
+        const nom = document.getElementById('l-nom')?.value.trim() || 'Ma_Lettre';
+        doc.save(nom.replace(/\s+/g, '_') + '_Lettre_Corrigee.pdf');
+      } catch (err) {
+        console.error('Erreur export PDF lettre corrigée :', err);
+        showToast('Erreur lors de la génération du PDF : ' + err.message, 'error');
+      }
     }
 
     // Export PDF de la lettre générée : texte vectoriel natif jsPDF
@@ -719,7 +765,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         list.innerHTML = data.history.map(l => `
           <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default; border-color:rgba(255,255,255,0.05)">
             <div style="overflow:hidden">
-              <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${l.job_offer}</div>
+              <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${escHtml(l.job_offer)}</div>
               <div style="font-size:0.75rem;color:var(--text-secondary)">
                 ${new Date(l.created_at).toLocaleDateString('fr-FR')} • Score: ${l.score}%
               </div>
@@ -735,7 +781,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
           </div>
         `).join('');
       } catch (e) {
-        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${e.message}</p>`;
+        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${escHtml(e.message)}</p>`;
       }
     }
 

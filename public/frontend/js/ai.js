@@ -97,7 +97,10 @@ export async function sendAnswer(answer) {
         const conseilDiv = document.createElement('div');
         conseilDiv.className = 'alert alert-info mt-2';
         conseilDiv.style.fontSize = '0.85rem';
-        conseilDiv.innerHTML = `<strong>💡 Conseil :</strong> ${data.conseil}`;
+        const conseilStrong = document.createElement('strong');
+        conseilStrong.textContent = '💡 Conseil :';
+        conseilDiv.appendChild(conseilStrong);
+        conseilDiv.appendChild(document.createTextNode(' ' + (data.conseil || '')));
         feedbackNode.appendChild(conseilDiv);
 
         // Si une question suivante est prévue, on l'affiche après un court délai

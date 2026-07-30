@@ -248,6 +248,11 @@
           </button>
         </div>
 
+        <button class="btn btn-primary btn-full" id="btn-save-interview" title="Sauvegarder cet entretien dans vos archives"
+          style="display:none; margin-bottom:0.75rem; background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 4px 15px rgba(20,184,166,0.3);">
+          <i class="fa-solid fa-floppy-disk"></i> Sauvegarder cet entretien
+        </button>
+
         <!-- Ligne 2 : Archives + Effacer + Réinitialiser -->
         <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
           <button class="btn btn-secondary" id="btn-history-interview" title="Historique">
@@ -273,12 +278,13 @@
   <script src="../js/utils.js"></script>
   <script type="module">
     import { getQuestion, sendAnswer } from "../js/ai.js";
-    import { callAPI } from "../js/api.js";
+    import { callAPI, postAPI } from "../js/api.js";
 
     const btnNext = document.querySelector("#btn-next");
     const btnMicro = document.querySelector("#start-recording-btn");
     const btnDelete = document.querySelector("#btn-delete");
     const btnReset = document.querySelector("#btn-reset");
+    const btnSaveInterview = document.querySelector("#btn-save-interview");
     const waves = document.querySelector("#recording-waves");
 
     let recognition = null;
@@ -466,6 +472,7 @@
           btnNext.style.display = "";
           btnMicro.style.display = "";
           btnDelete.style.display = "";
+          btnSaveInterview.style.display = "none";
           // Effacer le localStorage
           localStorage.removeItem(jmKey('last_chat'));
           // Effacer les notes personnelles
@@ -482,6 +489,31 @@
         btnNext.disabled = false;
         btnMicro.disabled = false;
         btnDelete.disabled = false;
+      }
+    });
+
+    // Clic sur Sauvegarder cet entretien
+    btnSaveInterview.addEventListener("click", async () => {
+      const jobTitle = (prompt("Quel est le poste visé pour cet entretien ?", "") || "").trim();
+
+      btnSaveInterview.disabled = true;
+      const originalLabel = btnSaveInterview.innerHTML;
+      btnSaveInterview.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sauvegarde en cours...';
+
+      try {
+        const res = await postAPI("entretien/save", { job_title: jobTitle });
+        if (res && res.success) {
+          showToast("Entretien sauvegardé dans vos archives !", "success");
+          btnSaveInterview.style.display = "none";
+        } else {
+          showToast(res?.error || "Erreur lors de la sauvegarde.", "error");
+          btnSaveInterview.disabled = false;
+          btnSaveInterview.innerHTML = originalLabel;
+        }
+      } catch (e) {
+        showToast("Erreur : " + e.message, "error");
+        btnSaveInterview.disabled = false;
+        btnSaveInterview.innerHTML = originalLabel;
       }
     });
 
@@ -629,7 +661,7 @@
           return `
             <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default; border-color:rgba(255,255,255,0.05)">
               <div style="overflow:hidden">
-                <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${title}</div>
+                <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${escHtml(title)}</div>
                 <div style="font-size:0.75rem;color:var(--text-secondary)">
                   ${new Date(item.created_at).toLocaleDateString('fr-FR')}${scoreInfo}
                 </div>
@@ -645,7 +677,7 @@
             </div>`;
         }).join('');
       } catch (e) {
-        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${e.message}</p>`;
+        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${escHtml(e.message)}</p>`;
       }
     }
 

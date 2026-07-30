@@ -2,13 +2,16 @@
 namespace App\Controllers;
 
 use App\Models\User;
+use App\Models\LoginAttempt;
 use App\Middleware\Auth;
 
 class AuthController {
     private User $userModel;
+    private LoginAttempt $loginAttempt;
 
     public function __construct() {
         $this->userModel = new User($GLOBALS['pdo']);
+        $this->loginAttempt = new LoginAttempt($GLOBALS['pdo']);
     }
 
     private function input(): array {
@@ -92,6 +95,17 @@ class AuthController {
             return;
         }
 
+        $retryAfter = $this->loginAttempt->getRetryAfter($email);
+        if ($retryAfter > 0) {
+            $minutes = (int) ceil($retryAfter / 60);
+            $this->json([
+                'success' => false,
+                'error' => "Trop de tentatives échouées. Réessayez dans {$minutes} min.",
+                'retry_after' => $retryAfter
+            ], 429);
+            return;
+        }
+
         $user = $this->userModel->findByEmail($email);
 
         if ($user && password_verify($password, $user['password_hash'])) {
@@ -99,6 +113,8 @@ class AuthController {
                 $this->json(['success' => false, 'error' => 'Ce compte a été désactivé.'], 403);
                 return;
             }
+
+            $this->loginAttempt->resetAttempts($email);
 
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
@@ -110,6 +126,7 @@ class AuthController {
                 'profile' => $this->buildProfilePayload($user)
             ]);
         } else {
+            $this->loginAttempt->registerFailure($email);
             $this->json(['success' => false, 'error' => 'Identifiants incorrects'], 401);
         }
     }

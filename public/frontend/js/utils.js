@@ -1,4 +1,25 @@
 /* ── Toggle mot de passe (œil) ─────────────────────────────── */
+
+/* ── Échappement HTML (anti-XSS) ─────────────────────────────
+   À utiliser pour toute donnée dynamique (saisie utilisateur, texte
+   généré par l'IA, contenu venant de la base) injectée via innerHTML.
+   Même pattern que la fonction esc() déjà utilisée dans admin.js.
+
+   escHtml() : pour du texte placé ENTRE des balises, ex. <span>${escHtml(x)}</span>
+   escAttr()  : pour une valeur placée DANS un attribut, ex. src="${escAttr(x)}"
+                (escHtml seul n'échappe pas les guillemets, donc ne suffit pas
+                à protéger un attribut — une valeur contenant un " pourrait
+                sinon en sortir et injecter un attribut/gestionnaire d'événement). ── */
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str === null || str === undefined ? '' : String(str);
+  return d.innerHTML;
+}
+
+function escAttr(str) {
+  return escHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function togglePassword(inputId, btn) {
   const input = document.getElementById(inputId);
   const icon = btn.querySelector('i');
@@ -31,7 +52,7 @@ function showToast(message, type = 'info', duration = 3500) {
   };
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.innerHTML = `<span style="font-size:1.1rem">${icons[type] || icons.info}</span><span>${message}</span>`;
+  toast.innerHTML = `<span style="font-size:1.1rem">${icons[type] || icons.info}</span><span>${escHtml(message)}</span>`;
   container.appendChild(toast);
   setTimeout(() => toast.remove(), duration + 400);
 }
@@ -313,9 +334,9 @@ function _initials(name) {
 function _avatarHTML(user, sizeClass) {
   const photo = (user && user.photo) || getStoredProfile().photo || '';
   if (photo) {
-    return `<img class="profile-avatar ${sizeClass}" src="${photo}" alt="${user.name}" />`;
+    return `<img class="profile-avatar ${sizeClass}" src="${escAttr(photo)}" alt="${escAttr(user.name)}" />`;
   }
-  return `<span class="profile-avatar ${sizeClass}">${_initials(user.name)}</span>`;
+  return `<span class="profile-avatar ${sizeClass}">${escHtml(_initials(user.name))}</span>`;
 }
 
 function setupProfileDropdown(btnConfig, user, AUTH_API_URL) {
@@ -331,7 +352,7 @@ function setupProfileDropdown(btnConfig, user, AUTH_API_URL) {
   btnConfig.className = 'btn-nav btn-nav-ghost profile-trigger';
   btnConfig.innerHTML =
     _avatarHTML(user, '') +
-    '<span class="profile-trigger-name">' + user.name + '</span>' +
+    '<span class="profile-trigger-name">' + escHtml(user.name) + '</span>' +
     '<i class="fa-solid fa-chevron-down profile-trigger-chevron"></i>';
 
   let dropdown = wrap.querySelector('.profile-dropdown');
@@ -346,9 +367,9 @@ function setupProfileDropdown(btnConfig, user, AUTH_API_URL) {
     <div class="profile-dropdown-header">
       ${_avatarHTML(user, 'profile-avatar-lg')}
       <div class="profile-dropdown-identity">
-        <span class="profile-dropdown-name">${user.name}</span>
-        <span class="profile-dropdown-email">${user.email || ''}</span>
-        ${profileExtra.phone ? `<span class="profile-dropdown-phone"><i class="fa-solid fa-phone"></i> ${profileExtra.phone}</span>` : ''}
+        <span class="profile-dropdown-name">${escHtml(user.name)}</span>
+        <span class="profile-dropdown-email">${escHtml(user.email || '')}</span>
+        ${profileExtra.phone ? `<span class="profile-dropdown-phone"><i class="fa-solid fa-phone"></i> ${escHtml(profileExtra.phone)}</span>` : ''}
       </div>
     </div>
     <div class="profile-dropdown-divider"></div>
@@ -625,6 +646,139 @@ async function requireAPI(callback) {
   }
 }
 
+/* ── Guide d'utilisation par page ─────────────────────────────
+   Explique en 3 étapes courtes comment utiliser la page en cours.
+   S'affiche automatiquement à la première visite, puis reste
+   accessible via le bouton "?" flottant. ────────────────────── */
+const PAGE_GUIDES = {
+  'index.html': {
+    title: "Bienvenue sur My Job Mentor",
+    icon: 'fa-house',
+    steps: [
+      { title: "Découvrez les modules", text: "CV, Lettre, Entretien et Oral : chaque module vous aide sur une étape précise de votre recherche d'emploi." },
+      { title: "Créez votre compte", text: "Cliquez sur \"Commencer\" pour vous inscrire et sauvegarder votre progression." },
+      { title: "Lancez-vous", text: "Choisissez un module dans le menu du haut et suivez le guide de la page." }
+    ]
+  },
+  'login.html': {
+    title: "Se connecter ou créer un compte",
+    icon: 'fa-right-to-bracket',
+    steps: [
+      { title: "Première visite ?", text: "Cliquez sur \"Créer un compte\" et renseignez vos informations." },
+      { title: "Déjà inscrit ?", text: "Cliquez sur \"Se connecter\" avec votre email et mot de passe." },
+      { title: "Après connexion", text: "Vous accédez directement aux modules CV, Lettre, Entretien et Oral." }
+    ]
+  },
+  'cv.html': {
+    title: "Guide du module CV",
+    icon: 'fa-file',
+    steps: [
+      { title: "Avant : renseignez vos infos", text: "Remplissez vos informations personnelles, expériences et formations dans le formulaire." },
+      { title: "Pendant : générez avec l'IA", text: "Cliquez sur \"Générer\" pour créer votre CV, ou utilisez \"Analyser & Améliorer\" / \"Adapter à l'offre\"." },
+      { title: "Après : téléchargez", text: "Une fois satisfait, exportez votre CV en PDF prêt à envoyer." }
+    ]
+  },
+  'lettre.html': {
+    title: "Guide du module Lettre",
+    icon: 'fa-envelope',
+    steps: [
+      { title: "Avant : préparez le contexte", text: "Collez votre profil/CV et l'offre d'emploi visée, ou le nom de l'entreprise." },
+      { title: "Pendant : générez ou corrigez", text: "Générez une nouvelle lettre, ou collez-en une existante à corriger." },
+      { title: "Après : exportez", text: "Téléchargez la lettre en PDF, prête à joindre à votre candidature." }
+    ]
+  },
+  'entretien.html': {
+    title: "Guide de la simulation d'entretien",
+    icon: 'fa-microphone',
+    steps: [
+      { title: "Avant : démarrez l'entretien", text: "Cliquez sur \"Démarrer l'entretien\" pour lancer l'échange avec l'IA recruteur." },
+      { title: "Pendant : répondez naturellement", text: "Répondez comme en vrai entretien ; l'IA enchaîne avec des questions de suivi." },
+      { title: "Après : consultez vos notes", text: "Ouvrez \"Mes Notes personnelles\" pour revoir vos points forts et axes d'amélioration." }
+    ]
+  },
+  'oral.html': {
+    title: "Guide de l'entraînement oral",
+    icon: 'fa-microphone-lines',
+    steps: [
+      { title: "Avant : choisissez la langue", text: "Sélectionnez FR / EN / ES et, si besoin, précisez le poste visé." },
+      { title: "Pendant : parlez au micro", text: "Cliquez sur le micro et répondez à la question affichée à voix haute." },
+      { title: "Après : lisez l'analyse", text: "L'IA évalue votre fluidité et vos hésitations pour vous aider à progresser." }
+    ]
+  },
+  'admin.html': {
+    title: "Guide du panneau d'administration",
+    icon: 'fa-user-gear',
+    steps: [
+      { title: "Vue d'ensemble", text: "Les cartes en haut résument le nombre d'utilisateurs et l'usage global de la plateforme." },
+      { title: "Rechercher / filtrer", text: "Utilisez la barre de recherche pour retrouver un utilisateur précis." },
+      { title: "Gérer un compte", text: "Cliquez sur un utilisateur pour modifier son rôle ou désactiver son accès." }
+    ]
+  }
+};
+
+function currentPageKey() {
+  const path = window.location.pathname;
+  const file = path.substring(path.lastIndexOf('/') + 1);
+  return file === '' ? 'index.html' : file;
+}
+
+function buildGuideModal(guide) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'page-guide-overlay';
+
+  const stepsHtml = guide.steps.map((s, i) => `
+    <div class="guide-step">
+      <div class="guide-step-num">${i + 1}</div>
+      <div class="guide-step-body">
+        <div class="guide-step-title">${s.title}</div>
+        <div class="guide-step-text">${s.text}</div>
+      </div>
+    </div>
+  `).join('');
+
+  overlay.innerHTML = `
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-title"><i class="fa-solid ${guide.icon}"></i> ${guide.title}</span>
+        <button class="modal-close" id="page-guide-close" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="guide-steps">${stepsHtml}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.classList.remove('active');
+  document.getElementById('page-guide-close').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  return overlay;
+}
+
+function initPageGuide() {
+  const key = currentPageKey();
+  const guide = PAGE_GUIDES[key];
+  if (!guide) return;
+
+  const overlay = buildGuideModal(guide);
+
+  // Bouton flottant "?"
+  const fab = document.createElement('button');
+  fab.className = 'help-fab';
+  fab.id = 'page-guide-fab';
+  fab.setAttribute('aria-label', "Aide sur cette page");
+  fab.innerHTML = '<i class="fa-solid fa-question"></i>';
+  fab.addEventListener('click', () => overlay.classList.add('active'));
+  document.body.appendChild(fab);
+
+  // Affichage automatique à la première visite de cette page
+  const seenKey = `jm_guide_seen_${key}`;
+  if (!localStorage.getItem(seenKey)) {
+    setTimeout(() => overlay.classList.add('active'), 500);
+    localStorage.setItem(seenKey, '1');
+  }
+}
+
 /* ── Init on DOM ready ─────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   // initParticles(); // Moved to particles.js
@@ -633,4 +787,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileNav();
   checkAuthStatus();
   injectEditProfileModal();
+  initPageGuide();
 });

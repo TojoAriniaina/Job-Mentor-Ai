@@ -22,11 +22,22 @@
     return palette[userId % palette.length];
   }
 
+  // Repli si la photo ne charge pas : remplace l'<img> par un badge d'initiales.
+  // Passe par des attributs data-* (déjà échappés) plutôt que par du JS
+  // interpolé dans l'attribut onerror, pour éviter toute injection.
+  window.__adminAvatarFallback = function (img) {
+    const div = document.createElement('div');
+    div.className = 'user-avatar';
+    div.style.background = img.dataset.fallbackColor || '';
+    div.textContent = img.dataset.fallbackInitials || '';
+    img.replaceWith(div);
+  };
+
   function avatarHTML(u) {
     if (u.photo) {
-      return `<img class="user-avatar" src="${u.photo}" alt="" style="object-fit:cover" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'user-avatar',style:'background:${avatarColor(u.id)}',textContent:'${initials(u.name)}'}))" />`;
+      return `<img class="user-avatar" src="${escAttr(u.photo)}" alt="" style="object-fit:cover" data-fallback-color="${escAttr(avatarColor(u.id))}" data-fallback-initials="${escAttr(initials(u.name))}" onerror="window.__adminAvatarFallback(this)" />`;
     }
-    return `<div class="user-avatar" style="background:${avatarColor(u.id)}">${initials(u.name)}</div>`;
+    return `<div class="user-avatar" style="background:${avatarColor(u.id)}">${esc(initials(u.name))}</div>`;
   }
 
   function formatDate(iso) {

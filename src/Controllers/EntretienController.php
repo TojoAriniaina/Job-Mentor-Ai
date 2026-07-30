@@ -75,7 +75,8 @@ class EntretienController {
                 "success" => true,
                 "feedback" => "Je n'ai pas bien entendu votre réponse.",
                 "conseil" => "Il est important de répondre aux questions du recruteur, même brièvement, pour montrer votre engagement.",
-                "next_question" => "Pourriez-vous essayer de répondre à ma question : \"$question\" ?"
+                "next_question" => "Pourriez-vous essayer de répondre à ma question : \"$question\" ?",
+                "end" => false
             ]);
             return;
         }
@@ -117,7 +118,13 @@ class EntretienController {
                 'feedback' => $json['feedback']
             ];
 
-            if (isset($json['next_question'])) {
+            // "end" est déterminé uniquement par le compteur de questions,
+            // jamais par la présence (ou non) d'un champ next_question dans
+            // la réponse de l'IA — sinon la fin de l'entretien dépend d'un
+            // détail non garanti du JSON généré.
+            $isLastAnswer = $index >= $this->maxQuestions;
+
+            if (!$isLastAnswer && !empty($json['next_question'])) {
                 $_SESSION['current_question'] = $json['next_question'];
                 $_SESSION['q_index']++;
             }
@@ -126,7 +133,8 @@ class EntretienController {
                 "success" => true,
                 "feedback" => $json['feedback'],
                 "conseil" => $json['conseil'],
-                "next_question" => $json['next_question'] ?? null
+                "next_question" => $isLastAnswer ? null : ($json['next_question'] ?? null),
+                "end" => $isLastAnswer
             ]);
         } catch (\Exception $e) {
             error_log('[EntretienController] ' . $e->getMessage());
@@ -214,5 +222,58 @@ class EntretienController {
     public function reset(): void {
         unset($_SESSION['q_index'], $_SESSION['interview_history'], $_SESSION['current_question']);
         $this->json(["success" => true, "message" => "Entretien réinitialisé."]);
+    }
+
+    public function save(): void {
+        $userId = Auth::require();
+        $input = $this->input();
+        $jobTitle = trim($input['job_title'] ?? '');
+        if ($jobTitle === '') {
+            $jobTitle = 'Entretien général';
+        }
+
+        $history = $_SESSION['interview_history'] ?? [];
+        if (empty($history)) {
+            $this->json(["success" => false, "error" => "Aucun entretien en cours à sauvegarder."]);
+            return;
+        }
+
+        $globalScore = $this->computeGlobalScore($history);
+
+        try {
+            $id = $this->historyModel->create($userId, $jobTitle, $globalScore, $history);
+            // On vide la session pour éviter une double sauvegarde du même entretien
+            unset($_SESSION['q_index'], $_SESSION['interview_history'], $_SESSION['current_question']);
+            $this->json(["success" => true, "id" => $id, "global_score" => $globalScore]);
+        } catch (\Exception $e) {
+            error_log('[EntretienController] ' . $e->getMessage());
+            $this->json(["success" => false, "error" => "Erreur lors de la sauvegarde de l'entretien."], 500);
+        }
+    }
+
+    private function computeGlobalScore(array $history): int {
+        $historyText = "";
+        foreach ($history as $item) {
+            $historyText .= "Q: {$item['question']}\nR: {$item['answer']}\nFeedback donné : {$item['feedback']}\n\n";
+        }
+
+        $prompt = "Voici la transcription complète d'un entretien d'embauche simulé, avec le feedback donné à chaque réponse :\n\n";
+        $prompt .= $historyText;
+        $prompt .= "En te basant sur la qualité globale des réponses du candidat, donne une note globale sur 100.\n";
+        $prompt .= "Réponds UNIQUEMENT en JSON avec cette structure :\n";
+        $prompt .= '{"score": 0}';
+
+        try {
+            $raw = $this->llm->call([
+                ['role' => 'system', 'content' => 'Tu es un recruteur expert qui évalue objectivement la performance globale d\'un candidat. Réponds uniquement en JSON.'],
+                ['role' => 'user', 'content' => $prompt]
+            ]);
+            $json = $this->llm->extractJson($raw);
+            $score = (int) ($json['score'] ?? 0);
+            return max(0, min(100, $score));
+        } catch (\Exception $e) {
+            error_log('[EntretienController] Erreur calcul score global : ' . $e->getMessage());
+            return 0;
+        }
     }
 }

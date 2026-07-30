@@ -91,6 +91,7 @@ $router->get(   '/api/entretien/notes/{id}',     EntretienController::class, 'ge
 $router->get(   '/api/entretien/notes/delete/{id}', EntretienController::class, 'deleteNote');
 $router->get(   '/api/entretien/last-answer',    EntretienController::class, 'deleteLastAnswer');
 $router->get(   '/api/entretien/reset',          EntretienController::class, 'reset');
+$router->post(  '/api/entretien/save',           EntretienController::class, 'save');
 
 // Oral
 $router->post(  '/api/oral/analyze',  OralController::class, 'analyze');

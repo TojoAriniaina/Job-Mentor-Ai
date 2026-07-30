@@ -4,8 +4,15 @@ Liste de travail restant, classée par priorité.
 
 ## Priorité haute — avant une mise en production publique
 
-- [ ] **Corriger le risque XSS lié à `innerHTML`** — présent dans `cv.html`, `lettre.html`, `oral.html`, `entretien.html`, `ai.js`, `utils.js` (environ 74 occurrences). Remplacer par `textContent` partout où le contenu n'est pas volontairement du HTML, ou passer par une fonction d'échappement pour le reste. Risque : un texte généré par l'IA ou saisi par un utilisateur contenant une balise `<script>` pourrait s'exécuter dans le navigateur.
-- [ ] **Ajouter une limitation des tentatives de connexion** — rien n'empêche actuellement un enchaînement de tentatives de mot de passe sur `/api/auth/login`. Prévoir un compteur (en session ou en base) avec un délai après un nombre d'échecs (ex : 5).
+- [x] **Corriger le risque XSS lié à `innerHTML`** — audit complet des ~74 occurrences dans `cv.html`, `lettre.html`, `oral.html`, `entretien.html`, `ai.js`, `utils.js`, `admin.js`.
+  - Ajout de `escHtml()` (texte) et `escAttr()` (attributs) dans `utils.js`, utilisées partout où du contenu dynamique (saisie utilisateur, texte IA, données DB) est injecté en `innerHTML`.
+  - **Découverte en cours de route** : `cv.html`/`lettre.html`/`oral.html` appelaient déjà `escHtml`/`escAttr` un peu partout (travail entamé précédemment), mais ces fonctions n'étaient définies nulle part → `displayCV()`, `displayAnalysis()`, `displayTextAdaptation()` plantaient silencieusement à chaque génération. Corrigé du même coup.
+  - `ai.js` : le conseil généré par l'IA n'est plus injecté brut.
+  - `oral.html` : `job_title` et message d'erreur de l'historique échappés ; la transcription rechargée depuis l'historique passe désormais par `textContent` au lieu d'`innerHTML` brut ; nom de catégorie de score (clé JSON IA) échappé.
+  - `entretien.html` : `job_title` (saisi via la nouvelle fonctionnalité de sauvegarde) et message d'erreur échappés.
+  - `admin.js` (le plus critique — vue admin sur les autres utilisateurs) : la photo de profil était injectée sans échappement dans un attribut `src`, avec un `onerror` inline interpolant le nom brut dans du JS exécutable (cassable via une simple apostrophe dans le nom). Remplacé par des attributs `data-*` échappés + une fonction de repli dédiée (`window.__adminAvatarFallback`), qui élimine l'injection de données dans du code plutôt que de la rapiécer. Les autres champs (`u.name`, `u.email`, `u.secteur`) étaient déjà protégés par `esc()`.
+  - `login.html`, `admin.html`, `index.html` : vérifiés, aucun contenu dynamique non échappé.
+- [x] **Ajouter une limitation des tentatives de connexion** — implémenté via `App\Models\LoginAttempt` (table `login_attempts`, auto-créée comme les colonnes de `User`). Suivi par `email + IP` en base (résiste au vidage de cookies, contrairement à un compteur en session pure). Après 5 échecs, blocage de 5 minutes ; réponse HTTP 429 avec message clair. Compteur remis à zéro à la connexion réussie.
 - [ ] **Décider du sort de l'historique d'entretien** — la table `interview_history` et son modèle existent mais ne sont jamais alimentés par le code actuel (l'échange reste en `localStorage` navigateur). Deux options :
   - implémenter la sauvegarde réelle en base (appeler `create()` en fin de session dans `EntretienController`) ;
   - ou supprimer la table/le modèle inutilisés pour éviter la confusion, et documenter que l'historique est volontairement local.
