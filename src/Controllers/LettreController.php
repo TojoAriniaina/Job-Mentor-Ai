@@ -136,13 +136,16 @@ class LettreController {
             return;
         }
 
-        $prompt  = "Corrige et améliore cette lettre de motivation. Rends-la concise, directe et percutante, en supprimant les longueurs inutiles :\n\"$text\"\n\n";
+        $prompt  = "Corrige et améliore cette lettre de motivation de façon COMPLÈTE et DÉFINITIVE. Rends-la concise, directe et percutante, en supprimant les longueurs inutiles :\n\"$text\"\n\n";
+        $prompt .= "IMPORTANT : \"texte_corrige\" doit déjà intégrer TOUTES les corrections grammaticales/orthographiques ET TOUTES les améliorations stylistiques que tu identifies. N'en garde aucune de côté comme simple recommandation : applique-les toi-même dans le texte final. Les listes \"erreurs\" et \"suggestions_style\" servent uniquement à expliquer à l'utilisateur ce qui a déjà été corrigé/amélioré dans \"texte_corrige\", ce ne sont pas des actions restant à faire.\n\n";
+        $prompt .= "ATTENTION : vérifie la grammaire de TOUT le texte, ligne par ligne, y compris les lignes d'en-tête et de destinataire (nom, adresse, formule d'introduction du destinataire, objet) — pas seulement les paragraphes du corps. Exemples d'erreurs fréquentes à ce niveau : article ou préposition manquant (\"À l'attention du Responsable Recrutement\" doit devenir \"À l'attention du Responsable du Recrutement\"), accord incorrect, formule tronquée.\n\n";
         $prompt .= "Réponds UNIQUEMENT avec ce JSON (aucun texte avant ou après) :\n";
         $prompt .= '{
-  "texte_corrige": "...",
-  "erreurs": ["erreur corrigée 1", "..."],
-  "suggestions_style": ["..."]
+  "texte_corrige": "texte final, déjà entièrement corrigé et amélioré",
+  "erreurs": ["erreur corrigée 1 (déjà appliquée ci-dessus)", "..."],
+  "suggestions_style": ["amélioration stylistique déjà appliquée 1", "..."]
 }';
+        $prompt .= "\n\nRappel avant de répondre : chaque élément que tu listes dans \"erreurs\" et \"suggestions_style\" DOIT déjà être visible et appliqué dans \"texte_corrige\". N'écris jamais une suggestion que tu n'as pas toi-même intégrée au texte final. Relis une dernière fois l'en-tête et la ligne de destinataire pour vérifier qu'aucun mot n'y manque.";
 
         try {
             $raw = $this->llm->call([

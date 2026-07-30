@@ -459,7 +459,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 
     ${data.suggestions_style?.length ? `
     <div class="glass-card p-4 mb-3">
-      <h3 style="font-size:1rem;font-weight:700;color:#fcd34d;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Suggestions stylistiques</h3>
+      <h3 style="font-size:1rem;font-weight:700;color:#fcd34d;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Améliorations stylistiques apportées</h3>
       ${data.suggestions_style.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${escHtml(s)}</span></div>`).join('')}
     </div>` : ''}
 
@@ -506,13 +506,9 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         const marginL = 20;
         const marginR = 20;
         const contentW = pageWidth - marginL - marginR;
+        const rightX = pageWidth - marginR;
 
         doc.setTextColor(20, 20, 20);
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
-
-        // Pas de titre "Lettre de motivation corrigée" imprimé sur le document :
-        // c'est un libellé interne à l'interface, pas un texte destiné au recruteur.
-        let y = 20;
 
         // texte_corrige peut arriver sous forme d'une seule chaîne (cas normal)
         // ou, plus rarement, d'un tableau de paragraphes selon ce que renvoie
@@ -522,17 +518,114 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
           ? data.texte_corrige.join('\n\n')
           : String(data.texte_corrige || '');
 
-        let paragraphs = texteBrut.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-        // Filet de sécurité : si le split ne donne rien d'exploitable
-        // (texte sans double saut de ligne, ou format inattendu),
-        // on retombe sur le texte entier comme un seul bloc plutôt que
-        // de produire un PDF vide.
-        if (paragraphs.length === 0 && texteBrut.trim()) {
-          paragraphs = [texteBrut.trim()];
+        if (!texteBrut.trim()) {
+          throw new Error('Le texte de la lettre corrigée est vide.');
         }
 
-        if (paragraphs.length === 0) {
-          throw new Error('Le texte de la lettre corrigée est vide.');
+        let y = 20;
+        const isObjetLine = l => /^objet\s*:/i.test(l);
+        const isDateLine = l => /,\s*le\s+\d/i.test(l) || /^\d{1,2}\s+[a-zéû]+\s+\d{4}$/i.test(l);
+        // Marque le début du bloc destinataire (colonne droite), pas la formule
+        // de politesse finale ("Madame, Monsieur," qui elle a une virgule).
+        // [''’‘] couvre l'apostrophe droite ET les apostrophes typographiques
+        // courbes que l'IA utilise souvent ("l'attention" / "l'attention").
+        const isDestinataireStart = l => /^(à l['’‘]attention|madame\s*\/\s*monsieur|monsieur\s+le|madame\s+la)/i.test(l);
+
+        // On tente de repérer l'en-tête (nom, coordonnées, destinataire, objet,
+        // date) avant la formule d'appel ("Madame, Monsieur," / "Bonjour"...)
+        // pour le mettre en forme comme dans une lettre générée (expéditeur à
+        // gauche, destinataire + date à droite). Si cette structure n'est pas
+        // trouvée (texte inhabituel), on retombe sur un rendu simple en
+        // paragraphes plutôt que de mal découper la lettre.
+        const rawLines = texteBrut.split('\n').map(l => l.trim());
+        const salutationIdx = rawLines.findIndex(l => /^(madame|monsieur|bonjour|cher|chère)/i.test(l));
+
+        let bodyStartLines;
+
+        if (salutationIdx > 0) {
+          const headerLines = rawLines.slice(0, salutationIdx).filter(Boolean);
+
+          // Sépare l'en-tête en groupes : expéditeur (gauche), objet
+          // (pleine largeur, traité après), date + destinataire (droite).
+          const senderLines = [];
+          const dateLines = [];
+          const destinataireLines = [];
+          let objetLine = null;
+          let inRight = false;
+
+          headerLines.forEach(line => {
+            if (isObjetLine(line)) { objetLine = line; return; }
+            if (isDestinataireStart(line)) inRight = true;
+            if (isDateLine(line)) { dateLines.push(line); return; }
+            (inRight ? destinataireLines : senderLines).push(line);
+          });
+
+          // Colonne droite : la date en premier (en haut), le bloc
+          // destinataire en dessous — toujours dans cet ordre visuel, même si
+          // l'IA les a écrits dans un ordre différent dans le texte source.
+          const rightLines = [...dateLines, ...destinataireLines];
+
+          // ---- Colonne gauche : expéditeur ----
+          let leftY = y;
+          senderLines.forEach((line, i) => {
+            if (i === 0) {
+              doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+              doc.text(line, marginL, leftY);
+              leftY += 7;
+            } else {
+              doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+              doc.text(line, marginL, leftY);
+              leftY += 5.5;
+            }
+          });
+
+          // ---- Colonne droite : date puis destinataire ----
+          let rightY = y;
+          rightLines.forEach((line, i) => {
+            const isDate = isDateLine(line);
+            const isFirstDestinataireLine = !isDate && i === dateLines.length;
+            doc.setFont('helvetica', isFirstDestinataireLine ? 'bold' : 'normal');
+            doc.setFontSize(isDate ? 10 : 9.5);
+            doc.text(line, rightX, rightY, { align: 'right' });
+            rightY += isDate ? 8 : 5.5;
+          });
+
+          y = Math.max(leftY, rightY) + 6;
+
+          // ---- Objet (pleine largeur, sous les deux colonnes) ----
+          if (objetLine) {
+            const sepIdx = objetLine.indexOf(':');
+            const label = 'Objet : ';
+            const rest = objetLine.slice(sepIdx + 1).trim();
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
+            doc.text(label, marginL, y);
+            const w = doc.getTextWidth(label);
+            doc.setFont('helvetica', 'normal');
+            doc.text(rest, marginL + w, y);
+            y += 10;
+          }
+
+          bodyStartLines = rawLines.slice(salutationIdx);
+        } else {
+          // Structure non reconnue : pas d'en-tête isolé, tout part en corps de texte.
+          bodyStartLines = rawLines;
+        }
+
+        // La formule d'appel ("Madame, Monsieur,") reste sur sa propre ligne,
+        // comme dans une lettre normale, plutôt que d'être fondue dans le
+        // paragraphe suivant.
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
+        if (bodyStartLines.length && /^(madame|monsieur|bonjour|cher|chère)/i.test(bodyStartLines[0])) {
+          if (y > pageHeight - 25) { doc.addPage(); y = 20; }
+          doc.text(bodyStartLines[0], marginL, y);
+          y += 8;
+          bodyStartLines = bodyStartLines.slice(1);
+        }
+
+        const bodyText = bodyStartLines.join('\n');
+        let paragraphs = bodyText.split(/\n\s*\n/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+        if (paragraphs.length === 0 && bodyText.trim()) {
+          paragraphs = [bodyText.replace(/\n/g, ' ').trim()];
         }
 
         paragraphs.forEach(paragraph => {
