@@ -1,133 +1,132 @@
 import { callAPI, postAPI } from "./api.js";
 
-// ── Text-to-Speech ───────────────────────────────────────────
-function speakText(text) {
-    if (!window.speechSynthesis) return;
+// ── Text-to-Speech (ElevenLabs via backend) ──────────────────
 
-    // Annuler toute lecture en cours
-    window.speechSynthesis.cancel();
+// Précharge l'audio TTS sans le jouer. Retourne {audio, url} ou null en cas d'échec.
+let ttsWarningShown = false;
+export async function fetchAudio(text) {
+    try {
+        const response = await fetch(`${window.API_BASE}/tts/speak`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ text })
+        });
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'fr-FR';
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
+        if (!response.ok) {
+            const err = await response.json().catch(() => null);
+            throw new Error(err?.error || `Erreur HTTP ${response.status}`);
+        }
 
-    // Choisir une voix française si disponible
-    const voices = window.speechSynthesis.getVoices();
-    const frVoice = voices.find(v => v.lang && v.lang.startsWith('fr'));
-    if (frVoice) utterance.voice = frVoice;
-
-    window.speechSynthesis.speak(utterance);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        return { audio, url };
+    } catch (e) {
+        console.warn('[TTS] ElevenLabs échoué:', e.message);
+        if (!ttsWarningShown && typeof showToast === 'function') {
+            showToast('Voix ElevenLabs indisponible — voix de secours utilisée.', 'warning');
+            ttsWarningShown = true;
+        }
+        return null;
+    }
 }
 
-// Les voix se chargent de façon asynchrone — forcer le chargement dès le départ
+// Joue un audio pré-chargé et nettoie après lecture.
+function playAudio(audioObj) {
+    return new Promise(resolve => {
+        const { audio, url } = audioObj;
+        audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+        audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+        audio.play().catch(() => { URL.revokeObjectURL(url); resolve(); });
+    });
+}
+
+// Joue un texte via TTS (fetch + play). Utilisé comme fallback si pas de pré-chargement.
+async function speakText(text) {
+    const fetched = await fetchAudio(text);
+    if (fetched) {
+        return playAudio(fetched);
+    }
+    return speakTextFallback(text);
+}
+
+function speakTextFallback(text) {
+    return new Promise(resolve => {
+        if (!window.speechSynthesis) { resolve(); return; }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'fr-FR';
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        const voices = window.speechSynthesis.getVoices();
+        const frVoice = voices.find(v => v.lang && v.lang.startsWith('fr'));
+        if (frVoice) utterance.voice = frVoice;
+        utterance.onend = resolve;
+        utterance.onerror = resolve;
+        window.speechSynthesis.speak(utterance);
+    });
+}
+
 if (window.speechSynthesis) {
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 }
 
-// ── Chat bubble ──────────────────────────────────────────────
-function appendBubble(text, sender = 'ai') {
-    const chatWindow = document.getElementById("chat-window");
-    const initialMsg = document.getElementById('initial-msg');
-    if (initialMsg) initialMsg.remove();
-
-    const bubble = document.createElement("div");
-    bubble.className = `bubble ${sender}-bubble`;
-    const icon = sender === 'ai'
-        ? '<i class="fa-solid fa-robot"></i> JobMentor IA'
-        : '<i class="fa-solid fa-user"></i> Vous';
-    bubble.innerHTML = `<div class="bubble-name">${icon}</div><div class="bubble-text"></div>`;
-    chatWindow.appendChild(bubble);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-    return bubble.querySelector(".bubble-text");
-}
-
-// ── Typewriter effect ────────────────────────────────────────
-function typeWriter(element, text, speed = 25) {
-    return new Promise(resolve => {
-        let i = 0;
-        function type() {
-            if (i < text.length) {
-                element.textContent += text.charAt(i);
-                i++;
-                const chatWindow = document.getElementById("chat-window");
-                if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
-                setTimeout(type, speed);
-            } else {
-                resolve();
-            }
-        }
-        type();
-    });
+// ── Avatar state (thinking / speaking) ───────────────────────
+function setAvatarState(state) {
+    const avatar = document.querySelector('.ai-avatar');
+    if (!avatar) return;
+    avatar.classList.remove('thinking', 'speaking');
+    if (state) avatar.classList.add(state);
+    // Grand cercle equalizer au centre du chat
+    if (typeof window.setSpeakingVisualizer === 'function') {
+        window.setSpeakingVisualizer(state === 'speaking' || state === 'thinking', state);
+    }
 }
 
 // ── Entretien : get question ─────────────────────────────────
-export async function getQuestion() {
-    const textNode = appendBubble("...");
-    textNode.innerHTML = '<i><i class="fa-solid fa-spinner fa-spin"></i> L\'IA génère une question...</i>';
-
+export async function getQuestion(preloadedAudio = null, onMessage = null) {
+    setAvatarState('thinking');
     const data = await callAPI("entretien/question");
-    textNode.innerHTML = '';
-
     if (data && data.question) {
-        await typeWriter(textNode, data.question);
-        speakText(data.question);
-    }
-
-    return data;
-}
-
-export async function sendAnswer(answer) {
-    // 1. On affiche la bulle de l'utilisateur
-    appendBubble(answer, 'user');
-
-    // 2. On affiche le chargement de l'IA
-    const feedbackNode = appendBubble("...");
-    feedbackNode.innerHTML = '<i><i class="fa-solid fa-spinner fa-spin"></i> L\'IA analyse votre réponse...</i>';
-
-    // 3. Appel API
-    const data = await postAPI("entretien/analyze", { answer });
-    feedbackNode.innerHTML = '';
-
-    if (data && data.success) {
-        // Affichage du feedback
-        await typeWriter(feedbackNode, data.feedback);
-
-        // Ajout du conseil dans un petit bloc spécial
-        const conseilDiv = document.createElement('div');
-        conseilDiv.className = 'alert alert-info mt-2';
-        conseilDiv.style.fontSize = '0.85rem';
-        const conseilStrong = document.createElement('strong');
-        conseilStrong.textContent = '💡 Conseil :';
-        conseilDiv.appendChild(conseilStrong);
-        conseilDiv.appendChild(document.createTextNode(' ' + (data.conseil || '')));
-        feedbackNode.appendChild(conseilDiv);
-
-        // Si une question suivante est prévue, on l'affiche après un court délai
-        if (data.next_question) {
-            setTimeout(async () => {
-                const nextQNode = appendBubble("...");
-                nextQNode.innerHTML = '<i><i class="fa-solid fa-microphone"></i> Recruteur...</i>';
-
-                await new Promise(r => setTimeout(r, 1000));
-                nextQNode.innerHTML = '';
-
-                await typeWriter(nextQNode, data.next_question);
-                speakText(data.next_question);
-            }, 1500);
+        const ttsText = "... " + data.question;
+        const fetched = preloadedAudio || await fetchAudio(ttsText);
+        setAvatarState('speaking');
+        if (onMessage) onMessage(data.question, 'ai');
+        if (fetched) {
+            await playAudio(fetched);
+        } else {
+            await speakTextFallback(ttsText);
         }
+        setAvatarState(null);
     } else {
-        feedbackNode.innerHTML = '<span class="text-danger">Erreur d\'analyse de l\'IA.</span>';
+        setAvatarState(null);
     }
-
     return data;
 }
 
-export function simulateUserAnswer() {
-    // On n'en a plus besoin si on utilise la vraie reco vocale ou texte,
-    // mais on la garde pour compatibilité si oral.html l'utilise encore.
-    const textNode = appendBubble("", 'user');
-    typeWriter(textNode, "Ceci est une simulation de ma réponse interceptée par le micro...", 40);
+export async function sendAnswer(answer, onMessage = null) {
+    setAvatarState('thinking');
+    const data = await postAPI("entretien/analyze", { answer });
+    if (data && data.success) {
+        const texts = [data.feedback, data.conseil, data.next_question].filter(Boolean);
+        const fetched = await Promise.all(texts.map(t => fetchAudio("... " + t)));
+
+        setAvatarState('speaking');
+        for (let i = 0; i < texts.length; i++) {
+            if (onMessage) onMessage(texts[i], 'ai');
+            if (fetched[i]) {
+                await playAudio(fetched[i]);
+            } else {
+                await speakTextFallback("... " + texts[i]);
+            }
+        }
+        setAvatarState(null);
+    } else {
+        setAvatarState(null);
+        showToast("Erreur d'analyse de l'IA.", "error");
+    }
+    return data;
 }
 
 // ── MODULE CV ────────────────────────────────────────────────
@@ -179,4 +178,61 @@ window.AI.analyzeOralResponse = async function ({ transcription, poste, langue }
         throw new Error(data ? data.error : "Erreur d'analyse de la réponse orale");
     }
 };
+
+// ── Import de fichier (PDF / DOCX / TXT) ─────────────────────
+async function importFile(file) {
+    let text = '';
+
+    if (file.type === 'text/plain' || file.name.match(/\.txt$/i)) {
+        text = await file.text();
+
+    } else if (file.name.match(/\.docx?$/i)) {
+        const buf = await file.arrayBuffer();
+        if (typeof mammoth !== 'undefined') {
+            const result = await mammoth.extractRawText({ arrayBuffer: buf });
+            text = result.value;
+        } else {
+            throw new Error('Pour les fichiers Word, convertissez en PDF d\'abord.');
+        }
+
+    } else if (file.type === 'application/pdf' || file.name.match(/\.pdf$/i)) {
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+
+        const pages = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            pages.push(content.items.map(it => it.str).join(' '));
+        }
+        text = pages.join('\n');
+
+        // PDF scanné → OCR Tesseract
+        if (!text.trim() && typeof Tesseract !== 'undefined') {
+            const worker = await Tesseract.createWorker('fra+eng');
+            const ocrPages = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 2 });
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                const { data: { text: ocrText } } = await worker.recognize(canvas);
+                ocrPages.push(ocrText);
+            }
+            await worker.terminate();
+            text = ocrPages.join('\n');
+        }
+    } else {
+        throw new Error('Format non supporté. Utilisez PDF, DOCX ou TXT.');
+    }
+
+    text = text.replace(/\s+/g, ' ').trim();
+    if (!text) throw new Error('Impossible d\'extraire le texte de ce fichier.');
+    return text;
+}
+
+// Expose for classic script usage
+window.importFile = importFile;
 

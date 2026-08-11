@@ -9,64 +9,9 @@
   <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
   <meta content="Entraînez-vous avec un recruteur IA interactif." name="description" />
   <link href="../css/style.css" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
   <style>
     /* Spécifique à ce module de Chat */
-    .chat-window {
-      width: 100%;
-      height: 400px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      padding-right: 10px;
-      margin-bottom: 2rem;
-    }
-
-    .chat-window::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .chat-window::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
-    }
-
-    .bubble {
-      max-width: 85%;
-      padding: 1rem 1.5rem;
-      border-radius: var(--radius-lg);
-      line-height: 1.6;
-      font-size: 0.95rem;
-      animation: slideIn 0.3s ease-out forwards;
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .ai-bubble {
-      align-self: flex-start;
-      background: rgba(20, 184, 166, 0.15);
-      border: 1px solid rgba(20, 184, 166, 0.3);
-      border-top-left-radius: 4px;
-    }
-
-    .user-bubble {
-      align-self: flex-end;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid var(--glass-border);
-      border-top-right-radius: 4px;
-    }
-
     .ai-avatar {
       width: 60px;
       height: 60px;
@@ -86,6 +31,69 @@
       border: 1px solid rgba(239, 68, 68, 0.4);
       box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
     }
+
+    .ai-avatar.thinking {
+      animation: thinkingPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes thinkingPulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    .ai-avatar.speaking {
+      animation: speakingPulse 1s ease-in-out infinite;
+      box-shadow: 0 0 30px rgba(20, 184, 166, 0.6);
+    }
+    @keyframes speakingPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(20,184,166,0.3); }
+      50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(20,184,166,0.6); }
+    }
+
+    /* ── Speaking visualizer (grand cercle au centre du chat) ── */
+    .speaking-visualizer {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 1.5rem auto;
+      animation: vizFadeIn 0.3s ease-out;
+    }
+    .speaking-visualizer.active { display: flex; }
+
+    @keyframes vizFadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .speaking-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--blue));
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 5px;
+      padding: 0 0 25px 0;
+      box-shadow: 0 0 40px rgba(20,184,166,0.5);
+      animation: circlePulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes circlePulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(20,184,166,0.3); }
+      50% { box-shadow: 0 0 60px rgba(20,184,166,0.7); }
+    }
+
+    .eq-bar {
+      width: 6px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 3px;
+      animation: eqBounce var(--dur) ease-in-out infinite alternate;
+    }
+
+    @keyframes eqBounce {
+      from { height: var(--h1); }
+      to { height: var(--h2); }
+    }
   </style>
 </head>
 
@@ -101,14 +109,14 @@
     </a>
     <ul class="nav-links" id="nav-links">
       <li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
-      <li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file"></i></span> CV</a></li>
-      <li><a href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope"></i></span> Lettre</a></li>
-      <li><a class="active" href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+      <li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file-lines"></i></span> CV</a></li>
+      <li><a href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope-open-text"></i></span> Lettre</a></li>
+      <li><a class="active" href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-user-tie"></i></span>
           Entretien</a></li>
       <li><a href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
     </ul>
     <div class="nav-cta">
-      <button class="btn-nav btn-nav-ghost" id="btn-config"><i class="fa-solid fa-gear"></i> API</button>
+      <button class="btn-nav btn-nav-ghost" id="btn-config"> API</button>
       <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
     </div>
   </nav>
@@ -116,7 +124,7 @@
   <div class="modal-overlay" id="modal-history">
     <div class="modal-container">
       <div class="modal-header" style="margin-bottom: 1rem;">
-        <h2 class="modal-title"><i class="fa-solid fa-clock-rotate-left"></i> Mes Archives</h2>
+        <h2 class="modal-title"> Mes Archives</h2>
         <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
       </div>
 
@@ -134,7 +142,7 @@
   <div class="modal-overlay" id="modal-transcript">
     <div class="modal-container" style="max-width: 700px;">
       <div class="modal-header">
-        <h2 class="modal-title" id="transcript-title">Détails de l'entretien</h2>
+        <h2 class="modal-title" id="transcript-title"><i class="fa-solid fa-file-lines"></i> Détails de l'entretien</h2>
         <button class="modal-close"
           onclick="document.getElementById('modal-transcript').classList.remove('active')">&times;</button>
       </div>
@@ -147,7 +155,7 @@
   <div class="app-wrapper">
     <div class="page-header" style="background-image: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.55) 65%, rgba(10,10,13,0.97) 100%), url('../assets/img/entretien-header.jpg'); background-size: cover; background-position: center 30%;">
       <div class="container">
-        <span class="badge badge-teal animate-fade-up"><i class="fa-solid fa-microphone"></i> Simulation
+        <span class="badge badge-teal animate-fade-up"> Simulation
           d'Entretien</span>
         <h1 class="page-title animate-fade-up delay-1">
           Préparez-vous avec <span class="gradient-text-teal">l'IA Recruteur</span>
@@ -159,7 +167,7 @@
     </div>
     <div class="container" style="padding-bottom:80px">
       <div
-        style="max-width:900px; margin:0 auto;">
+        style="max-width:1100px; margin:0 auto;">
 
         <!-- ══ Carte Centrale : Conversation IA ══ -->
         <div class="glass-card p-4 animate-fade-up delay-3"
@@ -167,32 +175,28 @@
           <!-- En-tête -->
           <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem;">
             <div class="ai-avatar pulse"
-              style="width:40px; height:40px; font-size:1.1rem; flex-shrink:0; animation:float 4s ease-in-out infinite; margin:0; box-shadow:0 0 14px rgba(20,184,166,0.4);">
-              <i class="fa-solid fa-robot" style="color:#fff"></i>
+              style="width:40px; height:40px; font-size:1.1rem; flex-shrink:0; margin:0; box-shadow:0 0 14px rgba(20,184,166,0.4);">
+              
             </div>
             <div>
               <div
                 style="font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--teal-light);">
-                <i class="fa-solid fa-comments"></i> Conversation avec l'IA
+                 Conversation avec l'IA
               </div>
               <div style="font-size:0.72rem; color:var(--text-muted); margin-top:1px;">Recruteur virtuel en temps réel
               </div>
             </div>
           </div>
           <!-- Fenêtre chat -->
-          <div class="chat-window" id="chat-window" style="flex:1; margin-bottom:0; min-height:450px;">
-            <div class="bubble ai-bubble" id="initial-msg"
-              style="opacity:0.8; background:transparent; border:1px solid var(--glass-border); text-align:center; align-self:center;">
-              <i><i class="fa-solid fa-comment"></i> L'IA recruteur est prête. Cliquez sur "Démarrer l'entretien" pour
-                démarrer l'échange.</i>
-            </div>
+          <div class="speaking-visualizer" id="speaking-visualizer">
+            <div class="speaking-circle" id="speaking-circle"></div>
           </div>
         </div>
 
         <!-- ══ Bouton pour ouvrir les notes ══ -->
         <div style="text-align:center; margin-top:1.5rem;">
           <button class="btn btn-secondary" id="btn-toggle-notes" style="background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 3px 12px rgba(20,184,166,0.3);">
-            <i class="fa-solid fa-note-sticky"></i> Mes Notes personnelles
+             <i class="fa-solid fa-note-sticky"></i> Notes
           </button>
         </div>
 
@@ -203,12 +207,12 @@
           <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem;">
             <div
               style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--teal), var(--blue)); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; box-shadow:0 0 14px rgba(20,184,166,0.4);">
-              <i class="fa-solid fa-note-sticky" style="color:#fff;"></i>
+              
             </div>
             <div>
               <label for="notes-area" id="notes-area-label"
                 style="font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--teal-light); display:block; margin:0;">
-                Mes Notes personnelles
+                Notes
               </label>
               <div style="font-size:0.72rem; color:var(--text-muted); margin-top:1px;">Vos points clés &amp; questions à
                 poser</div>
@@ -221,7 +225,7 @@
           <!-- Bouton export -->
           <button class="btn btn-primary btn-full" id="btn-save-notes-pdf" title="Télécharger mes notes en .pdf"
             style="background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 3px 12px rgba(20,184,166,0.3);">
-            <i class="fa-solid fa-file-pdf"></i> Enregistrer mes notes (.pdf)
+             Enregistrer mes notes (.pdf)
           </button>
         </div>
 
@@ -234,12 +238,12 @@
         <!-- Ligne 1 : Démarrer + Micro -->
         <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom:0.75rem;">
           <button class="btn btn-primary" id="btn-next"
-            style="flex:1; max-width:300px; background:linear-gradient(135deg, var(--teal), var(--blue)); box-shadow:0 4px 15px rgba(20,184,166,0.3)">
-            <i class="fa-solid fa-play"></i> Démarrer l'entretien
+            style="max-width:220px; background:linear-gradient(135deg, var(--teal), var(--blue)); box-shadow:0 4px 15px rgba(20,184,166,0.3)">
+             Démarrer l'entretien
           </button>
 
-          <button class="btn btn-secondary" id="start-recording-btn" style="flex:1; max-width:300px;">
-            <i class="fa-solid fa-microphone"></i> <span>Répondre (Micro)</span>
+          <button class="btn btn-secondary" id="start-recording-btn" style="max-width:220px;">
+             <span><i class="fa-solid fa-microphone"></i> Répondre (Micro)</span>
             <div class="waveform paused" id="recording-waves" style="display:none; height:16px;">
               <div class="wave-bar" style="height:4px; background:#fca5a5;"></div>
               <div class="wave-bar" style="height:4px; background:#fca5a5;"></div>
@@ -248,22 +252,24 @@
           </button>
         </div>
 
-        <button class="btn btn-primary btn-full" id="btn-save-interview" title="Sauvegarder cet entretien dans vos archives"
-          style="display:none; margin-bottom:0.75rem; background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 4px 15px rgba(20,184,166,0.3);">
-          <i class="fa-solid fa-floppy-disk"></i> Sauvegarder cet entretien
-        </button>
+        <div style="text-align:center">
+          <button class="btn btn-primary" id="btn-save-interview" title="Sauvegarder cet entretien dans vos archives"
+            style="display:none; margin-bottom:0.75rem; max-width:280px; background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 4px 15px rgba(20,184,166,0.3);">
+             <i class="fa-solid fa-floppy-disk"></i> Sauvegarder cet entretien
+          </button>
+        </div>
 
         <!-- Ligne 2 : Archives + Effacer + Réinitialiser -->
         <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
           <button class="btn btn-secondary" id="btn-history-interview" title="Historique">
-            <i class="fa-solid fa-clock-rotate-left"></i> Mes Archives
+             <i class="fa-solid fa-clock-rotate-left"></i> Mes Archives
           </button>
           <button class="btn btn-secondary" id="btn-delete" style="border-color:rgba(239,68,68,0.3); color:#fca5a5;">
-            <i class="fa-solid fa-rotate-left"></i> <span>Effacer</span>
+             <span><i class="fa-solid fa-trash-can"></i> Effacer</span>
           </button>
           <button class="btn btn-secondary" id="btn-reset" title="Réinitialiser l'entretien"
             style="border-color:rgba(251,146,60,0.4); color:#fdba74;">
-            <i class="fa-solid fa-arrows-rotate"></i> Réinitialiser
+             <i class="fa-solid fa-rotate-left"></i> Réinitialiser
           </button>
         </div>
 
@@ -277,8 +283,49 @@
   <script src="../js/particles.js"></script>
   <script src="../js/utils.js"></script>
   <script type="module">
-    import { getQuestion, sendAnswer } from "../js/ai.js";
+    import { getQuestion, sendAnswer, fetchAudio } from "../js/ai.js";
     import { callAPI, postAPI } from "../js/api.js";
+
+    // ── Pré-charger l'audio de la première question dès le chargement ──
+    const FIRST_QUESTION = "... Bonjour ! Je suis ravi de vous recevoir pour cet entretien. Pour commencer, pouvez-vous vous présenter et me parler de votre parcours ?";
+    let preloadedFirstAudio = null;
+    fetchAudio(FIRST_QUESTION).then(a => { preloadedFirstAudio = a; }).catch(() => {});
+
+    // ── Speaking visualizer (grand cercle equalizer) ──
+    function createEqBars() {
+      const circle = document.getElementById('speaking-circle');
+      circle.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'eq-bar';
+        bar.style.setProperty('--dur', `${0.4 + Math.random() * 0.4}s`);
+        bar.style.setProperty('--h1', `${15 + Math.random() * 10}px`);
+        bar.style.setProperty('--h2', `${40 + Math.random() * 35}px`);
+        circle.appendChild(bar);
+      }
+    }
+
+    window.setSpeakingVisualizer = function (show, state) {
+      const viz = document.getElementById('speaking-visualizer');
+      if (!viz) return;
+      if (show) {
+        createEqBars();
+        viz.classList.add('active');
+      } else {
+        viz.classList.remove('active');
+      }
+    };
+
+    // ── Écriture silencieuse de la conversation dans les notes ──
+    function appendToNotes(role, text) {
+      if (!text || !text.trim()) return;
+      const notesArea = document.getElementById('notes-area');
+      if (!notesArea) return;
+      const timestamp = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const sep = notesArea.value ? '\n\n' : '';
+      notesArea.value += sep + role + ' — ' + timestamp + '\n' + text;
+      localStorage.setItem(jmKey('last_notes'), notesArea.value);
+    }
 
     const btnNext = document.querySelector("#btn-next");
     const btnMicro = document.querySelector("#start-recording-btn");
@@ -359,7 +406,12 @@
       btnMicro.disabled = true;
       btnDelete.disabled = true;
       try {
-        const data = await sendAnswer(text);
+        appendToNotes('Candidat', text);
+
+        const data = await sendAnswer(text, (msg, role) => {
+          appendToNotes('Recruteur', msg);
+        });
+
         if (data.end) {
           btnNext.style.display = "none";
           btnMicro.style.display = "none";
@@ -381,12 +433,12 @@
       btnNext.disabled = true;
       btnMicro.disabled = true;
       btnDelete.disabled = true;
-      const initMsg = document.getElementById("initial-msg");
-      if (initMsg) initMsg.style.display = 'none';
 
       try {
-        await getQuestion();
-        btnNext.innerHTML = '<i class="fa-solid fa-forward-step"></i> Question suivante';
+        await getQuestion(preloadedFirstAudio, (q) => appendToNotes('Recruteur', q));
+        preloadedFirstAudio = null; // Utilisé, on ne recharge pas
+        btnNext.innerHTML = ' Question suivante';
+        btnSaveInterview.style.display = "inline-flex";
       } catch (e) {
         showToast("Erreur : " + e.message, "error");
       } finally {
@@ -414,7 +466,7 @@
 
     // Clic sur Supprimer
     btnDelete.addEventListener("click", async () => {
-      if (!confirm("Voulez-vous supprimer votre dernière réponse et recommencer cette question ?")) return;
+      if (!await showConfirmModal("Voulez-vous supprimer votre dernière réponse et recommencer cette question ?", { title: 'Effacer la réponse', confirmText: 'Supprimer', danger: true })) return;
 
       btnDelete.disabled = true;
       btnNext.disabled = true;
@@ -423,19 +475,7 @@
       try {
         const res = await callAPI("entretien/last-answer");
         if (res && res.success) {
-          const chatWindow = document.getElementById("chat-window");
-          const userBubbles = chatWindow.querySelectorAll(".user-bubble");
-
-          if (userBubbles.length > 0) {
-            const lastUserBubble = userBubbles[userBubbles.length - 1];
-            while (chatWindow.lastChild && chatWindow.lastChild !== lastUserBubble) {
-              chatWindow.removeChild(chatWindow.lastChild);
-            }
-            chatWindow.removeChild(lastUserBubble);
-            showToast("Réponse supprimée. Vous pouvez re-répondre.", "success");
-          } else {
-            showToast("Aucune réponse à supprimer dans l'affichage.", "info");
-          }
+          showToast("Réponse supprimée. Vous pouvez re-répondre.", "success");
         } else {
           showToast(res.error || "Erreur lors de la suppression.", "error");
         }
@@ -450,7 +490,7 @@
 
     // Clic sur Réinitialiser
     btnReset.addEventListener("click", async () => {
-      if (!confirm("Voulez-vous vraiment réinitialiser l'entretien ? Toute la conversation en cours et vos notes seront effacées.")) return;
+      if (!await showConfirmModal("Voulez-vous vraiment réinitialiser l'entretien ? Toute la conversation en cours et vos notes seront effacées.", { title: 'Réinitialiser l\'entretien', confirmText: 'Réinitialiser', danger: true })) return;
 
       btnReset.disabled = true;
       btnNext.disabled = true;
@@ -460,21 +500,12 @@
       try {
         const res = await callAPI("entretien/reset");
         if (res && res.success) {
-          // Vider la fenêtre de chat
-          const chatWindow = document.getElementById("chat-window");
-          chatWindow.innerHTML = `
-            <div class="bubble ai-bubble" id="initial-msg"
-              style="opacity:0.8; background:transparent; border:1px solid var(--glass-border); text-align:center; align-self:center;">
-              <i><i class="fa-solid fa-comment"></i> L'IA recruteur est prête. Cliquez sur "Démarrer l'entretien" pour démarrer l'échange.</i>
-            </div>`;
           // Réinitialiser le bouton Démarrer
-          btnNext.innerHTML = '<i class="fa-solid fa-play"></i> Démarrer l\'entretien';
+          btnNext.innerHTML = ' Démarrer l\'entretien';
           btnNext.style.display = "";
           btnMicro.style.display = "";
           btnDelete.style.display = "";
           btnSaveInterview.style.display = "none";
-          // Effacer le localStorage
-          localStorage.removeItem(jmKey('last_chat'));
           // Effacer les notes personnelles
           document.getElementById('notes-area').value = '';
           localStorage.removeItem(jmKey('last_notes'));
@@ -498,7 +529,7 @@
 
       btnSaveInterview.disabled = true;
       const originalLabel = btnSaveInterview.innerHTML;
-      btnSaveInterview.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sauvegarde en cours...';
+      btnSaveInterview.innerHTML = ' Sauvegarde en cours...';
 
       try {
         const res = await postAPI("entretien/save", { job_title: jobTitle });
@@ -516,25 +547,6 @@
         btnSaveInterview.innerHTML = originalLabel;
       }
     });
-
-    // --- Persistance de l'entretien ---
-    const chatWindow = document.getElementById("chat-window");
-
-    // Charger l'historique au démarrage
-    const savedChat = localStorage.getItem(jmKey('last_chat'));
-    if (savedChat) {
-      chatWindow.innerHTML = savedChat;
-      const initMsg = document.getElementById("initial-msg");
-      if (initMsg && chatWindow.children.length > 1) initMsg.style.display = 'none';
-      if (chatWindow.children.length > 1) btnNext.innerHTML = '<i class="fa-solid fa-forward-step"></i> Question suivante';
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    // Observer les changements pour sauvegarder
-    const observer = new MutationObserver(() => {
-      localStorage.setItem(jmKey('last_chat'), chatWindow.innerHTML);
-    });
-    observer.observe(chatWindow, { childList: true, subtree: true });
 
     // --- Toggle Notes ---
     document.getElementById('btn-toggle-notes').addEventListener('click', () => {
@@ -587,7 +599,7 @@
           </style>
         </head>
         <body>
-          <h1>Mes Notes — Entretien My Job Mentor</h1>
+          <h1>Notes — Entretien My Job Mentor</h1>
           <div class="meta">Date : ${dateStr} à ${timeStr}</div>
           <div class="content">${escapedNotes}</div>
           <script>window.onload = () => { window.print(); window.close(); }<\/script>
@@ -595,6 +607,8 @@
         </html>
       `);
       printWin.document.close();
+      printWin.focus();
+      setTimeout(() => { try { printWin.close(); } catch(e) {} }, 2000);
       showToast('Fenêtre PDF ouverte — choisissez "Enregistrer en PDF".', 'success');
     });
 
@@ -630,12 +644,12 @@
       const list = getHistoryList();
       list.innerHTML = `
         <div class="text-center p-5">
-          <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:var(--purple-light); margin-bottom:1rem"></i>
+          
           <p class="text-secondary">Chargement...</p>
         </div>`;
 
       try {
-        const action = currentTab === 'interviews' ? 'list' : 'list-notes';
+        const action = currentTab === 'interviews' ? 'list' : 'notes/list';
         const response = await fetch(`${window.API_BASE}/entretien/${action}`, { credentials: 'include' });
         const data = await response.json();
 
@@ -646,8 +660,8 @@
         if (!items || items.length === 0) {
           list.innerHTML = `
             <div class="text-center p-5">
-              <i class="fa-solid fa-box-open" style="font-size:3rem; color:var(--glass-border); margin-bottom:1rem"></i>
-              <p class="text-secondary">Aucun élément trouvé.</p>
+              
+              <p class="text-secondary"><i class="fa-solid fa-inbox"></i> Aucun élément trouvé.</p>
             </div>`;
           return;
         }
@@ -696,7 +710,7 @@
     }
 
     window.deleteNote = async function (id) {
-      if (!confirm('Supprimer cette note ?')) return;
+      if (!await showConfirmModal('Supprimer cette note ?', { title: 'Supprimer la note', confirmText: 'Supprimer', danger: true })) return;
       try {
         const response = await fetch(`${window.API_BASE}/entretien/notes/delete/${id}`, { credentials: 'include' });
         const data = await response.json();
@@ -724,7 +738,7 @@
     }
 
     window.deleteInterviewHistory = async function (id) {
-      if (!confirm('Supprimer cet entretien définitivement ?')) return;
+      if (!await showConfirmModal('Supprimer cet entretien définitivement ?', { title: 'Supprimer l\'entretien', confirmText: 'Supprimer', danger: true })) return;
       try {
         const response = await fetch(`${window.API_BASE}/entretien/delete/${id}`, { credentials: 'include' });
         const data = await response.json();

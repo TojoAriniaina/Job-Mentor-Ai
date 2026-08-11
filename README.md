@@ -10,8 +10,8 @@ Plateforme web francophone d'accompagnement à la recherche d'emploi. Elle aide 
 |---|---|
 | **Authentification** | Inscription, connexion, déconnexion, profil éditable (photo, téléphone, secteur, titre) |
 | **CV** | Génération par IA à partir d'un formulaire structuré, score de complétude **calculé de façon déterministe** (pas auto-déclaré par l'IA), historique |
-| **Lettre de motivation** | Génération à partir d'un CV + une offre, correction de lettres existantes, score de pertinence **déterministe** (comparaison mots-clés texte/offre), sauvegarde en 2 étapes distinctes (générer, puis enregistrer) |
-| **Entretien simulé** | Questions générées dynamiquement par l'IA avec feedback à chaque réponse, jusqu'à 5 questions par session |
+| **Lettre de motivation** | Génération à partir d'un CV + une offre, correction de lettres existantes, score de pertinence **déterministe** (comparaison mots-clés texte/offre), export PDF avec mise en page automatique de l'en-tête |
+| **Entretien simulé** | Questions générées dynamiquement par l'IA avec feedback à chaque réponse, jusqu'à 5 questions par session, sauvegarde en archives avec score global |
 | **Entraînement oral** | Reconnaissance vocale **100% côté navigateur** (API Web Speech, aucun audio envoyé au serveur), puis analyse du texte transcrit par l'IA avec score et axes d'amélioration |
 | **Administration** | Espace réservé aux comptes `role = admin` : liste des utilisateurs (recherche, filtres par rôle/statut, photo de profil ou initiales en repli), statistiques d'usage par module, activation/désactivation de compte, promotion/rétrogradation de rôle, suppression de compte. Accessible via un onglet dédié sur la page de connexion |
 
@@ -41,7 +41,7 @@ Job-Mentor-Ai/
 ├── src/
 │   ├── Router.php
 │   ├── Controllers/          # AuthController, CvController, LettreController, EntretienController, OralController, UserController, AdminController
-│   ├── Models/                # User, CvDocument, CoverLetter, InterviewHistory, OralAnalysis, UserNote
+│   ├── Models/                # User, CvDocument, CoverLetter, InterviewHistory, OralAnalysis, UserNote, LoginAttempt
 │   ├── Services/               # LlmService (appels IA), AtsScorer (scores déterministes)
 │   └── Middleware/Auth.php     # Vérification de session (+ rôle pour les routes admin), appelée en tête de chaque action protégée
 ├── database.sql               # Schéma complet de la base
@@ -85,13 +85,19 @@ Job-Mentor-Ai/
 
 Un compte admin peut ensuite promouvoir d'autres comptes directement depuis l'interface, sans repasser par SQL.
 
+## Sécurité
+
+- **Limitation des tentatives de connexion** : suivi des échecs par email + adresse IP en base (`login_attempts`), blocage temporaire de 5 minutes après 5 échecs.
+- **Protection contre les injections XSS** : tout contenu dynamique (saisie utilisateur, texte généré par l'IA, données issues de la base) affiché dans l'interface passe par des fonctions d'échappement centralisées (`escHtml`, `escAttr` dans `utils.js`).
+- **Mots de passe** : hachage via `password_hash()`, longueur minimale de 8 caractères vérifiée côté client et serveur.
+- **`.env`** exclu du contrôle de version ; clé API de secours avec bascule automatique en cas d'échec.
+
 ## Points d'attention connus
 
-- **Historique d'entretien non persisté** : la table `interview_history` existe en base mais n'est actuellement jamais alimentée par le code — l'échange question/réponse ne vit que dans la mémoire du navigateur (`localStorage`) pendant la session. Voir `TODO.md`.
-- **Sécurité** : usage de `innerHTML` à plusieurs endroits du frontend (risque XSS à corriger avant une mise en production publique), pas de limitation du nombre de tentatives de connexion. Voir `TODO.md`.
 - **`og:image`** (métadonnées de partage de lien) utilise un chemin relatif — à remplacer par une URL absolue une fois un vrai nom de domaine en place.
 - **Espace admin sans pagination** : la liste des utilisateurs se charge en une seule fois (filtrage/recherche côté client). Suffisant pour le volume actuel, à revoir si la base dépasse quelques centaines de comptes.
 - **Pas de "Create" côté admin** : la gestion des utilisateurs est volontairement en **Read / Update / Delete** seul — un admin ne peut pas créer de compte pour un tiers, chaque utilisateur passe par le formulaire d'inscription standard pour définir lui-même son mot de passe.
+- **Export PDF de la lettre corrigée** : la détection automatique de l'en-tête (expéditeur/destinataire/date/objet) repose sur des motifs de texte usuels d'une lettre de motivation française — fonctionne pour une structure classique, mais retombe sur un rendu en paragraphes simples si la structure n'est pas reconnue.
 
 ## Documentation complémentaire
 

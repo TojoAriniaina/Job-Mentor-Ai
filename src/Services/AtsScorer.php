@@ -179,9 +179,12 @@ class AtsScorer {
         if (!empty($info['formation']) && !is_array($info['formation'])) {
             $info['formation'] = $this->parseDatedTextRows($info['formation'], 'formation');
         }
+        $soft = array_values(array_filter(array_map('trim', explode(',', $info['soft_competences'] ?? ''))));
         if (!empty($info['competences']) && !is_array($info['competences'])) {
             $skills = array_values(array_filter(array_map('trim', explode(',', $info['competences']))));
-            $info['competences'] = ['techniques' => $skills, 'outils' => [], 'soft' => []];
+            $info['competences'] = ['techniques' => $skills, 'outils' => [], 'soft' => $soft];
+        } elseif (!empty($soft)) {
+            $info['competences'] = ['techniques' => [], 'outils' => [], 'soft' => $soft];
         }
 
         return $info;

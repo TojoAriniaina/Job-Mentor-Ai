@@ -44,12 +44,16 @@ class CvController {
 
         $completenessScore = $this->ats->calculateCompletenessScore($info_for_ai);
 
+        $titreSaisi = $info_for_ai['titre'] ?? '';
+
         $prompt = 'Génère un CV professionnel en français à partir de ces informations : ' . json_encode($info_for_ai, JSON_UNESCAPED_UNICODE) . '
 Le score de complétude calculé est ' . $completenessScore . '/100 basé sur les données fournies.
 IMPORTANT : si une information n\'est pas fournie, laisse le champ correspondant en chaîne vide "". N\'écris JAMAIS de texte de remplissage comme "Non renseigné", "N/A", "non spécifié" ou équivalent : soit tu as l\'information, soit le champ reste vide.
+IMPORTANT : le champ "titre" DOIT reprendre EXACTEMENT le titre professionnel fourni par l\'utilisateur (' . json_encode($titreSaisi, JSON_UNESCAPED_UNICODE) . '). N\'invente pas un autre titre, n\'ajoute pas de mots comme "Full Stack", "Senior" ou "Junior" si ce n\'est pas dans le titre fourni.
+IMPORTANT : les soft skills fournis par l\'utilisateur dans "competences.soft" doivent être repris TELS QUELS, sans reformulation ni ajout.
 Format JSON strict : {
   "nom": "...",
-  "titre": "Titre professionnel accrocheur",
+  "titre": ' . json_encode($titreSaisi, JSON_UNESCAPED_UNICODE) . ',
   "contact": { "email":"...", "tel":"...", "ville":"...", "linkedin":"..." },
   "profil": "Résumé professionnel percutant en 3-4 phrases",
   "competences": { "techniques":["..."], "outils":["..."], "soft":["..."] },
@@ -185,5 +189,76 @@ Réponds UNIQUEMENT en JSON: {
         }
         $this->cvModel->delete((int)$id, $userId);
         $this->json(['success' => true]);
+    }
+
+    public function importAnalyze(): void {
+        $userId = Auth::require();
+        $input = $this->input();
+        $cvText = trim($input['cv_text'] ?? '');
+        $jobOffer = trim($input['job_offer'] ?? '');
+        $photo = $input['photo'] ?? null;
+
+        if (empty($cvText)) {
+            $this->json(['success' => false, 'error' => 'Le texte du CV est manquant.'], 400);
+            return;
+        }
+
+        $prompt = "Parse ce texte de CV et extrais les informations structurées.\n";
+        $prompt .= "Si une information n'est pas trouvée, laisse le champ vide \"\".\n";
+        $prompt .= "IMPORTANT : n'invente jamais d'information. Utilise uniquement ce qui est dans le texte.\n\n";
+        $prompt .= "TEXTE DU CV :\n$cvText\n\n";
+        $prompt .= 'Format JSON strict : {
+  "nom": "...",
+  "titre": "...",
+  "contact": { "email": "...", "tel": "...", "ville": "...", "linkedin": "..." },
+  "profil": "Résumé professionnel en 3-4 phrases",
+  "competences": { "techniques": ["..."], "outils": ["..."], "soft": ["..."] },
+  "experience": [{ "poste": "...", "entreprise": "...", "periode": "...", "realisation": ["..."] }],
+  "formation": [{ "diplome": "...", "etablissement": "...", "annee": "..." }],
+  "langues": [{ "langue": "...", "niveau": "..." }]
+}';
+
+        try {
+            $raw = $this->llm->call([
+                ['role' => 'system', 'content' => 'Tu es un expert RH. Tu parses des CV et tu extrais les informations structurées. Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte avant ou après.'],
+                ['role' => 'user',   'content' => $prompt]
+            ], ['max_tokens' => 2000]);
+
+            $json_data = $this->llm->extractJson($raw);
+            if (!$json_data) throw new \Exception("Impossible de parser le CV. Format de réponse invalide.");
+
+            $json_data = $this->ats->cleanAiPlaceholderText($json_data);
+
+            // Score de complétude
+            $normalized = $this->ats->normalizeCvInfoForScoring($json_data);
+            $completeness = $this->ats->calculateCompletenessScore($normalized);
+            $finalScore = $this->ats->calculateGeneratedCvScore($json_data);
+            $json_data['score_ats'] = $finalScore['completeness_score'];
+            $json_data['ats_details'] = $finalScore;
+
+            // Score vs offre (si fournie)
+            if (!empty($jobOffer)) {
+                $cvContent = json_encode($json_data, JSON_UNESCAPED_UNICODE);
+                $atsAgainstOffer = $this->ats->calculateRealATSScore($cvContent, $jobOffer);
+                $json_data['score_pertinence'] = $atsAgainstOffer['total'];
+                $json_data['pertinence_details'] = $atsAgainstOffer;
+            }
+
+            // Attacher la photo si fournie
+            if ($photo) {
+                $json_data['photo'] = $photo;
+            }
+
+            // Sauvegarder
+            if ($userId) {
+                $title = $json_data['nom'] ?? 'CV importé';
+                $this->cvModel->create($userId, $title, $json_data, $json_data['score_ats']);
+            }
+
+            $this->json(['success' => true, 'data' => $json_data]);
+        } catch (\Exception $e) {
+            error_log('[CvController::importAnalyze] ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }

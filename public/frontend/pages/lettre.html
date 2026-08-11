@@ -24,20 +24,20 @@
 </a>
 <ul class="nav-links" id="nav-links">
 <li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
-<li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file"></i></span> CV</a></li>
-<li><a class="active" href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope"></i></span> Lettre</a></li>
-<li><a href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-microphone"></i></span> Entretien</a></li>
+<li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file-lines"></i></span> CV</a></li>
+<li><a class="active" href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope-open-text"></i></span> Lettre</a></li>
+<li><a href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-user-tie"></i></span> Entretien</a></li>
 <li><a href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
 </ul>
 <div class="nav-cta">
-<button class="btn-nav btn-nav-ghost" id="btn-config"><i class="fa-solid fa-gear"></i> API</button>
+<button class="btn-nav btn-nav-ghost" id="btn-config"> API</button>
 <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
 </div>
 </nav>
 <div class="app-wrapper">
 <div class="page-header" style="background-image: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.55) 65%, rgba(10,10,13,0.97) 100%), url('../assets/img/lettre-header.jpg'); background-size: cover; background-position: center 40%;">
 <div class="container">
-<span class="badge badge-blue animate-fade-up"><i class="fa-solid fa-envelope"></i> Lettre de Motivation</span>
+<span class="badge badge-blue animate-fade-up"> Lettre de Motivation</span>
 <h1 class="page-title animate-fade-up delay-1">
           Une lettre qui<br/><span class="gradient-text" style="background:linear-gradient(90deg,var(--blue),var(--teal-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Fait
             la différence</span>
@@ -57,7 +57,7 @@
 <div class="grid grid-2" style="gap:2rem">
 <!-- Formulaire -->
 <div class="glass-card p-4 animate-fade-up h-full">
-<h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"><i class="fa-solid fa-pen"></i> Informations</h2>
+<h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"> Informations</h2>
 <div class="form-group">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
   <label class="form-label" for="l-cv" style="margin-bottom:0">Votre profil / CV (résumé) *</label>
@@ -67,13 +67,13 @@
            color:var(--primary,#6c63ff);cursor:pointer;white-space:nowrap;transition:all .2s"
     onmouseover="this.style.background='var(--primary,#6c63ff)';this.style.color='#fff'"
     onmouseout="this.style.background='transparent';this.style.color='var(--primary,#6c63ff)'">
-    <i class="fa-solid fa-file-arrow-up"></i> Importer un CV
+     <i class="fa-solid fa-file-arrow-up"></i> Importer un CV
   </button>
   <input type="file" id="cv-file-input" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="importCVFile(event)"/>
 </div>
 <textarea class="form-control" id="l-cv" placeholder="Développeur Full Stack avec 3 ans d'expérience en React et Node.js. Diplômé d'un Master Informatique. Maîtrise de Docker, PostgreSQL..." rows="5"></textarea>
 <div id="cv-import-status" style="display:none;font-size:0.8rem;margin-top:5px;color:var(--primary,#6c63ff)">
-  <i class="fa-solid fa-spinner fa-spin"></i> <span id="cv-import-msg">Lecture du fichier...</span>
+   <span id="cv-import-msg">Lecture du fichier...</span>
 </div>
 </div>
 <div class="form-group">
@@ -117,9 +117,9 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
 </div>
 </div>
             <div style="display:flex;gap:10px;margin-top:10px">
-              <button class="btn btn-primary" id="btn-gen-lettre" style="flex:4"><i class="fa-solid fa-wand-magic-sparkles"></i> Générer ma lettre</button>
+              <button class="btn btn-primary" id="btn-gen-lettre" style="flex:4"> Générer ma lettre</button>
               <button class="btn btn-secondary" id="btn-history-lettre-form" title="Mes archives" style="flex:1">
-                <i class="fa-solid fa-box-archive"></i>
+                <i class="fa-solid fa-clock-rotate-left"></i>
               </button>
               <button class="btn btn-secondary" id="btn-reset-lettre" title="Réinitialiser le formulaire" style="flex:1">
                 <i class="fa-solid fa-rotate-left"></i>
@@ -129,7 +129,7 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
 <!-- Résultat -->
 <div class="h-full">
 <div class="glass-card p-4 h-full" id="lettre-placeholder" style="text-align:center;padding:3rem 2rem">
-<div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"><i class="fa-solid fa-envelope"></i></div>
+<div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"></div>
 <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Votre lettre apparaîtra ici</h3>
 <p class="text-secondary text-sm">Remplissez le formulaire et cliquez sur "Générer"</p>
 </div>
@@ -142,27 +142,23 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
 <div class="skeleton skeleton-line w-90"></div>
 <div class="skeleton skeleton-line w-60"></div>
 </div>
-<p class="text-secondary text-sm text-center" style="margin-top:0.5rem"><i class="fa-solid fa-wand-magic-sparkles"></i> Rédaction de votre lettre en cours...</p>
+<p class="text-secondary text-sm text-center" style="margin-top:0.5rem"> Rédaction de votre lettre en cours...</p>
 </div>
 <div class="hidden" id="lettre-result">
 <!-- Score -->
 <div class="glass-card p-4 mb-3" id="lettre-score-card">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-<h3 style="font-size:1rem;font-weight:700">Score de pertinence</h3>
+<div style="display:flex;align-items:center;justify-content:space-between">
+<h3 style="font-size:1rem;font-weight:700"> Lettre générée</h3>
                 <div style="display:flex;gap:8px">
-                  <button class="btn btn-sm btn-success" id="btn-save-lettre-db" style="background:var(--teal); border:none"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
-                  <button class="btn btn-sm btn-primary" onclick="downloadLettrePDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                  <button class="btn btn-sm btn-secondary" id="btn-copy-lettre" title="Copier"><i class="fa-solid fa-clipboard"></i></button>
+                  <button class="btn btn-sm btn-success" id="btn-save-lettre-db" style="background:var(--teal); border:none"> Enregistrer</button>
+                  <button class="btn btn-sm btn-primary" onclick="downloadLettrePDF()"> PDF</button>
+                  <button class="btn btn-sm btn-secondary" id="btn-copy-lettre" title="Copier"></button>
                 </div>
-</div>
-<div style="display:flex;align-items:center;gap:2rem">
-<div id="lettre-score-ring"></div>
-<div id="lettre-score-detail" style="flex:1"></div>
 </div>
 </div>
 <!-- Lettre texte -->
 <div class="glass-card p-4 mb-3" id="lettre-text-card">
-<h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-file"></i> Lettre générée</h3>
+<h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"> Contenu de la lettre</h3>
 <div id="lettre-text" style="line-height:1.9;font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;font-family:'Georgia',serif;">
 </div>
 </div>
@@ -180,14 +176,28 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
 <div class="glass-card p-4 animate-fade-up h-full">
 <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"> Correction de votre lettre</h2>
 <div class="form-group">
-<label class="form-label" for="lettre-to-correct">Collez votre lettre de motivation *</label>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+  <label class="form-label" for="lettre-to-correct" style="margin-bottom:0">Collez votre lettre de motivation *</label>
+  <button type="button" id="btn-import-letter-correct" onclick="document.getElementById('letter-file-input-correct').click()"
+    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;font-size:0.78rem;font-weight:600;
+           border:1.5px solid var(--primary,#6c63ff);border-radius:8px;background:transparent;
+           color:var(--primary,#6c63ff);cursor:pointer;white-space:nowrap;transition:all .2s"
+    onmouseover="this.style.background='var(--primary,#6c63ff)';this.style.color='#fff'"
+    onmouseout="this.style.background='transparent';this.style.color='var(--primary,#6c63ff)'">
+     <i class="fa-solid fa-file-arrow-up"></i> Importer une lettre
+  </button>
+  <input type="file" id="letter-file-input-correct" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="handleImportLetterCorrect(event)"/>
+</div>
 <textarea class="form-control" id="lettre-to-correct" placeholder="Collez ici votre lettre de motivation pour obtenir une correction complète...
 
 Madame, Monsieur,
 
 Je me permets de vous contacter afin de candidater au poste de..." rows="16"></textarea>
+<div id="letter-import-status-correct" style="display:none;font-size:0.8rem;margin-top:5px;color:var(--primary,#6c63ff)">
+   <span id="letter-import-msg-correct">Lecture du fichier...</span>
 </div>
-<button class="btn btn-primary btn-full" id="btn-correct-lettre"> Corriger ma lettre</button>
+</div>
+<button class="btn btn-primary btn-full" id="btn-correct-lettre"> <i class="fa-solid fa-spell-check"></i> Corriger ma lettre</button>
 </div>
 <div class="h-full">
 <div class="glass-card p-4 h-full" id="correct-placeholder" style="text-align:center;padding:3rem 2rem">
@@ -202,7 +212,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 <div class="skeleton skeleton-line w-75"></div>
 <div class="skeleton skeleton-line w-90"></div>
 </div>
-<p class="text-secondary text-sm text-center" style="margin-top:0.5rem"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyse de votre lettre en cours...</p>
+<p class="text-secondary text-sm text-center" style="margin-top:0.5rem"> Analyse de votre lettre en cours...</p>
 </div>
 <div class="hidden" id="correct-result"></div>
 </div>
@@ -243,7 +253,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
   <div class="modal-overlay" id="modal-history">
     <div class="modal-container" style="max-width: 600px;">
       <div class="modal-header">
-        <h2 class="modal-title"><i class="fa-solid fa-clock-rotate-left"></i> Mes Archives</h2>
+        <h2 class="modal-title"> Mes Archives</h2>
         <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
       </div>
       <div id="history-list" style="max-height: 400px; overflow-y: auto; padding: 5px;">
@@ -339,8 +349,6 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       document.getElementById('lettre-result').classList.add('hidden');
       document.getElementById('lettre-skeleton').classList.add('hidden');
       document.getElementById('lettre-placeholder').classList.remove('hidden');
-      document.getElementById('lettre-score-ring').innerHTML = '';
-      document.getElementById('lettre-score-detail').innerHTML = '';
       document.getElementById('lettre-text').textContent = '';
       document.getElementById('lettre-strengths').style.display = 'none';
       document.getElementById('lettre-strengths').innerHTML = '';
@@ -359,22 +367,9 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 
       document.getElementById('lettre-skeleton').classList.add('hidden');
       document.getElementById('lettre-placeholder').classList.add('hidden');
-      document.getElementById('lettre-result').classList.remove('hidden');
-
-      const score = typeof data.score_pertinence === 'number' ? data.score_pertinence : 0;
-      const color = scoreColor(score);
-      document.getElementById('lettre-score-ring').innerHTML = createScoreRing(score, color, 90, 7);
-      document.getElementById('lettre-score-detail').innerHTML = `
-    <div style="margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">
-        <span class="text-secondary">Pertinence</span><span style="color:${color}">${score}%</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="l-pr1" style="width:0;background:${color}"></div></div>
-    </div>`;
-      setTimeout(() => {
-        const el = document.getElementById('l-pr1');
-        if (el) el.style.width = score + '%';
-      }, 200);
+      const lettreResult = document.getElementById('lettre-result');
+      lettreResult.classList.remove('hidden');
+      lettreResult.classList.add('result-reveal');
 
       // Text
       const lettre = data.lettre || data.raw || '';
@@ -390,8 +385,8 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       if (data.points_forts?.length) {
         strengthsEl.style.display = 'block';
         strengthsEl.innerHTML = `
-      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light)"><i class="fa-solid fa-check"></i> Points forts de votre lettre</h3>
-      ${data.points_forts.map(p => `<div class="feedback-item positive"><span><i class="fa-solid fa-check"></i></span><span>${escHtml(p)}</span></div>`).join('')}`;
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light)"> Points forts de votre lettre</h3>
+      ${data.points_forts.map(p => `<div class="feedback-item positive"><span></span><span>${escHtml(p)}</span></div>`).join('')}`;
       }
 
       // Suggestions
@@ -399,8 +394,8 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       if (data.suggestions?.length) {
         suggestionsEl.style.display = 'block';
         suggestionsEl.innerHTML = `
-      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Suggestions</h3>
-      ${data.suggestions.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${escHtml(s)}</span></div>`).join('')}`;
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"> Suggestions</h3>
+      ${data.suggestions.map(s => `<div class="feedback-item improvement"><span></span><span>${escHtml(s)}</span></div>`).join('')}`;
       }
     }
 
@@ -438,6 +433,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       document.getElementById('correct-placeholder').classList.add('hidden');
       const el = document.getElementById('correct-result');
       el.classList.remove('hidden');
+      el.classList.add('result-reveal');
       const score = typeof data.score === 'number' ? data.score : 0;
       const color = scoreColor(score);
       el.innerHTML = `
@@ -453,23 +449,23 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 
     ${data.erreurs?.length ? `
     <div class="glass-card p-4 mb-3">
-      <h3 style="font-size:1rem;font-weight:700;color:#fca5a5;margin-bottom:1rem"><i class="fa-solid fa-circle"></i> Erreurs corrigées (${data.erreurs.length})</h3>
-      ${data.erreurs.map(e => `<div class="feedback-item critical"><span><i class="fa-solid fa-circle"></i></span><span>${escHtml(e)}</span></div>`).join('')}
+      <h3 style="font-size:1rem;font-weight:700;color:#fca5a5;margin-bottom:1rem"> Erreurs corrigées (${data.erreurs.length})</h3>
+      ${data.erreurs.map(e => `<div class="feedback-item critical"><span></span><span>${escHtml(e)}</span></div>`).join('')}
     </div>` : ''}
 
     ${data.suggestions_style?.length ? `
     <div class="glass-card p-4 mb-3">
-      <h3 style="font-size:1rem;font-weight:700;color:#fcd34d;margin-bottom:1rem"><i class="fa-solid fa-lightbulb"></i> Améliorations stylistiques apportées</h3>
-      ${data.suggestions_style.map(s => `<div class="feedback-item improvement"><span><i class="fa-solid fa-lightbulb"></i></span><span>${escHtml(s)}</span></div>`).join('')}
+      <h3 style="font-size:1rem;font-weight:700;color:#fcd34d;margin-bottom:1rem"> Améliorations stylistiques apportées</h3>
+      ${data.suggestions_style.map(s => `<div class="feedback-item improvement"><span></span><span>${escHtml(s)}</span></div>`).join('')}
     </div>` : ''}
 
     ${data.texte_corrige ? `
     <div class="glass-card p-4">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-        <h3 style="font-size:1rem;font-weight:700"><i class="fa-solid fa-check"></i> Version corrigée</h3>
+        <h3 style="font-size:1rem;font-weight:700"> Version corrigée</h3>
         <div style="display:flex;gap:8px">
-<button class="btn btn-sm btn-primary" id="btn-download-corrected" onclick="downloadLettre('lettre-corrige-content')"><i class="fa-solid fa-download"></i> Enregistrer</button>
-<button class="btn btn-sm btn-secondary" id="btn-copy-corrected"><i class="fa-solid fa-clipboard"></i> Copier</button>
+<button class="btn btn-sm btn-primary" id="btn-download-corrected" onclick="downloadLettre('lettre-corrige-content')"> Enregistrer</button>
+<button class="btn btn-sm btn-secondary" id="btn-copy-corrected"> Copier</button>
 </div>
       </div>
       <div id="lettre-corrige-content" style="line-height:1.9;font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;font-family:'Georgia',serif;padding:1rem;background:rgba(20,184,166,0.05);border-radius:var(--radius-md);border:1px solid rgba(20,184,166,0.15)">${escHtml(data.texte_corrige)}</div>
@@ -767,7 +763,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       }
     }
 
-    // ✅ Auto-remplissage du nom depuis le profil de l'utilisateur connecté
+    //  Auto-remplissage du nom depuis le profil de l'utilisateur connecté
     // On attend que checkAuthStatus() (dans utils.js) ait défini jm_current_user
     (function autoFillNomFromProfile() {
       function doFill() {
@@ -803,7 +799,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       const btn = document.getElementById('btn-save-lettre-db');
       const content = document.getElementById('lettre-text').innerText;
       const offer = document.getElementById('l-offre').value || "Lettre de motivation";
-      const score = parseInt(document.getElementById('lettre-score-ring').innerText) || 0;
+      const score = (window._lastLettreData && typeof window._lastLettreData.score === 'number') ? window._lastLettreData.score : 0;
 
       setLoading(btn, true, 'Enregistrement...');
       try {
@@ -836,7 +832,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       modal.classList.add('active');
       list.innerHTML = `
         <div class="text-center p-5">
-          <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:var(--purple-light); margin-bottom:1rem"></i>
+          
           <p class="text-secondary">Récupération de vos archives...</p>
         </div>`;
       
@@ -849,7 +845,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         if (!data.history || data.history.length === 0) {
           list.innerHTML = `
             <div class="text-center p-5">
-              <i class="fa-solid fa-box-open" style="font-size:3rem; color:var(--glass-border); margin-bottom:1rem"></i>
+              
               <p class="text-secondary">Aucune lettre enregistrée pour le moment.</p>
             </div>`;
           return;
@@ -865,7 +861,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
             </div>
             <div style="display:flex;gap:8px; margin-left:15px">
               <button class="btn btn-sm btn-primary" onclick="loadSavedLettre(${l.id})" title="Ouvrir">
-                <i class="fa-solid fa-folder-open"></i>
+                <i class="fa-solid fa-eye"></i>
               </button>
               <button class="btn btn-sm btn-secondary" onclick="deleteSavedLettre(${l.id})" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Supprimer">
                 <i class="fa-solid fa-trash-can"></i>
@@ -914,6 +910,28 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         showToast('Erreur lors de la suppression', 'error');
       }
     }
+
+    /* ── Import lettre dans l'onglet Corriger ── */
+    window.handleImportLetterCorrect = async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = '';
+
+      const status = document.getElementById('letter-import-status-correct');
+      const msg = document.getElementById('letter-import-msg-correct');
+      status.style.display = 'block';
+      msg.textContent = 'Lecture du fichier...';
+
+      try {
+        const text = await window.importFile(file);
+        document.getElementById('lettre-to-correct').value = text;
+        showToast('Lettre importée avec succès !', 'success');
+      } catch (err) {
+        showToast('Erreur : ' + err.message, 'error');
+      } finally {
+        status.style.display = 'none';
+      }
+    };
   </script>
 
   <!-- Import CV depuis l'appareil (PDF.js + Tesseract.js fallback OCR) -->
@@ -1003,7 +1021,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
           showToast('Impossible d\'extraire le texte de ce fichier.', 'error');
         } else {
           document.getElementById('l-cv').value = text;
-          showToast('CV importé avec succès ✓', 'success');
+          showToast('CV importé avec succès ', 'success');
         }
 
       } catch (err) {

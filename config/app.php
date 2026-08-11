@@ -28,5 +28,14 @@ define('DB_NAME', getenv('DB_NAME') ?: 'jobmentor_db');
 
 define('LLM_MODEL', getenv('LLM_MODEL') ?: 'google/gemini-2.0-flash-001');
 define('LLM_API_URL', getenv('LLM_API_URL') ?: 'https://openrouter.ai/api/v1/chat/completions');
+
+// URL absolue du site une fois un nom de domaine réel en place (ex: https://jobmentor-ai.mg).
+// Sert notamment aux balises Open Graph (og:image, og:url) dans public/frontend/index.html,
+// qui doivent être des URLs absolues pour que les aperçus de lien (réseaux sociaux,
+// messageries) fonctionnent. Laisser vide en développement local.
+define('APP_URL', rtrim(getenv('APP_URL') ?: '', '/'));
 define('OPENROUTER_API_KEY', getenv('OPENROUTER_API_KEY') ?: '');
 define('OPENROUTER_API_KEY_2', getenv('OPENROUTER_API_KEY_2') ?: '');
+
+define('ELEVENLABS_API_KEY', getenv('ELEVENLABS_API_KEY') ?: '');
+define('ELEVENLABS_VOICE_ID', getenv('ELEVENLABS_VOICE_ID') ?: '21m00Tcm4TlvDq8ikWAM');

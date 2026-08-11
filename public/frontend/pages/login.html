@@ -8,6 +8,7 @@
   <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
 <meta content="Connectez-vous pour sauvegarder vos CV, lettres de motivation et simulations d'entretien." name="description"/>
 <link href="../css/style.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 <style>
     .auth-container {
       max-width: 440px;
@@ -217,7 +218,7 @@
       }
     }
   </style>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/></head>
+</head>
 <body>
 <canvas id="bg-canvas"></canvas>
 <div class="bg-mesh"></div>
@@ -236,7 +237,7 @@
     <p>Connectez-vous pour reprendre votre CV, votre lettre ou votre prochaine simulation d'entretien.</p>
     <div class="auth-intro-actions">
       <button class="btn btn-primary btn-lg" id="btn-show-login"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
-      <button class="btn btn-secondary btn-lg" id="btn-show-register"><i class="fa-solid fa-user-plus"></i> Créer un compte</button>
+      <button class="btn btn-secondary btn-lg" id="btn-show-register"> Créer un compte</button>
     </div>
   </div>
 </div>
@@ -261,27 +262,26 @@
 <!-- LOGIN -->
 <div class="glass-card p-4 animate-fade-up" id="login-card">
 <div class="text-center mb-4">
-<div class="icon-box icon-box-lg icon-purple" style="margin:0 auto 1rem" id="login-icon-box"><i class="fa-solid fa-user-lock" id="login-icon"></i></div>
 <h1 style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800" id="login-title">Bienvenue</h1>
 <p class="text-secondary text-sm" id="login-subtitle">Connectez-vous pour retrouver vos données</p>
 </div>
 <div class="tabs" id="login-mode-tabs" style="margin-bottom:1.5rem">
   <button type="button" class="tab-btn active" id="tab-login-user" onclick="setLoginMode('user')">
-    <i class="fa-solid fa-user"></i> Utilisateur
+     Utilisateur
   </button>
   <button type="button" class="tab-btn" id="tab-login-admin" onclick="setLoginMode('admin')">
-    <i class="fa-solid fa-shield-halved"></i> Administrateur
+     Administrateur
   </button>
 </div>
 <div class="form-group">
-<!-- ✅ FIX: for="login-email" associé à id="login-email" -->
+<!--  FIX: for="login-email" associé à id="login-email" -->
 <label class="form-label" for="login-email">Adresse email</label>
 <input class="form-control" id="login-email" name="login-email" autocomplete="off" placeholder="marie@exemple.com" type="email"/>
 </div>
 <div class="form-group mb-4">
   <label class="form-label" for="login-password">Mot de passe</label>
   <div style="position:relative">
-    <input class="form-control" id="login-password" name="login-password" autocomplete="off"
+    <input class="form-control" id="login-password" name="login-password" autocomplete="new-password"
            placeholder="••••••••" type="password" 
            style="padding-right:44px"/>
     <button type="button" onclick="togglePassword('login-password', this)"
@@ -289,15 +289,15 @@
              background:none;border:none;cursor:pointer;color:var(--text-secondary);
              font-size:1rem;padding:4px;transition:color 0.2s"
       title="Afficher/Masquer">
-      <i class="fa-solid fa-eye" id="eye-login"></i>
+      <i class="fa-solid fa-eye"></i>
     </button>
   </div>
 </div>
-<button class="btn btn-primary btn-full mb-3" id="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
+<button class="btn btn-primary btn-full mb-3" id="btn-login"> <i class="fa-solid fa-right-to-bracket"></i> Se connecter</button>
 <div class="text-center text-sm text-secondary">
-          Pas encore de compte ? <a href="#" onclick="toggleAuth('register')" style="color:var(--blue-light)">S'inscrire</a>
+          Pas encore de compte ? <a href="#" onclick="toggleAuth('register'); return false" style="color:var(--blue-light)">S'inscrire</a>
 <br/><br/>
-<a href="#" onclick="toggleAuth('reset')" style="color:var(--purple-light)">Mot de passe oublié ?</a>
+<a href="#" onclick="toggleAuth('reset'); return false" style="color:var(--purple-light)">Mot de passe oublié ?</a>
 </div>
 </div>
 <!-- REGISTER -->
@@ -318,7 +318,7 @@
         box-shadow:0 0 0 3px rgba(20,184,166,0.3);
         transition:all 0.25s;font-size:2rem;color:#fff;
       " onmouseover="this.style.boxShadow='0 0 0 4px rgba(20,184,166,0.6)'" onmouseout="this.style.boxShadow='0 0 0 3px rgba(20,184,166,0.3)'">
-        <i class="fa-solid fa-user-plus"></i>
+        
       </div>
       <!-- Avatar avec photo -->
       <img id="reg-photo-preview" src="" alt="Photo"
@@ -334,14 +334,14 @@
         display:flex;align-items:center;justify-content:center;
         font-size:0.65rem;cursor:pointer;
         border:2px solid var(--bg-primary, #0f172a);
-      "><i class="fa-solid fa-camera"></i></span>
+      "></span>
     </div>
     <h1 style="font-family:'Outfit',sans-serif;font-size:1.7rem;font-weight:800">Créer un compte</h1>
     <p class="text-secondary text-sm">Préparez vos entretiens avec l'IA</p>
     <!-- Bouton retirer photo (affiché seulement si photo choisie) -->
     <button id="reg-remove-photo-btn" type="button" onclick="removeRegPhoto()"
       style="display:none;background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.72rem;margin-top:2px">
-      ✕ Retirer la photo
+       Retirer la photo
     </button>
   </div>
 
@@ -400,17 +400,17 @@
   <!-- Bouton S'inscrire centré en bas -->
   <div style="text-align:center;margin-top:1.25rem">
     <button class="btn btn-teal" id="btn-register" style="min-width:220px;padding:0.7rem 2.5rem;font-size:1rem">
-      <i class="fa-solid fa-pen"></i> S'inscrire
+       <i class="fa-solid fa-user-plus"></i> S'inscrire
     </button>
     <p class="text-center text-sm text-secondary" style="margin-top:0.75rem">
-      Déjà un compte ? <a href="#" onclick="toggleAuth('login')" style="color:var(--teal-light)">Se connecter</a>
+      Déjà un compte ? <a href="#" onclick="toggleAuth('login'); return false" style="color:var(--teal-light)">Se connecter</a>
     </p>
   </div>
 </div>
 <!-- RESET PASSWORD -->
 <div class="glass-card p-4 animate-fade-up hidden" id="reset-card">
 <div class="text-center mb-4">
-<div class="icon-box icon-box-lg icon-purple" style="margin:0 auto 1rem"><i class="fa-solid fa-key"></i></div>
+<div class="icon-box icon-box-lg icon-purple" style="margin:0 auto 1rem"></div>
 <h1 style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800">Réinitialiser</h1>
 <p class="text-secondary text-sm" id="reset-subtitle">Entrez votre adresse email pour recevoir un code</p>
 </div>
@@ -422,7 +422,7 @@
     <input class="form-control" id="reset-email" name="email" autocomplete="email" placeholder="marie@exemple.com" type="email"/>
   </div>
   <button class="btn btn-primary btn-full mb-3" id="btn-request-reset">
-    <i class="fa-solid fa-paper-plane"></i> Envoyer le code
+     <i class="fa-solid fa-paper-plane"></i> Envoyer le code
   </button>
 </div>
 
@@ -448,12 +448,12 @@
     </div>
   </div>
   <button class="btn btn-primary btn-full mb-3" id="btn-reset">
-    <i class="fa-solid fa-rotate"></i> Mettre à jour
+     <i class="fa-solid fa-check"></i> Mettre à jour
   </button>
 </div>
 
 <div class="text-center text-sm text-secondary">
-<a href="#" onclick="toggleAuth('login')" style="color:var(--purple-light)">Retour à la connexion</a>
+<a href="#" onclick="toggleAuth('login'); return false" style="color:var(--purple-light)">Retour à la connexion</a>
 </div>
 </div>
 </div>
@@ -535,29 +535,18 @@
       }));
     }
 
-    function clearLoginAutofill() {
-      const emailInput = document.getElementById('login-email');
-      const passwordInput = document.getElementById('login-password');
-      if (emailInput) {
-        emailInput.value = '';
-      }
-      if (passwordInput) {
-        passwordInput.value = '';
-      }
-    }
-
-    /* ── Toggle mot de passe (œil) ── */
+    /* ── Toggle mot de passe ── */
     function togglePassword(inputId, btn) {
       const input = document.getElementById(inputId);
       const icon = btn.querySelector('i');
       if (input.type === 'password') {
         input.type = 'text';
-        icon.className = 'fa-solid fa-eye-slash';
         btn.style.color = 'var(--purple-light)';
+        if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
       } else {
         input.type = 'password';
-        icon.className = 'fa-solid fa-eye';
         btn.style.color = 'var(--text-secondary)';
+        if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
       }
     }
 
@@ -576,21 +565,18 @@
       document.getElementById('tab-login-user').classList.toggle('active', mode === 'user');
       document.getElementById('tab-login-admin').classList.toggle('active', mode === 'admin');
 
-      const icon = document.getElementById('login-icon');
       const title = document.getElementById('login-title');
       const subtitle = document.getElementById('login-subtitle');
       const btn = document.getElementById('btn-login');
 
       if (mode === 'admin') {
-        icon.className = 'fa-solid fa-shield-halved';
         title.textContent = 'Espace Administrateur';
         subtitle.textContent = 'Connectez-vous avec un compte administrateur';
-        btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Connexion admin';
+        btn.innerHTML = ' Connexion admin';
       } else {
-        icon.className = 'fa-solid fa-user-lock';
         title.textContent = 'Bienvenue';
         subtitle.textContent = 'Connectez-vous pour retrouver vos données';
-        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Se connecter';
+        btn.innerHTML = ' Se connecter';
       }
     }
 
@@ -618,7 +604,7 @@
           throw new Error("Ce compte n'a pas les droits administrateur.");
         }
 
-        // ✅ Sauvegarde du profil pour auto-remplissage CV
+        //  Sauvegarde du profil pour auto-remplissage CV
         saveLoginProfile(data.user, data.profile, { email });
 
         showToast('Bienvenue ' + data.user.name + ' !', 'success');
@@ -682,7 +668,7 @@
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Erreur inscription');
 
-        // ✅ Sauvegarde des données du profil pour auto-remplissage CV
+        //  Sauvegarde des données du profil pour auto-remplissage CV
         saveLoginProfile(data.user, data.profile, {
           nom: name,
           email,
@@ -768,12 +754,6 @@
       } finally {
         setLoading(btn, false);
       }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      clearLoginAutofill();
-      setTimeout(clearLoginAutofill, 300);
-      setTimeout(clearLoginAutofill, 800);
     });
   </script>
 </body>

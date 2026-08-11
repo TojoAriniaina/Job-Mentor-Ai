@@ -66,6 +66,18 @@ Décisions de conception :
 - **Auto-protection** : un administrateur ne peut ni se désactiver, ni se rétrograder (s'il est le dernier admin), ni se supprimer lui-même.
 - **Deux entrées vers l'espace admin** : un lien dans le menu profil (visible seulement si `role = admin`), et un onglet dédié sur la page de connexion qui redirige directement vers `admin.html` après vérification du rôle.
 
+### Phase 9 — Durcissement pré-soutenance
+Traitement des points de sécurité identifiés en Phase 5 et restés ouverts (voir `TODO.md`) :
+
+- **Limitation des tentatives de connexion** : ajout de `App\Models\LoginAttempt`, suivi en base par email + adresse IP (plutôt qu'en session seule, contournable en vidant les cookies), blocage temporaire de 5 minutes après 5 échecs.
+- **Persistance de l'historique d'entretien** : la fonctionnalité de sauvegarde côté interface était partiellement câblée mais incomplète côté backend, provoquant une erreur silencieuse en fin de session. Complétée de bout en bout : bouton de sauvegarde, route `POST /api/entretien/save`, contrôleur, calcul d'un score global par l'IA sur l'ensemble de l'échange.
+- **Audit XSS complet** : définition centralisée de deux fonctions d'échappement (`escHtml()`, `escAttr()`) dans `utils.js`, et vérification systématique de chaque point d'injection de contenu dynamique dans le DOM sur l'ensemble du frontend (`cv.html`, `lettre.html`, `oral.html`, `entretien.html`, `ai.js`, `admin.js`). Point le plus sensible traité dans l'espace admin, où la photo de profil d'un utilisateur était injectée sans échappement dans un attribut HTML.
+- **Export PDF de la lettre corrigée** : mise en page automatique reproduisant la structure d'une lettre de motivation française (en-tête expéditeur à gauche, destinataire et date à droite, objet en évidence), avec détection par motifs de texte et repli sur un rendu simple si la structure n'est pas reconnue.
+- **Reconnaissance vocale (module oral)** : redémarrage automatique de la session en cas d'interruption par le navigateur, pour éviter la perte de transcription en cours d'enregistrement — alignement sur le mécanisme déjà en place dans le module entretien.
+- **Fiabilisation de la détection de fin d'entretien** : la condition de fin de session reposait implicitement sur un champ non garanti de la réponse de l'IA ; rendue déterministe, basée uniquement sur le compteur de questions.
+
+Méthodologie de validation spécifique à cette phase : vérification manuelle du code (cohérence des accolades/parenthèses, relecture ligne à ligne des zones modifiées), suivie d'une **vérification itérative avec l'utilisateur final** — chaque correctif a été testé en conditions réelles (PDF générés, entretiens complets, enregistrements vocaux), avec ajustements ciblés à partir des résultats observés plutôt qu'une seule passe de correction.
+
 ## 4. Méthodologie de test
 
 Aucun framework de test automatisé n'est en place à ce jour (voir `TODO.md`). La validation a été faite par :
@@ -79,4 +91,4 @@ Aucun framework de test automatisé n'est en place à ce jour (voir `TODO.md`). 
 
 ## 5. État actuel
 
-Les 4 modules IA, l'authentification et l'espace administrateur sont fonctionnels de bout en bout au niveau du pipeline (validation, appel IA le cas échéant, gestion d'erreur, persistance). Les limites connues et le travail restant sont documentés dans `TODO.md`.
+Les 4 modules IA, l'authentification et l'espace administrateur sont fonctionnels de bout en bout au niveau du pipeline (validation, appel IA le cas échéant, gestion d'erreur, persistance). Les points de sécurité de base identifiés en Phase 5 (rate-limiting, XSS, persistance de l'historique d'entretien) ont été traités en Phase 9. Les limites connues restantes et le travail non prioritaire sont documentés dans `TODO.md`.

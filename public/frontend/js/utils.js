@@ -22,14 +22,11 @@ function escAttr(str) {
 
 function togglePassword(inputId, btn) {
   const input = document.getElementById(inputId);
-  const icon = btn.querySelector('i');
   if (input.type === 'password') {
     input.type = 'text';
-    icon.className = 'fa-solid fa-eye-slash';
     if (btn.style) btn.style.color = 'var(--purple-light)';
   } else {
     input.type = 'password';
-    icon.className = 'fa-solid fa-eye';
     if (btn.style) btn.style.color = 'var(--text-secondary)';
   }
 }
@@ -45,10 +42,10 @@ function showToast(message, type = 'info', duration = 3500) {
   }
 
   const icons = { 
-    info: '<i class="fa-solid fa-lightbulb"></i>', 
-    success: '<i class="fa-solid fa-check"></i>', 
-    error: '<i class="fa-solid fa-xmark"></i>', 
-    warning: '<i class="fa-solid fa-triangle-exclamation"></i>' 
+    info: '<i class="fa-solid fa-circle-info"></i>', 
+    success: '<i class="fa-solid fa-circle-check"></i>', 
+    error: '<i class="fa-solid fa-circle-xmark"></i>', 
+    warning: '' 
   };
   const toast = document.createElement('div');
   toast.className = 'toast';
@@ -353,7 +350,7 @@ function setupProfileDropdown(btnConfig, user, AUTH_API_URL) {
   btnConfig.innerHTML =
     _avatarHTML(user, '') +
     '<span class="profile-trigger-name">' + escHtml(user.name) + '</span>' +
-    '<i class="fa-solid fa-chevron-down profile-trigger-chevron"></i>';
+    '';
 
   let dropdown = wrap.querySelector('.profile-dropdown');
   if (!dropdown) {
@@ -369,19 +366,19 @@ function setupProfileDropdown(btnConfig, user, AUTH_API_URL) {
       <div class="profile-dropdown-identity">
         <span class="profile-dropdown-name">${escHtml(user.name)}</span>
         <span class="profile-dropdown-email">${escHtml(user.email || '')}</span>
-        ${profileExtra.phone ? `<span class="profile-dropdown-phone"><i class="fa-solid fa-phone"></i> ${escHtml(profileExtra.phone)}</span>` : ''}
+        ${profileExtra.phone ? `<span class="profile-dropdown-phone"> ${escHtml(profileExtra.phone)}</span>` : ''}
       </div>
     </div>
     <div class="profile-dropdown-divider"></div>
     <button type="button" class="dropdown-item" id="dropdown-item-edit-profile">
-      <i class="fa-solid fa-user-pen dropdown-item-icon"></i> Modifier le profil
+       <i class="fa-solid fa-pen-to-square"></i> Modifier le profil
     </button>
     ${user.role === 'admin' ? `
     <button type="button" class="dropdown-item" id="dropdown-item-admin">
-      <i class="fa-solid fa-shield-halved dropdown-item-icon"></i> Administration
+       <i class="fa-solid fa-user-gear"></i> Administration
     </button>` : ''}
     <button type="button" class="dropdown-item dropdown-item-danger" id="dropdown-item-logout">
-      <i class="fa-solid fa-right-from-bracket dropdown-item-icon"></i> Déconnexion
+       <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
     </button>
   `;
 
@@ -498,7 +495,7 @@ function injectEditProfileModal() {
             </span>
           </div>
           <button type="button" id="edit-remove-photo-btn" class="avatar-remove-btn" onclick="removeEditPhoto()" style="display:none">
-            ✕ Retirer la photo
+             Retirer la photo
           </button>
         </div>
 
@@ -519,7 +516,7 @@ function injectEditProfileModal() {
 
         <div style="display:flex;align-items:center;gap:0.8rem">
           <button class="btn btn-primary btn-full" id="btn-save-profile" onclick="saveProfileEdits()">
-            <i class="fa-solid fa-floppy-disk"></i> Enregistrer les modifications
+             Enregistrer les modifications
           </button>
           <span class="saved-badge" id="profile-saved-badge"><i class="fa-solid fa-check"></i> Sauvegardé</span>
         </div>
@@ -656,62 +653,68 @@ const PAGE_GUIDES = {
     icon: 'fa-house',
     steps: [
       { title: "Découvrez les modules", text: "CV, Lettre, Entretien et Oral : chaque module vous aide sur une étape précise de votre recherche d'emploi." },
-      { title: "Créez votre compte", text: "Cliquez sur \"Commencer\" pour vous inscrire et sauvegarder votre progression." },
-      { title: "Lancez-vous", text: "Choisissez un module dans le menu du haut et suivez le guide de la page." }
+      { title: "Créez votre compte", text: "Cliquez sur \"Commencer\" pour vous inscrire et sauvegarder votre progression. Mot de passe oublié ? Utilisez le lien de réinitialisation par email." },
+      { title: "Choisissez un module", text: "Utilisez le menu du haut pour accéder à CV, Lettre, Entretien ou Oral. Chaque page possède son propre guide (bouton ? en bas à droite)." }
     ]
   },
   'login.html': {
     title: "Se connecter ou créer un compte",
     icon: 'fa-right-to-bracket',
     steps: [
-      { title: "Première visite ?", text: "Cliquez sur \"Créer un compte\" et renseignez vos informations." },
-      { title: "Déjà inscrit ?", text: "Cliquez sur \"Se connecter\" avec votre email et mot de passe." },
-      { title: "Après connexion", text: "Vous accédez directement aux modules CV, Lettre, Entretien et Oral." }
+      { title: "Première visite ?", text: "Cliquez sur \"Créer un compte\" et renseignez vos informations (nom, email, mot de passe)." },
+      { title: "Déjà inscrit ?", text: "Cliquez sur \"Se connecter\" avec votre email et mot de passe. Mot de passe oublié ? Utilisez le lien de réinitialisation par email." },
+      { title: "Après connexion", text: "Vous accédez au dashboard avec tous les modules : CV, Lettre, Entretien et Oral." }
     ]
   },
   'cv.html': {
     title: "Guide du module CV",
     icon: 'fa-file',
     steps: [
-      { title: "Avant : renseignez vos infos", text: "Remplissez vos informations personnelles, expériences et formations dans le formulaire." },
-      { title: "Pendant : générez avec l'IA", text: "Cliquez sur \"Générer\" pour créer votre CV, ou utilisez \"Analyser & Améliorer\" / \"Adapter à l'offre\"." },
-      { title: "Après : téléchargez", text: "Une fois satisfait, exportez votre CV en PDF prêt à envoyer." }
+      { title: "Onglet Générer", text: "Remplissez vos infos personnelles, expériences et formations. Choisissez un template (Classique, Moderne ou Minimaliste) et une couleur d'accent. Ajoutez une photo d'identité si vous le souhaitez." },
+      { title: "Importez un CV existant", text: "Vous avez déjà un CV ? Cliquez sur \"Importer\" pour charger un fichier PDF, DOCX ou TXT. Le contenu sera automatiquement analysé et structuré par l'IA." },
+      { title: "Onglet Analyser", text: "Collez votre CV existant pour obtenir un score ATS détaillé. La preview s'affiche avec le template et la couleur choisis. Ajoutez une photo, puis téléchargez en PDF." },
+      { title: "Onglet Adapter", text: "Adaptez votre CV à une offre d'emploi spécifique pour maximiser vos chances." },
+      { title: "Exportez et réinitialisez", text: "Téléchargez votre CV en PDF, copiez-le ou imprimez-le. Utilisez le bouton + pour réinitialiser et repartir de zéro. Consultez l'historique pour reprendre un CV sauvegardé." }
     ]
   },
   'lettre.html': {
     title: "Guide du module Lettre",
     icon: 'fa-envelope',
     steps: [
-      { title: "Avant : préparez le contexte", text: "Collez votre profil/CV et l'offre d'emploi visée, ou le nom de l'entreprise." },
-      { title: "Pendant : générez ou corrigez", text: "Générez une nouvelle lettre, ou collez-en une existante à corriger." },
-      { title: "Après : exportez", text: "Téléchargez la lettre en PDF, prête à joindre à votre candidature." }
+      { title: "Onglet Générer", text: "Collez votre profil/CV et l'offre d'emploi visée. L'IA génère une lettre de motivation personnalisée, prête à copier ou exporter en PDF." },
+      { title: "Importer un fichier", text: "Vous avez déjà une lettre ? Importez un fichier PDF, DOCX ou TXT directement depuis l'onglet Corriger. Le contenu sera chargé automatiquement." },
+      { title: "Onglet Corriger", text: "Collez une lettre existante pour la corriger. L'IA évalue la qualité (score /100) et propose une version améliorée avec des corrections." },
+      { title: "Exportez", text: "Téléchargez la lettre en PDF, copiez le texte ou réinitialisez pour recommencer." }
     ]
   },
   'entretien.html': {
     title: "Guide de la simulation d'entretien",
     icon: 'fa-microphone',
     steps: [
-      { title: "Avant : démarrez l'entretien", text: "Cliquez sur \"Démarrer l'entretien\" pour lancer l'échange avec l'IA recruteur." },
-      { title: "Pendant : répondez naturellement", text: "Répondez comme en vrai entretien ; l'IA enchaîne avec des questions de suivi." },
-      { title: "Après : consultez vos notes", text: "Ouvrez \"Mes Notes personnelles\" pour revoir vos points forts et axes d'amélioration." }
+      { title: "Démarrer l'entretien", text: "Cliquez sur \"Démarrer l'entretien\" pour lancer la simulation. L'IA recruteur pose les questions à voix haute (synthèse vocale)." },
+      { title: "Répondez naturellement", text: "Pas de bulles de chat : l'IA parle et vous répondez oralement ou par écrit. L'avatar montre l'IA en réflexion pendant qu'elle écoute et en pause quand elle parle." },
+      { title: "Notes personnelles", text: "Ouvrez \"Mes Notes personnelles\" pour noter vos observations et suivre vos progrès." },
+      { title: "Archives et réinitialisation", text: "Consultez l'historique de vos sessions passées. Utilisez \"Réinitialiser\" pour recommencer un nouvel entretien." }
     ]
   },
   'oral.html': {
     title: "Guide de l'entraînement oral",
     icon: 'fa-microphone-lines',
     steps: [
-      { title: "Avant : choisissez la langue", text: "Sélectionnez FR / EN / ES et, si besoin, précisez le poste visé." },
-      { title: "Pendant : parlez au micro", text: "Cliquez sur le micro et répondez à la question affichée à voix haute." },
-      { title: "Après : lisez l'analyse", text: "L'IA évalue votre fluidité et vos hésitations pour vous aider à progresser." }
+      { title: "Choisissez la langue", text: "Sélectionnez FR / EN / ES et, si besoin, précisez le poste visé pour des questions ciblées." },
+      { title: "Enregistrez vos réponses", text: "Cliquez sur le micro et répondez à la question affichée à voix haute. L'IA analyse votre prononciation et votre fluidité." },
+      { title: "Lisez l'analyse", text: "L'IA évalue votre fluidité, vos hésitations et votre vocabulaire pour vous aider à progresser." },
+      { title: "Réinitialisez", text: "Utilisez le bouton \"Réinitialiser\" pour effacer l'historique et recommencer un nouvel entraînement." }
     ]
   },
   'admin.html': {
     title: "Guide du panneau d'administration",
     icon: 'fa-user-gear',
     steps: [
-      { title: "Vue d'ensemble", text: "Les cartes en haut résument le nombre d'utilisateurs et l'usage global de la plateforme." },
-      { title: "Rechercher / filtrer", text: "Utilisez la barre de recherche pour retrouver un utilisateur précis." },
-      { title: "Gérer un compte", text: "Cliquez sur un utilisateur pour modifier son rôle ou désactiver son accès." }
+      { title: "Vue d'ensemble", text: "Les cartes en haut résument le nombre d'utilisateurs, les connexions et l'usage global de la plateforme." },
+      { title: "Rechercher / filtrer", text: "Utilisez la barre de recherche pour retrouver un utilisateur par nom ou email." },
+      { title: "Modifier un compte", text: "Cliquez sur un utilisateur pour changer son rôle (admin/utilisateur) ou désactiver son accès." },
+      { title: "Supprimer un compte", text: "Vous pouvez supprimer un utilisateur avec confirmation de sécurité. Cette action est irréversible." }
     ]
   }
 };
@@ -740,8 +743,8 @@ function buildGuideModal(guide) {
   overlay.innerHTML = `
     <div class="modal-container">
       <div class="modal-header">
-        <span class="modal-title"><i class="fa-solid ${guide.icon}"></i> ${guide.title}</span>
-        <button class="modal-close" id="page-guide-close" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+        <span class="modal-title"> ${guide.title}</span>
+        <button class="modal-close" id="page-guide-close" aria-label="Fermer">&times;</button>
       </div>
       <div class="guide-steps">${stepsHtml}</div>
     </div>
@@ -777,6 +780,80 @@ function initPageGuide() {
     setTimeout(() => overlay.classList.add('active'), 500);
     localStorage.setItem(seenKey, '1');
   }
+}
+
+/* ── Modale de confirmation stylée ─────────────────────────── */
+let _confirmModalInjected = false;
+function showConfirmModal(message, { title = 'Confirmer', confirmText = 'Confirmer', cancelText = 'Annuler', danger = true } = {}) {
+  return new Promise(resolve => {
+    if (!_confirmModalInjected) {
+      _confirmModalInjected = true;
+      const style = document.createElement('style');
+      style.textContent = `
+        .confirm-modal-overlay{position:fixed;inset:0;background:rgba(5,5,8,0.7);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:2200;padding:1rem}
+        .confirm-modal-overlay.show{display:flex}
+        .confirm-modal{max-width:400px;width:100%;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.8rem;text-align:center;box-shadow:0 16px 48px rgba(0,0,0,.5);animation:modalIn .2s ease}
+        @keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+        .confirm-modal-icon{font-size:1.8rem;margin-bottom:.75rem;display:block}
+        .confirm-modal-icon.danger{color:var(--red)}
+        .confirm-modal-icon.warning{color:var(--amber)}
+        .confirm-modal-title{font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:.5rem}
+        .confirm-modal-msg{font-size:.88rem;color:var(--text-secondary);line-height:1.55;margin-bottom:1.4rem}
+        .confirm-modal-actions{display:flex;gap:.6rem}
+        .confirm-modal-actions button{flex:1;padding:.7rem;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
+        .confirm-cancel-btn{background:transparent;color:var(--text-primary);border:1px solid var(--glass-border)}
+        .confirm-cancel-btn:hover{background:rgba(255,255,255,.06)}
+        .confirm-ok-btn{border:1px solid transparent}
+        .confirm-ok-btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
+        .confirm-ok-btn.danger:hover{background:#dc2626}
+        .confirm-ok-btn.warning{background:var(--amber);color:#000;border-color:var(--amber)}
+        .confirm-ok-btn.warning:hover{background:#d97706}
+      `;
+      document.head.appendChild(style);
+    }
+
+    let overlay = document.getElementById('confirm-modal-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'confirm-modal-overlay';
+      overlay.className = 'confirm-modal-overlay';
+      overlay.innerHTML = `
+        <div class="confirm-modal">
+          <i class="confirm-modal-icon" id="confirm-modal-icon"></i>
+          <div class="confirm-modal-title" id="confirm-modal-title"></div>
+          <div class="confirm-modal-msg" id="confirm-modal-msg"></div>
+          <div class="confirm-modal-actions">
+            <button class="confirm-cancel-btn" id="confirm-modal-cancel"></button>
+            <button class="confirm-ok-btn" id="confirm-modal-ok"></button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
+      document.getElementById('confirm-modal-cancel').addEventListener('click', () => close(false));
+      document.getElementById('confirm-modal-ok').addEventListener('click', () => close(true));
+    }
+
+    const iconEl = document.getElementById('confirm-modal-icon');
+    const cls = danger ? 'danger' : 'warning';
+    iconEl.className = 'confirm-modal-icon ' + cls;
+    iconEl.innerHTML = danger
+      ? '<i class="fa-solid fa-triangle-exclamation"></i>'
+      : '<i class="fa-solid fa-circle-question"></i>';
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-msg').textContent = message;
+    const okBtn = document.getElementById('confirm-modal-ok');
+    okBtn.textContent = confirmText;
+    okBtn.className = 'confirm-ok-btn ' + cls;
+    document.getElementById('confirm-modal-cancel').textContent = cancelText;
+
+    function close(result) {
+      overlay.classList.remove('show');
+      resolve(result);
+    }
+
+    overlay.classList.add('show');
+  });
 }
 
 /* ── Init on DOM ready ─────────────────────────────────────── */

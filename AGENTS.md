@@ -2,89 +2,88 @@
 
 ## What this is
 
-French-language career coaching web app (CV generator, cover letters, interview simulator, oral practice). PHP MVC backend with Composer autoloading + vanilla JS frontend.
+French-language career coaching web app (CV generator, cover letters, interview simulator, oral training). PHP MVC backend with Composer autoloading + vanilla JS frontend. No build step, no bundler, no test framework.
 
 ## Architecture
 
 ```
-public/                     # Document root (Apache/XAMPP pointe ici)
-├── index.php               # Front controller — toutes les routes API passent par ici
+public/                     # Document root (Apache/XAMPP)
+├── index.php               # Front controller — routes /api/* to Router, else serves frontend
 ├── .htaccess               # Rewrite rules → index.php
-├── frontend/               # HTML + JS + CSS (statiques)
+├── frontend/               # Static HTML + JS + CSS (no build)
 │   ├── index.html
-│   ├── pages/              # login, cv, lettre, entretien, oral
+│   ├── 404.html
+│   ├── pages/              # login, cv, lettre, entretien, oral, admin, dashboard
 │   ├── css/                # style.css (design system) + cv-template.css
-│   └── js/                 # api.js, ai.js, utils.js, particles.js
+│   └── js/                 # config.js, api.js, ai.js, utils.js, auth.js, admin.js, particles.js
 src/                        # PHP source (PSR-4, namespace App\)
-├── Controllers/            # Auth, Cv, Lettre, Entretien, Oral, User
-├── Models/                 # User, CvDocument, CoverLetter, InterviewHistory, UserNote, OralAnalysis
+├── Controllers/            # Auth, Cv, Lettre, Entretien, Oral, User, Admin, Tts
+├── Models/                 # User, CvDocument, CoverLetter, InterviewHistory, UserNote, OralAnalysis, LoginAttempt
 ├── Services/               # LlmService (OpenRouter), AtsScorer
-├── Middleware/              # Auth (requireAuth)
-└── Router.php              # Routeur simple (tableau routes → controller@method)
-bootstrap/app.php           # Autoloader Composer + .env + session + $pdo
-config/app.php              # Constantes DB/LLM depuis .env
+├── Middleware/Auth.php     # require() + requireAdmin() — both re-check DB on every request
+└── Router.php              # Simple router (array of routes → controller@method)
+bootstrap/app.php           # Autoloader Composer + .env + session + $pdo (via $GLOBALS)
+config/app.php              # Custom .env loader (KEY=VALUE only, not vlucas/phpdotenv)
 composer.json               # PSR-4 autoload: App\ → src/
-database.sql                # Schéma MySQL (jobmentor_db)
+database.sql                # MySQL schema + inline migrations (ALTER TABLE ... ADD COLUMN IF NOT EXISTS)
 ```
-
-- **Database**: MySQL, DB name `jobmentor_db`. Tables: `users`, `cv_documents`, `cover_letters`, `interview_history`, `user_notes`, `oral_analyses`.
-- **AI**: OpenRouter API (default model `google/gemini-2.0-flash-001`). Called via `LlmService::call()`.
 
 ## Dev server
 
 ```bash
-# Depuis la racine du projet (public/ est le document root)
+# From project root (public/ is the document root)
 php -S localhost:8000 -t public
 ```
 
-Ou XAMPP/Apache avec DocumentRoot pointant vers `public/`.
+Or XAMPP/Apache with DocumentRoot pointing to `public/`. Run `composer install` first to generate the autoloader (no third-party packages, but PSR-4 autoload requires it).
+
+## Frontend loading order
+
+`config.js` must load first (classic script) — it sets `window.API_BASE` and `window.FRONTEND_BASE` dynamically based on the current URL path; every other script depends on it. `api.js` is **never** loaded via `<script>` tag — it only uses `export` and is `import`ed by `ai.js` (`<script type="module">`). Pages that need no AI (entretien.html, admin.html) skip `ai.js` entirely. `utils.js` and `particles.js` are classic scripts. Add any shared helpers to `utils.js`; keep ES-module `export`/`import` only inside the ai.js/api.js pair.
 
 ## API routing
 
-Routes définies dans `public/index.php`. Le front controller route vers les controllers.
+Routes defined in `public/index.php` using `Router` methods. The front controller strips the project folder prefix if present (e.g., `/Job-Mentor-Ai/api/...` → `/api/...`).
 
-| Controller | Routes | Purpose |
-|---|---|---|
-| `AuthController` | `/api/auth/{check,login,register,logout,request-reset,reset-password,update-profile}` | Auth + profil |
-| `CvController` | `/api/cv/{generate,improve,history,list}` + `/api/cv/{id}` | Génération, analyse, historique CV |
-| `LettreController` | `/api/lettre/{generate,correct,save,list}` + `/api/lettre/{id}` | Lettres de motivation |
-| `EntretienController` | `/api/entretien/{question,analyze,save-notes,reset,notes/list}` + `/api/entretien/{id}` | Simulation entretien |
-| `OralController` | `/api/oral/{analyze,list}` + `/api/oral/{id}` | Entraînement oral |
-| `UserController` | `/api/user/{save-apikey,apikey}` | Clés API utilisateur |
+- **Auth**: `/api/auth/{check,login,register,logout,request-reset,reset-password,update-profile}`
+- **CV**: `POST /api/cv/{generate,improve,import-analyze}` + `GET /api/cv/history` + `GET|DELETE /api/cv/{id}`
+- **Lettre**: `POST /api/lettre/{generate,correct,save}` + `GET /api/lettre/list` + `GET|POST /api/lettre/{id}`
+- **Entretien**: `GET /api/entretien/{question,list,reset}` + `POST /api/entretien/{analyze,save-notes,save}` + `GET /api/entretien/delete/{id}` + notes sub-routes (`notes/list`, `notes/{id}`, `notes/delete/{id}`, `last-answer`)
+- **Oral**: `POST /api/oral/analyze` + `GET /api/oral/{list}` + `GET /api/oral/{id}` + `GET /api/oral/delete/{id}`
+- **User**: `POST /api/user/save-apikey` + `GET /api/user/apikey`
+- **TTS**: `POST /api/tts/speak` — text-to-speech via ElevenLabs
+- **Admin**: `GET /api/admin/{users,stats}` + `POST /api/admin/users/{id}/{status,role}` + `DELETE /api/admin/users/{id}`
 
-Le router supporte l'ancien format `?action=` via `mapLegacyAction()` pour rétrocompatibilité.
+Legacy `?action=` URLs still work via `Router::mapLegacyAction()`.
 
-Protected routes use `Auth::require()` from `App\Middleware\Auth` — returns 401 JSON if unauthenticated.
+## Auth model
 
-## Adding a new endpoint
-
-1. Créer ou modifier le Controller dans `src/Controllers/`
-2. Ajouter la route dans `public/index.php`
-3. Si nouvelle table : créer le Model dans `src/Models/`
-
-## Frontend JS pattern
-
-- `frontend/js/api.js` — `callAPI(endpoint)` et `postAPI(endpoint, data)` avec `API_BASE = '/api'`.
-- `frontend/js/ai.js` — exports AI functions (`window.AI.generateCV`, etc.) qui wrappent `postAPI`.
-- `frontend/js/utils.js` — auth check, profile dropdown, toasts, mobile nav, init chain.
-- Frontend pages use ES modules (`import` from `api.js`) in `ai.js` but `utils.js` loads as a classic script.
+- Session-based (`$_SESSION['user_id']`). Frontend uses `credentials: 'include'`.
+- `Auth::require()` returns 401 JSON if unauthenticated. Also re-checks DB on every request via `assertStillActive()` to catch admin deactivation immediately.
+- `Auth::requireAdmin()` checks session role — used for all `/api/admin/*` routes.
+- Login rate limiting: `LoginAttempt` model tracks failures by email+IP, blocks after 5 attempts for 5 minutes.
 
 ## Key gotchas
 
-- **No `.env` in repo** — copy from README docs if setting up fresh. Required vars: `OPENROUTER_API_KEY`, `LLM_MODEL`, `DB_HOST/USER/PASS/NAME`.
-- **`.env` loader is custom** (`config/app.php`) — not `vlucas/phpdotenv`. Only handles `KEY=VALUE` lines.
-- **CORS is centralized** in `public/index.php` — `Access-Control-Allow-Origin: *`. If adding a new entry point, keep CORS consistent.
-- **Session-based auth** — PHP sessions (`$_SESSION['user_id']`). Frontend uses `credentials: 'include'`.
+- **No `.env` in repo** — copy from README docs. Required: `OPENROUTER_API_KEY`, `LLM_MODEL`, `DB_HOST/USER/PASS/NAME`. Optional: `OPENROUTER_API_KEY_2` (auto-failover on rate limit/quota errors), `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `APP_URL` (absolute URL for Open Graph meta tags).
+- **`.env` loader is custom** (`config/app.php`) — only handles `KEY=VALUE` lines, no multiline, no export prefix.
+- **CORS is centralized** in `public/index.php` — `Access-Control-Allow-Origin: *`. If adding a new entry point, keep consistent.
+- **`$pdo` is global** — stored in `$GLOBALS['pdo']` in `bootstrap/app.php`.
 - **Age is calculated server-side** (`AtsScorer::calculateAgeFromBirthdate()`) from DOB — never by the AI.
 - **ATS score is algorithmic** (`AtsScorer`) — keyword matching, skills, experience, structure. LLM provides qualitative analysis only.
-- **PDF export** uses jsPDF + html2canvas client-side. No server PDF generation.
-- **localStorage is user-scoped** — keys prefixed with `jm_u{userId}_` via `jmKey()` in utils.js.
-- **Legacy `?action=` URLs** still work via `Router::mapLegacyAction()` — old frontend pages don't break.
+- **PDF export is client-side and lib differs per module** — CV export uses **pdfmake** (`pdfMake.createPdf()`); Lettre export uses **jsPDF directly** (html2canvas was deliberately removed). No server PDF generation.
+- **CV/letter import is OCR'd client-side** — pdf.js + tesseract.js loaded from CDN in `cv.html`/`lettre.html`; files never reach the server, only extracted text does.
+- **Speech recognition is 100% browser-side** — `entretien.html` and `oral.html` use the Web Speech API (`SpeechRecognition`/`webkitSpeechRecognition`); audio never leaves the browser, only the transcribed text is POSTed.
+- **LLM prompts demand strict JSON output** — all controllers send system prompts like "Réponds UNIQUEMENT en JSON valide, sans markdown"; `LlmService::extractJson()` parses the response. Keep this contract for new AI features.
+- **localStorage is user-scoped** — keys prefixed with `jm_u{userId}_` via `jmKey()` in `utils.js`.
+- **XSS protection** — all dynamic content must pass through `escHtml()` (text) or `escAttr()` (attribute values) from `utils.js`.
+- **Admin module** — `admin.html` page + `admin.js` + `AdminController`. Users can only be Read/Update/Delete by admins; creation goes through standard registration.
+- **PHP errors go to `logs/php_errors.log`** — `display_errors` is off in `bootstrap/app.php`; debug via the log file, not the browser.
 
 ## DB schema changes
 
-The `users` table has inline migration via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in `database.sql` and `AuthController::register()`. Follow this pattern — don't create separate migration files.
+Inline migration pattern via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in `database.sql` — run the file again to apply new columns; don't create separate migration files.
 
 ## Language
 
-All user-facing strings and code comments are in French. Keep new code consistent with this.
+All user-facing strings and code comments are in French. Keep new code consistent.

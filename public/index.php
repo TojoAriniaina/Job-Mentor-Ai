@@ -38,6 +38,7 @@ use App\Controllers\EntretienController;
 use App\Controllers\OralController;
 use App\Controllers\UserController;
 use App\Controllers\AdminController;
+use App\Controllers\TtsController;
 
 // ── CORS centralisé ────────────────────────────────────────────
 header("Access-Control-Allow-Origin: *");
@@ -67,6 +68,7 @@ $router->post('/api/auth/update-profile', AuthController::class, 'updateProfile'
 // CV
 $router->post(  '/api/cv/generate',  CvController::class, 'generate');
 $router->post(  '/api/cv/improve',   CvController::class, 'improve');
+$router->post(  '/api/cv/import-analyze', CvController::class, 'importAnalyze');
 $router->get(   '/api/cv/history',   CvController::class, 'history');
 $router->get(   '/api/cv/{id}',      CvController::class, 'get');
 $router->delete('/api/cv/{id}',      CvController::class, 'delete');
@@ -102,6 +104,9 @@ $router->get(   '/api/oral/delete/{id}', OralController::class, 'delete');
 // User
 $router->post('/api/user/save-apikey', UserController::class, 'saveApikey');
 $router->get( '/api/user/apikey',     UserController::class, 'getApikey');
+
+// TTS (ElevenLabs)
+$router->post('/api/tts/speak', TtsController::class, 'speak');
 
 // Admin
 $router->get(   '/api/admin/users',              AdminController::class, 'users');

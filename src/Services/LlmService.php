@@ -15,21 +15,41 @@ class LlmService {
         $lastError = null;
         foreach ($keys as $i => $apiKey) {
             try {
-                return $this->attempt($apiKey, $messages, $params);
+                return $this->attemptWithRetry($apiKey, $messages, $params);
             } catch (\Exception $e) {
                 $lastError = $e;
-                // Si ce n'est pas la dernière clé disponible, on retente avec la suivante
-                // uniquement pour les erreurs typiques de quota / clé invalide / rate-limit.
-                $isRetryable = preg_match('/rate.?limit|quota|429|401|403|invalid.*key/i', $e->getMessage());
+                $msg = $e->getMessage();
+                $isRetryable = preg_match('/rate.?limit|quota|429|401|403|invalid.*key/i', $msg);
                 if ($i < count($keys) - 1 && $isRetryable) {
-                    error_log('[LlmService] Clé #' . ($i + 1) . ' en échec (' . $e->getMessage() . '), tentative avec la clé suivante.');
+                    error_log('[LlmService] Clé #' . ($i + 1) . ' en échec (' . $msg . '), tentative avec la clé suivante.');
                     continue;
                 }
-                error_log('[LlmService] Échec définitif après ' . ($i + 1) . ' clé(s) testée(s) : ' . $e->getMessage());
+                error_log('[LlmService] Échec définitif après ' . ($i + 1) . ' clé(s) testée(s) : ' . $msg);
                 throw $e;
             }
         }
 
+        throw $lastError;
+    }
+
+    private function attemptWithRetry(string $apiKey, array $messages, array $params = [], int $maxRetries = 2): string {
+        $lastError = null;
+        for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
+            try {
+                return $this->attempt($apiKey, $messages, $params);
+            } catch (\Exception $e) {
+                $lastError = $e;
+                $msg = $e->getMessage();
+                $isNetworkError = preg_match('/HTTP2 framing layer|Failed to connect|cURL|timeout|reset by peer|connection refused/i', $msg);
+                if ($isNetworkError && $attempt < $maxRetries) {
+                    $delay = ($attempt + 1) * 2;
+                    error_log('[LlmService] Erreur réseau (tentative ' . ($attempt + 1) . '/' . ($maxRetries + 1) . '), retry dans ' . $delay . 's : ' . $msg);
+                    sleep($delay);
+                    continue;
+                }
+                throw $e;
+            }
+        }
         throw $lastError;
     }
 

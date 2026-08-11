@@ -6,32 +6,40 @@
 }
 
 .cv-document {
+    --cv-accent: #7c3aed;
+    --cv-dark: color-mix(in srgb, var(--cv-accent) 75%, #000);
+    --cv-light: color-mix(in srgb, var(--cv-accent) 35%, #fff);
+    --cv-lighter: color-mix(in srgb, var(--cv-accent) 15%, #fff);
     background: #ffffff;
     color: #1e293b;
     font-family: 'Inter', sans-serif;
     width: 100%;
-    min-height: 297mm; /* A4 Ratio */
+    max-width: 100%;
+    aspect-ratio: 210 / 297;
     display: flex;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     border-radius: 8px;
     overflow: hidden;
     position: relative;
-    margin: 0;
+    margin: 0 auto;
+}
+
+/* Tous les templates gardent la forme A4 */
+.cv-document[data-template="moderne"],
+.cv-document[data-template="minimaliste"] {
+    flex-direction: column;
 }
 
 /* Sidebar (Left Column) */
 .cv-sidebar {
     width: 32%;
     flex-shrink: 0;
-    background: #2d1b69; /* Deep Purple */
+    background: var(--cv-dark);
     color: #ffffff;
     padding: 40px 25px;
     display: flex;
     flex-direction: column;
     gap: 30px;
-    /* Un email/lien LinkedIn long ne doit jamais pousser la colonne plus
-       large que sa largeur figée (voir downloadCV en JS) : sans ça, le
-       texte déborde silencieusement et peut fausser toute la capture PDF. */
     min-width: 0;
     overflow-wrap: anywhere;
 }
@@ -59,7 +67,7 @@
     margin-bottom: 15px;
     padding-bottom: 8px;
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-    color: #a78bfa;
+    color: var(--cv-light);
 }
 
 .cv-contact-item {
@@ -69,13 +77,13 @@
     font-size: 0.85rem;
     margin-bottom: 12px;
     color: rgba(255, 255, 255, 0.9);
-    min-width: 0; /* autorise l'élément flex à rétrécir sous son contenu */
+    min-width: 0;
 }
 
 .cv-contact-item i {
     width: 18px;
     flex-shrink: 0;
-    color: #a78bfa;
+    color: var(--cv-light);
     text-align: center;
 }
 
@@ -101,9 +109,20 @@
 }
 
 .cv-skill-list li::before {
-    content: "•";
-    color: #a78bfa;
+    content: "\2022";
+    color: var(--cv-light);
     font-weight: bold;
+}
+
+/* Skills list text color for non-sidebar templates */
+.cv-document[data-template="moderne"] .cv-skill-list li,
+.cv-document[data-template="minimaliste"] .cv-skill-list li {
+    color: #374151;
+}
+
+.cv-document[data-template="moderne"] .cv-skill-list li::before,
+.cv-document[data-template="minimaliste"] .cv-skill-list li::before {
+    color: var(--cv-accent);
 }
 
 /* Main Content (Right Column) */
@@ -113,8 +132,104 @@
     background: #ffffff;
 }
 
+/* Override .cv-main pour templates sans sidebar */
+.cv-document[data-template="moderne"] .cv-main,
+.cv-document[data-template="minimaliste"] .cv-main {
+    width: 100%;
+    padding: 30px;
+}
+
+/* ── Header ── */
 .cv-header {
     margin-bottom: 35px;
+}
+
+/* Header layout moderne/minimaliste : photo + texte côte à côte */
+.cv-document[data-template="moderne"] .cv-header,
+.cv-document[data-template="minimaliste"] .cv-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 24px 30px;
+    margin-bottom: 0;
+}
+
+/* Header moderne : fond sombre dérivé de l'accent */
+.cv-document[data-template="moderne"] .cv-header {
+    background: var(--cv-dark);
+    color: #ffffff;
+    border-radius: 8px 8px 0 0;
+}
+
+.cv-document[data-template="moderne"] .cv-photo-container {
+    flex-shrink: 0;
+}
+
+.cv-document[data-template="moderne"] .cv-photo-img {
+    width: 100px;
+    height: 100px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.cv-document[data-template="moderne"] .cv-name,
+.cv-document[data-template="moderne"] .cv-title {
+    color: #ffffff;
+}
+
+.cv-document[data-template="moderne"] .cv-title {
+    color: var(--cv-lighter);
+}
+
+.cv-document[data-template="moderne"] .cv-header-contact {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.cv-document[data-template="moderne"] .cv-header-contact-item i {
+    color: var(--cv-light);
+}
+
+/* Header minimaliste : fond gris clair + bordure */
+.cv-document[data-template="minimaliste"] .cv-header {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cv-document[data-template="minimaliste"] .cv-photo-container {
+    flex-shrink: 0;
+}
+
+.cv-document[data-template="minimaliste"] .cv-photo-img {
+    width: 90px;
+    height: 90px;
+    border: 3px solid #d1d5db;
+}
+
+.cv-document[data-template="minimaliste"] .cv-name {
+    color: #111827;
+}
+
+.cv-document[data-template="minimaliste"] .cv-title {
+    color: var(--cv-accent);
+}
+
+.cv-header-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.cv-header-contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.cv-header-contact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .cv-name {
@@ -129,9 +244,39 @@
 .cv-title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #7c3aed;
+    color: var(--cv-accent);
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+/* ── Layout deux colonnes — Moderne ── */
+.cv-main-left {
+    flex: 1;
+    padding-right: 20px;
+}
+
+.cv-main-right {
+    flex: 1;
+    padding-left: 20px;
+    border-left: 1px solid #e5e7eb;
+}
+
+.cv-sidebar-right {
+    flex: 1;
+    padding-left: 20px;
+    border-left: 1px solid #e5e7eb;
+}
+
+.cv-document[data-template="moderne"] .cv-main {
+    display: flex;
+    gap: 0;
+}
+
+/* ── Layout deux colonnes — Minimaliste ── */
+.cv-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
 }
 
 .cv-section {
@@ -147,12 +292,12 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    border-bottom: 2px solid #f1f5f9;
+    border-bottom: 2px solid var(--cv-lighter);
     padding-bottom: 8px;
 }
 
 .cv-section-title i {
-    color: #7c3aed;
+    color: var(--cv-accent);
     font-size: 1.1rem;
 }
 
@@ -187,7 +332,7 @@
     font-size: 0.85rem;
     font-weight: 600;
     color: #64748b;
-    background: #f1f5f9;
+    background: var(--cv-lighter);
     padding: 2px 10px;
     border-radius: 20px;
 }
@@ -195,7 +340,7 @@
 .cv-company {
     font-weight: 600;
     font-size: 0.9rem;
-    color: #7c3aed;
+    color: var(--cv-accent);
     margin-bottom: 8px;
 }
 
@@ -220,7 +365,44 @@
 }
 
 .cv-lang-name { font-weight: 600; }
-.cv-lang-level { color: #a78bfa; font-style: italic; }
+.cv-lang-level { color: var(--cv-accent); font-style: italic; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .cv-document {
+        flex-direction: column;
+        aspect-ratio: auto;
+        width: 100%;
+    }
+    .cv-sidebar {
+        width: 100%;
+    }
+    .cv-document[data-template="classique"] .cv-main {
+        width: 100%;
+    }
+    .cv-two-col {
+        grid-template-columns: 1fr;
+    }
+    .cv-main-left,
+    .cv-main-right,
+    .cv-sidebar-right {
+        border-left: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .cv-document[data-template="moderne"] .cv-header,
+    .cv-document[data-template="minimaliste"] .cv-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+    .cv-header-contact {
+        justify-content: center;
+    }
+    .cv-main {
+        padding: 24px;
+    }
+}
 
 /* Print Adjustments */
 @media print {

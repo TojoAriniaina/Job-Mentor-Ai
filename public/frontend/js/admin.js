@@ -122,13 +122,13 @@
           <div class="admin-actions">
             ${isSelf ? '<span style="font-size:0.75rem;color:var(--text-muted)">(vous)</span>' : `
               <button data-action="toggle-status" title="${isActive ? 'Désactiver' : 'Activer'}">
-                <i class="fa-solid ${isActive ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                <i class="fa-solid ${isActive ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
               </button>
               <button data-action="toggle-role" title="${u.role === 'admin' ? 'Rétrograder' : 'Promouvoir admin'}">
-                <i class="fa-solid ${u.role === 'admin' ? 'fa-user-minus' : 'fa-user-shield'}"></i>
+                <i class="fa-solid fa-user-gear"></i>
               </button>
               <button data-action="delete" class="danger" title="Supprimer">
-                <i class="fa-solid fa-trash"></i>
+                <i class="fa-solid fa-trash-can"></i>
               </button>
             `}
           </div>
@@ -157,7 +157,7 @@
     if (!filtered.length) {
       tbody.innerHTML = `
         <tr class="admin-empty-row"><td colspan="6">
-          <i class="fa-solid fa-user-slash"></i>
+          
           Aucun utilisateur ne correspond à ces critères
         </td></tr>`;
       return;
