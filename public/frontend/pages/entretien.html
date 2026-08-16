@@ -76,6 +76,17 @@
       padding: 0 0 25px 0;
       box-shadow: 0 0 40px rgba(20,184,166,0.5);
       animation: circlePulse 1.5s ease-in-out infinite;
+      cursor: pointer;
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .speaking-circle:hover {
+      box-shadow: 0 0 50px rgba(20,184,166,0.7);
+      transform: scale(1.05);
+    }
+    .speaking-circle.paused-state {
+      animation: none;
+      box-shadow: 0 0 20px rgba(20,184,166,0.3);
+      opacity: 0.7;
     }
 
     @keyframes circlePulse {
@@ -128,9 +139,8 @@
         <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
       </div>
 
-      <div class="tabs" id="history-tabs" style="margin-bottom: 1.5rem;">
-        <button class="tab-btn active" data-tab="interviews">Entretiens</button>
-        <button class="tab-btn" data-tab="notes">Notes Seules</button>
+      <div style="margin-bottom: 0.5rem;">
+        <div style="font-weight:600; font-size:0.85rem; color:var(--text-secondary);">Mes entretiens sauvegardés</div>
       </div>
 
       <div id="history-list" style="max-height: 400px; overflow-y: auto; padding: 5px;">
@@ -308,13 +318,32 @@
     window.setSpeakingVisualizer = function (show, state) {
       const viz = document.getElementById('speaking-visualizer');
       if (!viz) return;
+      const circle = document.getElementById('speaking-circle');
       if (show) {
         createEqBars();
         viz.classList.add('active');
+        circle.classList.remove('paused-state');
       } else {
         viz.classList.remove('active');
+        circle.classList.remove('paused-state');
       }
     };
+
+    // ── Pause IA : clic sur le cercle speaking-circle ──
+    document.getElementById('speaking-circle').addEventListener('click', () => {
+      if (typeof window.aiSpeechToggle === 'function') {
+        window.aiSpeechToggle();
+        const circle = document.getElementById('speaking-circle');
+        const bars = circle.querySelectorAll('.eq-bar');
+        if (window.aiSpeech.paused) {
+          circle.classList.add('paused-state');
+          bars.forEach(b => b.style.animationPlayState = 'paused');
+        } else {
+          circle.classList.remove('paused-state');
+          bars.forEach(b => b.style.animationPlayState = 'running');
+        }
+      }
+    });
 
     // ── Écriture silencieuse de la conversation dans les notes ──
     function appendToNotes(role, text) {
@@ -404,7 +433,6 @@
     async function handleAnswer(text) {
       btnNext.disabled = true;
       btnMicro.disabled = true;
-      btnDelete.disabled = true;
       try {
         appendToNotes('Candidat', text);
 
@@ -417,6 +445,9 @@
           btnMicro.style.display = "none";
           btnDelete.style.display = "none";
           document.getElementById('btn-save-interview').style.display = "inline-flex";
+          // Afficher automatiquement les notes à la fin de l'entretien
+          document.getElementById('notes-section').classList.remove('hidden');
+          document.getElementById('btn-toggle-notes').style.display = 'none';
         }
       } catch (e) {
         showToast("Erreur d'analyse : " + e.message, "error");
@@ -506,6 +537,9 @@
           btnMicro.style.display = "";
           btnDelete.style.display = "";
           btnSaveInterview.style.display = "none";
+          // Réinitialiser l'affichage des notes
+          document.getElementById('notes-section').classList.add('hidden');
+          document.getElementById('btn-toggle-notes').style.display = '';
           // Effacer les notes personnelles
           document.getElementById('notes-area').value = '';
           localStorage.removeItem(jmKey('last_notes'));
@@ -624,17 +658,6 @@
       getHistoryModal().classList.remove('active');
     }
 
-    let currentTab = 'interviews';
-
-    document.querySelectorAll('#history-tabs .tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#history-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentTab = btn.dataset.tab;
-        loadHistory();
-      });
-    });
-
     window.openHistoryModal = function () {
       getHistoryModal().classList.add('active');
       loadHistory();
@@ -649,42 +672,36 @@
         </div>`;
 
       try {
-        const action = currentTab === 'interviews' ? 'list' : 'notes/list';
-        const response = await fetch(`${window.API_BASE}/entretien/${action}`, { credentials: 'include' });
+        const response = await fetch(`${window.API_BASE}/entretien/list`, { credentials: 'include' });
         const data = await response.json();
 
         if (!data.success) throw new Error(data.error);
 
-        const items = currentTab === 'interviews' ? data.history : data.notes;
+        const items = data.history;
 
         if (!items || items.length === 0) {
           list.innerHTML = `
             <div class="text-center p-5">
               
-              <p class="text-secondary"><i class="fa-solid fa-inbox"></i> Aucun élément trouvé.</p>
+              <p class="text-secondary"><i class="fa-solid fa-inbox"></i> Aucun entretien sauvegardé.</p>
             </div>`;
           return;
         }
 
         list.innerHTML = items.map(item => {
-          const title = currentTab === 'interviews' ? item.job_title : item.title;
-          const scoreInfo = currentTab === 'interviews' ? ` • Score: ${item.global_score}%` : '';
-          const viewFunc = currentTab === 'interviews' ? `viewInterviewTranscript(${item.id})` : `viewNote(${item.id})`;
-          const delFunc = currentTab === 'interviews' ? `deleteInterviewHistory(${item.id})` : `deleteNote(${item.id})`;
-
           return `
             <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default; border-color:rgba(255,255,255,0.05)">
               <div style="overflow:hidden">
-                <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${escHtml(title)}</div>
+                <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${escHtml(item.job_title)}</div>
                 <div style="font-size:0.75rem;color:var(--text-secondary)">
-                  ${new Date(item.created_at).toLocaleDateString('fr-FR')}${scoreInfo}
+                  ${new Date(item.created_at).toLocaleDateString('fr-FR')} • Score: ${item.global_score}%
                 </div>
               </div>
               <div style="display:flex;gap:8px; margin-left:15px">
-                <button class="btn btn-sm btn-primary" onclick="${viewFunc}" title="Voir">
+                <button class="btn btn-sm btn-primary" onclick="viewInterviewTranscript(${item.id})" title="Voir">
                   <i class="fa-solid fa-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-secondary" onclick="${delFunc}" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Supprimer">
+                <button class="btn btn-sm btn-secondary" onclick="deleteInterviewHistory(${item.id})" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Supprimer">
                   <i class="fa-solid fa-trash-can"></i>
                 </button>
               </div>
@@ -692,34 +709,6 @@
         }).join('');
       } catch (e) {
         list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${escHtml(e.message)}</p>`;
-      }
-    }
-
-    window.viewNote = async function (id) {
-      try {
-        const response = await fetch(`${window.API_BASE}/entretien/notes/${id}`, { credentials: 'include' });
-        const data = await response.json();
-        if (data.success) {
-          document.getElementById('transcript-title').textContent = data.data.title;
-          document.getElementById('transcript-body').textContent = data.data.content;
-          document.getElementById('modal-transcript').classList.add('active');
-        }
-      } catch (e) {
-        showToast('Erreur lors du chargement', 'error');
-      }
-    }
-
-    window.deleteNote = async function (id) {
-      if (!await showConfirmModal('Supprimer cette note ?', { title: 'Supprimer la note', confirmText: 'Supprimer', danger: true })) return;
-      try {
-        const response = await fetch(`${window.API_BASE}/entretien/notes/delete/${id}`, { credentials: 'include' });
-        const data = await response.json();
-        if (data.success) {
-          showToast('Note supprimée', 'success');
-          loadHistory();
-        }
-      } catch (e) {
-        showToast('Erreur lors de la suppression', 'error');
       }
     }
 

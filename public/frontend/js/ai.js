@@ -4,6 +4,23 @@ import { callAPI, postAPI } from "./api.js";
 
 // Précharge l'audio TTS sans le jouer. Retourne {audio, url} ou null en cas d'échec.
 let ttsWarningShown = false;
+
+// ── État global pour la pause IA ──
+window.aiSpeech = { audio: null, paused: false };
+
+window.aiSpeechPause = function () {
+    const a = window.aiSpeech.audio;
+    if (a && !a.paused) { a.pause(); window.aiSpeech.paused = true; }
+};
+window.aiSpeechResume = function () {
+    const a = window.aiSpeech.audio;
+    if (a && a.paused) { a.play(); window.aiSpeech.paused = false; }
+};
+window.aiSpeechToggle = function () {
+    if (window.aiSpeech.paused) window.aiSpeechResume();
+    else window.aiSpeechPause();
+};
+
 export async function fetchAudio(text) {
     try {
         const response = await fetch(`${window.API_BASE}/tts/speak`, {
@@ -36,9 +53,26 @@ export async function fetchAudio(text) {
 function playAudio(audioObj) {
     return new Promise(resolve => {
         const { audio, url } = audioObj;
-        audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-        audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
-        audio.play().catch(() => { URL.revokeObjectURL(url); resolve(); });
+        window.aiSpeech.audio = audio;
+        window.aiSpeech.paused = false;
+        audio.onended = () => {
+            URL.revokeObjectURL(url);
+            window.aiSpeech.audio = null;
+            window.aiSpeech.paused = false;
+            resolve();
+        };
+        audio.onerror = () => {
+            URL.revokeObjectURL(url);
+            window.aiSpeech.audio = null;
+            window.aiSpeech.paused = false;
+            resolve();
+        };
+        audio.play().catch(() => {
+            URL.revokeObjectURL(url);
+            window.aiSpeech.audio = null;
+            window.aiSpeech.paused = false;
+            resolve();
+        });
     });
 }
 
@@ -62,8 +96,10 @@ function speakTextFallback(text) {
         const voices = window.speechSynthesis.getVoices();
         const frVoice = voices.find(v => v.lang && v.lang.startsWith('fr'));
         if (frVoice) utterance.voice = frVoice;
-        utterance.onend = resolve;
-        utterance.onerror = resolve;
+        // Expose l'état pour la pause
+        window.aiSpeech.audio = { paused: false, pause: () => { window.speechSynthesis.pause(); window.aiSpeech.audio.paused = true; }, play: () => { window.speechSynthesis.resume(); window.aiSpeech.audio.paused = false; } };
+        utterance.onend = () => { window.aiSpeech.audio = null; window.aiSpeech.paused = false; resolve(); };
+        utterance.onerror = () => { window.aiSpeech.audio = null; window.aiSpeech.paused = false; resolve(); };
         window.speechSynthesis.speak(utterance);
     });
 }
