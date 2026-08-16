@@ -455,9 +455,14 @@ PROFIL
                   </div>
                 </div>
                 <div style="text-align:center;margin-top:1rem" id="analyze-pdf-footer">
-                  <button class="btn btn-primary" onclick="downloadAnalyzeCV()">
-                     <i class="fa-solid fa-file-pdf"></i> Télécharger en PDF
-                  </button>
+                  <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+                    <button class="btn btn-primary" onclick="downloadAnalyzeCV()">
+                       <i class="fa-solid fa-file-pdf"></i> Télécharger en PDF
+                    </button>
+                    <button class="btn btn-sm btn-secondary" id="btn-copy-analyze-cv" onclick="copyAnalyzeCV()">
+                      <i class="fa-solid fa-copy"></i> Copier
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -695,9 +700,12 @@ PROFIL
       font-weight: 600;
     }
 
-    /* Colonnes grid-2 Analyser — hauteur fixe viewport */
+    /* Colonnes grid-2 Analyser — hauteur limitée au viewport
+       (hauteur auto + max-height : évite que les colonnes ne deviennent
+       énormes et le "Profil suggéré" tout en bas quand on dézoome) */
     #tab-improve-content .grid-2 > * {
-      height: calc(100vh - 120px);
+      height: auto;
+      max-height: calc(100vh - 120px);
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: rgba(139,92,246,0.3) transparent;
@@ -716,6 +724,7 @@ PROFIL
       border-radius: 3px;
     }
     #analyze-results-panel {
+      flex: 1;
       display: flex;
       flex-direction: column;
       min-height: 100%;
@@ -723,9 +732,30 @@ PROFIL
     #analyze-results-panel > .glass-card {
       flex-shrink: 0;
     }
-    /* Profil suggéré : bas de colonne gauche */
+    /* Profil suggéré : ancré en bas de colonne gauche pour que les deux
+       colonnes aient le même niveau (hauteur auto + max-height côté colonnes :
+       pas de plongée vers le bas au dézoom) */
     #analyze-profil-card {
       margin-top: auto;
+    }
+    /* Colonne droite : la section aperçu remplit la hauteur, son contenu
+       est calé en bas comme à gauche (sans min-height:0 pour ne pas
+       écraser l'aperçu si le contenu est plus grand que la colonne) */
+    #analyze-preview-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    #analyze-preview-section > #analyze-preview-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Palette + footer : bloc ancré en bas de la colonne droite pour que
+       les deux colonnes aient le même niveau */
+    #analyze-preview-wrapper .color-palette-section {
+      margin-top: auto;
+      padding-top: 4.8rem;
     }
     /* PDF footer : bas de colonne droite */
     #analyze-pdf-footer {
@@ -1188,6 +1218,18 @@ PROFIL
       } catch (err) {
         console.error('Erreur export PDFMake :', err);
         showToast('Erreur lors de la génération du PDF : ' + err.message, 'error');
+      }
+    };
+
+    // ── copyAnalyzeCV : copier le CV analysé en texte ──
+    window.copyAnalyzeCV = function () {
+      const dataStr = localStorage.getItem(jmKey('last_analysis_cv'));
+      if (!dataStr) { showToast('Aucun CV à copier', 'warning'); return; }
+      try {
+        const text = buildCVText(JSON.parse(dataStr));
+        copyToClipboard(text, document.getElementById('btn-copy-analyze-cv'));
+      } catch (e) {
+        showToast('Impossible de copier', 'error');
       }
     };
 

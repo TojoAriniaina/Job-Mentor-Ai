@@ -156,10 +156,10 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
                 </div>
 </div>
 </div>
-<!-- Lettre texte -->
+<!-- Aperçu lettre (mise en page identique au PDF téléchargé) -->
 <div class="glass-card p-4 mb-3" id="lettre-text-card">
-<h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"> Contenu de la lettre</h3>
-<div id="lettre-text" style="line-height:1.9;font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;font-family:'Georgia',serif;">
+<h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"> Aperçu de la lettre</h3>
+<div class="lettre-paper" id="lettre-text">
 </div>
 </div>
 <!-- Points forts -->
@@ -173,7 +173,7 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
 <!-- ══ TAB: Corriger ════════════════════════════════════ -->
 <div class="tab-content" id="tab-correct-content">
 <div class="grid grid-2" style="gap:2rem">
-<div class="glass-card p-4 animate-fade-up h-full">
+<div class="glass-card p-4 animate-fade-up h-full" id="correct-form-panel">
 <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"> Correction de votre lettre</h2>
 <div class="form-group">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -199,7 +199,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 </div>
 <button class="btn btn-primary btn-full" id="btn-correct-lettre"> <i class="fa-solid fa-spell-check"></i> Corriger ma lettre</button>
 </div>
-<div class="h-full">
+<div class="h-full" id="correct-result-col">
 <div class="glass-card p-4 h-full" id="correct-placeholder" style="text-align:center;padding:3rem 2rem">
 <div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"></div>
 <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Correction en attente</h3>
@@ -220,7 +220,68 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 </div>
 </div>
 </div>
-<style>
+  <style>
+    /* ── Onglet Corriger : résultats pleine largeur à la place du formulaire ── */
+    #tab-correct-content .grid-2.correct-single { grid-template-columns: 1fr; }
+    /* ── Aperçu « papier » de la lettre (mise en page du PDF) ── */
+    .lettre-paper {
+      background: #fff;
+      color: #111;
+      border-radius: 4px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      padding: 2.2rem 2.5rem;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .lettre-paper-inner {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .lp-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 2.2rem;
+    }
+    .lp-sender,
+    .lp-recipient {
+      font-size: 0.9rem;
+    }
+    .lp-name {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.15rem;
+    }
+    .lp-dest-first {
+      font-weight: 700;
+    }
+    .lp-objet {
+      margin-bottom: 1.4rem;
+      font-size: 0.95rem;
+    }
+    .lp-objet-label {
+      font-weight: 700;
+    }
+    .lp-body p {
+      margin: 0 0 1rem 0;
+      text-align: justify;
+    }
+    .lp-signature {
+      text-align: right;
+      font-weight: 700;
+      margin-top: 1.5rem;
+    }
+    .lettre-raw {
+      white-space: pre-wrap;
+    }
+    @media (max-width: 640px) {
+      .lp-header {
+        flex-direction: column;
+        gap: 1.2rem;
+      }
+    }
+
     @media print {
       body {
         background: #fff;
@@ -237,6 +298,19 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       #bg-canvas,
       .bg-mesh {
         display: none !important;
+      }
+
+      #lettre-text-card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        background: none !important;
+      }
+
+      .lettre-paper {
+        box-shadow: none;
+        border: none;
+        padding: 0;
       }
 
       #lettre-text {
@@ -359,6 +433,55 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       showToast('Formulaire réinitialisé', 'success');
     });
 
+    // ── buildLettrePreviewHTML : aperçu identique au PDF téléchargé ──
+    // Reproduit la mise en page de downloadLettrePDF() : expéditeur à gauche,
+    // date + destinataire à droite, objet, corps en paragraphes, signature.
+    function buildLettrePreviewHTML(data) {
+      const profile = (typeof getStoredProfile === 'function') ? getStoredProfile() : {};
+      const nom       = (data.nom       || document.getElementById('l-nom')?.value       || '').trim();
+      const adresse   = (data.adresse   || document.getElementById('l-adresse')?.value   || '').trim();
+      const telephone = (data.telephone || document.getElementById('l-telephone')?.value || '').trim();
+      const email     = profile.email || '';
+      const titre     = profile.titre || '';
+      const date      = data.date || '';
+      const destLignes = (data.destinataire_lignes && data.destinataire_lignes.length)
+        ? data.destinataire_lignes
+        : ['Madame / Monsieur le Responsable', 'Recrutement', data.entreprise, data.entreprise_adresse].filter(Boolean);
+
+      // Lettre brute (ex. chargée depuis l'historique) : pas de données
+      // structurées → on affiche simplement le texte, comme avant.
+      if (!data.corps && !data.objet) {
+        return `<div class="lettre-raw">${escHtml(data.lettre || '')}</div>`;
+      }
+
+      const senderHTML = [
+        `<div class="lp-name">${escHtml(nom || 'Prénom NOM')}</div>`,
+        titre ? `<div>${escHtml(titre)}</div>` : '',
+        ...[telephone, email, adresse].filter(Boolean).map(l => `<div>${escHtml(l)}</div>`)
+      ].join('');
+
+      const recipientHTML = [
+        date ? `<div>${escHtml(date)}</div>` : '',
+        ...destLignes.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(String(l))}</div>`)
+      ].join('');
+
+      const corps = data.corps || '';
+      let paragraphs = corps.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      if (paragraphs.length === 0 && corps.trim()) paragraphs = [corps.replace(/\n/g, ' ').trim()];
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+
+      return `
+      <div class="lettre-paper-inner">
+        <div class="lp-header">
+          <div class="lp-sender">${senderHTML}</div>
+          <div class="lp-recipient">${recipientHTML}</div>
+        </div>
+        <div class="lp-objet"><span class="lp-objet-label">Objet : </span>${escHtml('Candidature au poste de ' + (data.objet || ''))}</div>
+        <div class="lp-body">${bodyHTML}</div>
+        <div class="lp-signature">${escHtml(nom || '')}</div>
+      </div>`;
+    }
+
     function displayLettre(data) {
       // Sauvegarder pour persistance entre les pages
       localStorage.setItem(jmKey('last_lettre'), JSON.stringify(data));
@@ -371,9 +494,9 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       lettreResult.classList.remove('hidden');
       lettreResult.classList.add('result-reveal');
 
-      // Text
+      // Aperçu (mise en page identique au PDF téléchargé)
       const lettre = data.lettre || data.raw || '';
-      document.getElementById('lettre-text').textContent = lettre;
+      document.getElementById('lettre-text').innerHTML = buildLettrePreviewHTML(data);
       window._lettreText = lettre;
 
       // Copy button
@@ -437,6 +560,13 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       const score = typeof data.score === 'number' ? data.score : 0;
       const color = scoreColor(score);
       el.innerHTML = `
+    <div class="glass-card p-3 mb-3" style="text-align:center">
+      <span onclick="toggleCorrectForm()" style="cursor:pointer;color:var(--primary,#6c63ff);font-size:0.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;user-select:none">
+        <i class="fa-solid fa-chevron-down" style="font-size:0.7rem" id="toggle-correct-form-icon"></i>
+        <span id="toggle-correct-form-label">Afficher le formulaire</span>
+      </span>
+    </div>
+
     <div class="glass-card p-4 mb-3">
       <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem">
         ${createScoreRing(score, color, 80, 7)}
@@ -468,7 +598,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 <button class="btn btn-sm btn-secondary" id="btn-copy-corrected"> Copier</button>
 </div>
       </div>
-      <div id="lettre-corrige-content" style="line-height:1.9;font-size:0.9rem;color:var(--text-secondary);white-space:pre-wrap;font-family:'Georgia',serif;padding:1rem;background:rgba(20,184,166,0.05);border-radius:var(--radius-md);border:1px solid rgba(20,184,166,0.15)">${escHtml(data.texte_corrige)}</div>
+      <div id="lettre-corrige-content" class="lettre-paper">${buildCorrectionPreviewHTML(data)}</div>
     </div>` : ''}`;
 
       if (data.texte_corrige) {
@@ -476,6 +606,108 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
           copyToClipboard(data.texte_corrige, this);
         });
       }
+
+      // Place les résultats à la place du formulaire (pleine largeur)
+      const correctGrid = document.querySelector('#tab-correct-content .grid-2');
+      const correctFormPanel = document.getElementById('correct-form-panel');
+      const correctResultCol = document.getElementById('correct-result-col');
+      if (correctGrid && correctFormPanel && correctResultCol) {
+        correctFormPanel.classList.add('hidden');
+        correctResultCol.classList.add('hidden');
+        correctGrid.insertBefore(el, correctFormPanel.nextSibling);
+        correctGrid.classList.add('correct-single');
+      }
+    }
+
+    window.toggleCorrectForm = function () {
+      const panel = document.getElementById('correct-form-panel');
+      const icon = document.getElementById('toggle-correct-form-icon');
+      const label = document.getElementById('toggle-correct-form-label');
+      if (!panel) return;
+      const hidden = panel.classList.toggle('hidden');
+      if (icon) icon.className = hidden ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up';
+      if (label) label.textContent = hidden ? 'Afficher le formulaire' : 'Masquer le formulaire';
+      if (!hidden) {
+        const textarea = document.getElementById('lettre-to-correct');
+        if (textarea) textarea.focus();
+      }
+    };
+
+    // ── buildCorrectionPreviewHTML : aperçu écran de la version corrigée ──
+    // Reproduit la mise en page du PDF téléchargé (downloadLettre) : expéditeur
+    // à gauche, date + destinataire à droite, objet, salutation puis corps en
+    // paragraphes. Repli sur le texte brut si l'en-tête n'est pas reconnu.
+    function buildCorrectionPreviewHTML(data) {
+      const texteBrut = Array.isArray(data.texte_corrige)
+        ? data.texte_corrige.join('\n\n')
+        : String(data.texte_corrige || '');
+
+      const isObjetLine = l => /^objet\s*:/i.test(l);
+      const isDateLine = l => /,\s*le\s+\d/i.test(l) || /^\d{1,2}\s+[a-zéû]+\s+\d{4}$/i.test(l);
+      const isDestinataireStart = l => /^(à l['’‘]attention|madame\s*\/\s*monsieur|monsieur\s+le|madame\s+la)/i.test(l);
+
+      const rawLines = texteBrut.split('\n').map(l => l.trim());
+      const salutationIdx = rawLines.findIndex(l => /^(madame|monsieur|bonjour|cher|chère)/i.test(l));
+
+      if (salutationIdx <= 0) {
+        return `<div class="lettre-raw">${escHtml(texteBrut.trim())}</div>`;
+      }
+
+      const headerLines = rawLines.slice(0, salutationIdx).filter(Boolean);
+      const sender = [];
+      const dates = [];
+      const destinataire = [];
+      let objetLine = null;
+      let inRight = false;
+
+      headerLines.forEach(line => {
+        if (isObjetLine(line)) { objetLine = line; return; }
+        if (isDestinataireStart(line)) inRight = true;
+        if (isDateLine(line)) { dates.push(line); return; }
+        (inRight ? destinataire : sender).push(line);
+      });
+
+      const senderHTML = sender.map((l, i) =>
+        i === 0 ? `<div class="lp-name">${escHtml(l)}</div>` : `<div>${escHtml(l)}</div>`
+      ).join('');
+
+      const recipientHTML = [
+        ...dates.map(l => `<div>${escHtml(l)}</div>`),
+        ...destinataire.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(l)}</div>`)
+      ].join('');
+
+      let objetHTML = '';
+      if (objetLine) {
+        const sepIdx = objetLine.indexOf(':');
+        objetHTML = `<div class="lp-objet"><span class="lp-objet-label">Objet : </span>${escHtml(objetLine.slice(sepIdx + 1).trim())}</div>`;
+      }
+
+      const bodyStartLines = rawLines.slice(salutationIdx);
+      const salutationHTML = bodyStartLines.length && /^(madame|monsieur|bonjour|cher|chère)/i.test(bodyStartLines[0])
+        ? `<p>${escHtml(bodyStartLines[0])}</p>`
+        : '';
+      const corpsLines = salutationHTML ? bodyStartLines.slice(1) : bodyStartLines;
+
+      const corpsText = corpsLines.join('\n');
+      let paragraphs = corpsText.split(/\n\s*\n/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+      if (paragraphs.length === 0 && corpsText.trim()) {
+        paragraphs = [corpsText.replace(/\n/g, ' ').trim()];
+      }
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+
+      const headerHTML = (senderHTML || recipientHTML)
+        ? `<div class="lp-header">
+          ${senderHTML ? `<div class="lp-sender">${senderHTML}</div>` : ''}
+          ${recipientHTML ? `<div class="lp-recipient">${recipientHTML}</div>` : ''}
+        </div>`
+        : '';
+
+      return `
+      <div class="lettre-paper-inner">
+        ${headerHTML}
+        ${objetHTML}
+        <div class="lp-body">${salutationHTML}${bodyHTML}</div>
+      </div>`;
     }
 
     // Export PDF de la lettre corrigée : texte vectoriel natif jsPDF.

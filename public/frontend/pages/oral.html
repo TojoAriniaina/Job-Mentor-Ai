@@ -152,6 +152,9 @@
       padding: 0 4px;
       font-weight: 600;
     }
+    .oral-two-col { grid-template-columns: 1fr 1.4fr; }
+    /* Résultats pleine largeur à la place du formulaire */
+    #tab-practice-content .oral-two-col.oral-single { grid-template-columns: 1fr; }
     @media (max-width: 768px) {
       .oral-two-col { grid-template-columns: 1fr !important; }
     }
@@ -267,10 +270,10 @@
   </div>
 
   <!-- ③ Deux colonnes : Micro+Transcription | Feedback -->
-  <div class="oral-two-col" style="display:grid;grid-template-columns:1fr 1.4fr;gap:1.5rem;align-items:stretch;">
+  <div class="oral-two-col" id="oral-practice-grid" style="display:grid;gap:1.5rem;align-items:stretch;">
 
     <!-- Colonne gauche -->
-    <div style="display:flex;flex-direction:column;gap:1rem;">
+    <div id="oral-form-col" style="display:flex;flex-direction:column;gap:1rem;">
 
       <!-- Contrôles micro -->
       <div class="glass-card p-4 animate-fade-up delay-2" style="text-align:center;">
@@ -322,7 +325,7 @@
     </div>
 
     <!-- Colonne droite : Feedback -->
-    <div style="display:flex;flex-direction:column;">
+    <div id="oral-result-col" style="display:flex;flex-direction:column;">
       <div class="glass-card p-5" id="oral-placeholder" style="text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
         <div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite;opacity:0.7;"></div>
         <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.4rem;">Analyse en attente</h3>
@@ -333,6 +336,12 @@
         </div>
       </div>
       <div class="hidden" id="oral-result">
+        <div class="glass-card p-3 mb-3" style="text-align:center">
+          <span onclick="toggleOralForm()" style="cursor:pointer;color:var(--primary,#6c63ff);font-size:0.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;user-select:none">
+            <i class="fa-solid fa-chevron-down" style="font-size:0.7rem" id="toggle-oral-form-icon"></i>
+            <span id="toggle-oral-form-label">Afficher le formulaire</span>
+          </span>
+        </div>
         <div class="glass-card p-4 mb-3">
           <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1.5rem;"> Scores détaillés</h3>
           <div id="oral-global-ring" style="text-align:center;margin-bottom:1.5rem;"></div>
@@ -705,6 +714,17 @@
       document.getElementById('mic-status').textContent = 'Cliquez sur le micro pour commencer';
       document.getElementById('oral-placeholder').classList.remove('hidden');
       document.getElementById('oral-result').classList.add('hidden');
+      // Restaure la mise en page d'origine (formulaire + résultats côte à côte)
+      const oralGrid = document.getElementById('oral-practice-grid');
+      const oralFormCol = document.getElementById('oral-form-col');
+      const oralResultCol = document.getElementById('oral-result-col');
+      const oralEl = document.getElementById('oral-result');
+      if (oralGrid && oralFormCol && oralResultCol && oralEl) {
+        oralResultCol.appendChild(oralEl);
+        oralFormCol.classList.remove('hidden');
+        oralResultCol.classList.remove('hidden');
+        oralGrid.classList.remove('oral-single');
+      }
       localStorage.removeItem(jmKey('last_oral'));
       showToast('Session réinitialisée', 'success');
     });
@@ -794,7 +814,29 @@
         document.getElementById('oral-conseil').style.display = 'block';
         document.getElementById('oral-conseil-text').textContent = data.conseil_principal;
       }
+
+      // Place les résultats à la place du formulaire (pleine largeur)
+      const oralGrid = document.getElementById('oral-practice-grid');
+      const oralFormCol = document.getElementById('oral-form-col');
+      const oralResultCol = document.getElementById('oral-result-col');
+      const oralEl = document.getElementById('oral-result');
+      if (oralGrid && oralFormCol && oralResultCol && oralEl) {
+        oralFormCol.classList.add('hidden');
+        oralResultCol.classList.add('hidden');
+        oralGrid.insertBefore(oralEl, oralFormCol.nextSibling);
+        oralGrid.classList.add('oral-single');
+      }
     }
+
+    window.toggleOralForm = function () {
+      const col = document.getElementById('oral-form-col');
+      const icon = document.getElementById('toggle-oral-form-icon');
+      const label = document.getElementById('toggle-oral-form-label');
+      if (!col) return;
+      const hidden = col.classList.toggle('hidden');
+      if (icon) icon.className = hidden ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up';
+      if (label) label.textContent = hidden ? 'Afficher le formulaire' : 'Masquer le formulaire';
+    };
 
     /* ── Analyze text ── */
     document.getElementById('btn-analyze-text').addEventListener('click', async () => {
