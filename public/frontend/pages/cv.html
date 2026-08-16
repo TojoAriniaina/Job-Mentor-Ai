@@ -301,6 +301,11 @@
                   </div>
                 </div>
                 <div class="cv-preview" id="cv-preview-content"></div>
+                <!-- Astuce personnalisation -->
+                <div class="cv-tip-card">
+                  <i class="fa-solid fa-lightbulb"></i>
+                  <span>Astuce : cliquez sur un <strong>template</strong> ci-dessus ou une <strong>couleur</strong> ci-dessous pour personnaliser votre CV en direct.</span>
+                </div>
                 <!-- Color Palette -->
                 <div class="color-palette-section">
                   <span class="color-palette-label">Couleur du thème</span>
@@ -631,7 +636,10 @@ PROFIL
       transform: scale(1.08);
     }
 
-    /* Colonnes grid-2 alignées en hauteur */
+    /* Colonnes grid-2 alignées en hauteur — Générer */
+    #tab-generate-content .grid-2 {
+      align-items: stretch;
+    }
     #tab-generate-content .grid-2 > * {
       display: flex;
       flex-direction: column;
@@ -639,6 +647,52 @@ PROFIL
     }
     #tab-generate-content .grid-2 > * > .glass-card {
       flex: 1;
+    }
+    /* Colonne résultat : remplit la hauteur pour que le bas de l'aperçu
+       reste aligné avec le bas du formulaire "Vos informations" */
+    #tab-generate-content .grid-2 > * > #cv-result {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+    #tab-generate-content #cv-result > .glass-card {
+      flex-shrink: 0;
+    }
+    #tab-generate-content #cv-result > #cv-preview-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Palette de couleurs : juste sous la carte astuce */
+    #tab-generate-content #cv-preview-wrapper .color-palette-section {
+      margin-top: 1.5rem;
+      padding-top: 0;
+    }
+    /* Carte « Astuce » entre l'aperçu et la palette, centrée dans l'espace libre */
+    #tab-generate-content .cv-tip-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: auto;
+      margin-bottom: auto;
+      padding: 0.85rem 1.1rem;
+      background: rgba(139, 92, 246, 0.07);
+      border: 1px dashed rgba(139, 92, 246, 0.35);
+      border-radius: 12px;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+    #tab-generate-content .cv-tip-card i {
+      font-size: 1.15rem;
+      color: var(--purple-light);
+      flex-shrink: 0;
+      animation: float 4s ease-in-out infinite;
+    }
+    #tab-generate-content .cv-tip-card strong {
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
     /* Colonnes grid-2 Analyser — hauteur fixe viewport */
@@ -694,6 +748,7 @@ PROFIL
       #cv-suggestions-card,
       #cv-keywords-card,
       #cv-preview-title,
+      .cv-tip-card,
       .page-header,
       #bg-canvas,
       .bg-mesh {
