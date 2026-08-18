@@ -187,8 +187,8 @@ window.AI.improveCV = async function (cv, jobOffer) {
 };
 
 // ── MODULE LETTRE ────────────────────────────────────────────
-window.AI.generateCoverLetter = async function ({ cv, offre, ton, nom, adresse, telephone, ville, entreprise, entreprise_adresse }) {
-    const data = await postAPI("lettre/generate", { cv, offre, ton, nom, adresse, telephone, ville, entreprise, entreprise_adresse });
+window.AI.generateCoverLetter = async function ({ cv, offre, ton, civilite, nom, adresse, telephone, ville, entreprise, entreprise_adresse }) {
+    const data = await postAPI("lettre/generate", { cv, offre, ton, civilite, nom, adresse, telephone, ville, entreprise, entreprise_adresse });
     if (data && data.success) {
         return data.data;
     } else {

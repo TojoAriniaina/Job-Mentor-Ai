@@ -116,6 +116,21 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
 <button class="tab-btn" data-ton="dynamique" id="ton-dynamique"> Dynamique</button>
 </div>
 </div>
+<div class="form-group">
+<label class="form-label">Destinataire</label>
+<div class="tabs" id="civilite-tabs" style="margin-top:4px">
+<button class="tab-btn active" data-civilite="Madame, Monsieur" id="civ-both"> Madame, Monsieur</button>
+<button class="tab-btn" data-civilite="Madame" id="civ-mme"> Madame</button>
+<button class="tab-btn" data-civilite="Monsieur" id="civ-mr"> Monsieur</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">Modèle de lettre</label>
+<div class="tabs" id="template-tabs" style="margin-top:4px">
+<button class="tab-btn active" data-template="classique" id="tpl-classique"> Classique</button>
+<button class="tab-btn" data-template="professionnel" id="tpl-pro"> Professionnel</button>
+</div>
+</div>
             <div style="display:flex;gap:10px;margin-top:10px">
               <button class="btn btn-primary" id="btn-gen-lettre" style="flex:4"> Générer ma lettre</button>
               <button class="btn btn-secondary" id="btn-history-lettre-form" title="Mes archives" style="flex:1">
@@ -152,7 +167,7 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
                 <div style="display:flex;gap:8px">
                   <button class="btn btn-sm btn-success" id="btn-save-lettre-db" style="background:var(--teal); border:none"> Enregistrer</button>
                   <button class="btn btn-sm btn-primary" onclick="downloadLettrePDF()"> PDF</button>
-                  <button class="btn btn-sm btn-secondary" id="btn-copy-lettre" title="Copier"></button>
+                  <button class="btn btn-sm btn-secondary" id="btn-copy-lettre" title="Copier"><i class="fa-solid fa-copy"></i></button>
                 </div>
 </div>
 </div>
@@ -177,7 +192,7 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
 <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"> Correction de votre lettre</h2>
 <div class="form-group">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-  <label class="form-label" for="lettre-to-correct" style="margin-bottom:0">Collez votre lettre de motivation *</label>
+  <label class="form-label" for="lettre-to-correct" style="margin-bottom:0" id="label-lettre-to-correct">Collez votre lettre de motivation *</label>
   <button type="button" id="btn-import-letter-correct" onclick="document.getElementById('letter-file-input-correct').click()"
     style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;font-size:0.78rem;font-weight:600;
            border:1.5px solid var(--primary,#6c63ff);border-radius:8px;background:transparent;
@@ -193,11 +208,27 @@ Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea
 Madame, Monsieur,
 
 Je me permets de vous contacter afin de candidater au poste de..." rows="16"></textarea>
+<div id="lettre-correct-preview-wrapper" style="display:none">
+  <div id="lettre-correct-preview" class="lettre-paper" style="max-height:420px;overflow-y:auto"></div>
+  <button type="button" id="btn-edit-imported-letter" onclick="toggleEditImportedLetter()"
+    style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;margin-top:8px;font-size:0.78rem;font-weight:600;
+           border:1.5px solid var(--teal,#14b8a6);border-radius:8px;background:transparent;
+           color:var(--teal,#14b8a6);cursor:pointer;transition:all .2s"
+    onmouseover="this.style.background='var(--teal,#14b8a6)';this.style.color='#fff'"
+    onmouseout="this.style.background='transparent';this.style.color='var(--teal,#14b8a6)'">
+     <i class="fa-solid fa-pen"></i> Modifier
+  </button>
+</div>
 <div id="letter-import-status-correct" style="display:none;font-size:0.8rem;margin-top:5px;color:var(--primary,#6c63ff)">
    <span id="letter-import-msg-correct">Lecture du fichier...</span>
 </div>
 </div>
-<button class="btn btn-primary btn-full" id="btn-correct-lettre"> <i class="fa-solid fa-spell-check"></i> Corriger ma lettre</button>
+<div style="display:flex;gap:10px;margin-top:10px">
+<button class="btn btn-primary" id="btn-correct-lettre" style="flex:4"> <i class="fa-solid fa-spell-check"></i> Corriger ma lettre</button>
+<button class="btn btn-secondary" id="btn-reset-correct" title="Réinitialiser" style="flex:1">
+  <i class="fa-solid fa-rotate-left"></i>
+</button>
+</div>
 </div>
 <div class="h-full" id="correct-result-col">
 <div class="glass-card p-4 h-full" id="correct-placeholder" style="text-align:center;padding:3rem 2rem">
@@ -223,6 +254,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
   <style>
     /* ── Onglet Corriger : résultats pleine largeur à la place du formulaire ── */
     #tab-correct-content .grid-2.correct-single { grid-template-columns: 1fr; }
+    #lettre-corrige-content { max-width: 794px; margin: 0 auto; }
     /* ── Aperçu « papier » de la lettre (mise en page du PDF) ── */
     .lettre-paper {
       background: #fff;
@@ -274,6 +306,146 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
     }
     .lettre-raw {
       white-space: pre-wrap;
+    }
+    /* ── Modèle Professionnel ── */
+    .lp-pro {
+      background: #fff;
+      color: #1a1a2e;
+      border-radius: 4px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      padding: 2.5rem 2.8rem;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+    .lp-pro .lp-pro-inner {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .lp-pro .lp-pro-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .lp-pro .lp-pro-col {
+      flex: 1;
+      min-width: 0;
+    }
+    .lp-pro .lp-pro-col-left {
+      text-align: left;
+    }
+    .lp-pro .lp-pro-col-right {
+      text-align: right;
+    }
+    .lp-pro .lp-pro-name {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #1e3a5f;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .lp-pro .lp-pro-col-right .lp-pro-name {
+      justify-content: flex-end;
+    }
+    .lp-pro .lp-pro-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e3a5f, #2d6cb4);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .lp-pro .lp-pro-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.82rem;
+      color: #444;
+    }
+    .lp-pro .lp-pro-info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .lp-pro .lp-pro-col-right .lp-pro-info-item {
+      justify-content: flex-end;
+    }
+    .lp-pro .lp-pro-info-icon {
+      color: #2d6cb4;
+      width: 14px;
+      text-align: center;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+    }
+    .lp-pro .lp-pro-dest-label {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 0.4rem;
+      font-style: italic;
+    }
+    .lp-pro .lp-pro-company {
+      font-weight: 700;
+      color: #1e3a5f;
+      font-size: 0.92rem;
+    }
+    .lp-pro .lp-pro-date {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      color: #555;
+      margin-top: 0.8rem;
+    }
+    .lp-pro .lp-pro-col-right .lp-pro-date {
+      justify-content: flex-end;
+    }
+    .lp-pro .lp-pro-separator {
+      border: none;
+      height: 2px;
+      background: linear-gradient(90deg, #2d6cb4, #5ba3e6, #2d6cb4);
+      margin: 0 0 1.6rem 0;
+      border-radius: 1px;
+    }
+    .lp-pro .lp-pro-objet {
+      margin-bottom: 1.4rem;
+      font-size: 0.9rem;
+    }
+    .lp-pro .lp-pro-objet-label {
+      font-weight: 700;
+      color: #1e3a5f;
+    }
+    .lp-pro .lp-pro-body p {
+      margin: 0 0 1rem 0;
+      text-align: justify;
+      color: #222;
+    }
+    .lp-pro .lp-pro-salutation {
+      margin-bottom: 1.2rem;
+      font-weight: 500;
+    }
+    .lp-pro .lp-pro-signature {
+      text-align: right;
+      font-weight: 700;
+      margin-top: 2rem;
+      color: #1e3a5f;
+    }
+    @media (max-width: 640px) {
+      .lp-pro .lp-pro-header {
+        flex-direction: column;
+        gap: 1.2rem;
+      }
+      .lp-pro .lp-pro-col-right .lp-pro-name,
+      .lp-pro .lp-pro-col-right .lp-pro-info-item,
+      .lp-pro .lp-pro-col-right .lp-pro-date {
+        justify-content: flex-start;
+      }
     }
     @media (max-width: 640px) {
       .lp-header {
@@ -342,6 +514,8 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
   <script src="../js/utils.js"></script>
   <script>
     let selectedTon = 'formel';
+    let selectedCivilite = 'Madame, Monsieur';
+    let selectedTemplate = 'classique';
 
     // Tabs
     document.querySelectorAll('#lettre-tabs .tab-btn').forEach(btn => {
@@ -363,6 +537,27 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       });
     });
 
+    // Civilité selector
+    document.querySelectorAll('#civilite-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('#civilite-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCivilite = btn.dataset.civilite;
+      });
+    });
+
+    // Template selector
+    document.querySelectorAll('#template-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('#template-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedTemplate = btn.dataset.template;
+        localStorage.setItem(jmKey('lettre_template'), selectedTemplate);
+      });
+    });
+
     // Generate
     document.getElementById('btn-gen-lettre').addEventListener('click', async () => {
       const btn = document.getElementById('btn-gen-lettre');
@@ -380,6 +575,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
             cv,
             offre,
             ton: selectedTon,
+            civilite: selectedCivilite,
             nom:               document.getElementById('l-nom').value.trim(),
             adresse:           document.getElementById('l-adresse').value.trim(),
             telephone:         document.getElementById('l-telephone').value.trim(),
@@ -420,6 +616,11 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         btn.classList.toggle('active', btn.dataset.ton === 'formel');
       });
 
+      selectedCivilite = 'Madame, Monsieur';
+      document.querySelectorAll('#civilite-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.civilite === 'Madame, Monsieur');
+      });
+
       document.getElementById('lettre-result').classList.add('hidden');
       document.getElementById('lettre-skeleton').classList.add('hidden');
       document.getElementById('lettre-placeholder').classList.remove('hidden');
@@ -443,17 +644,76 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       const telephone = (data.telephone || document.getElementById('l-telephone')?.value || '').trim();
       const email     = profile.email || '';
       const titre     = profile.titre || '';
+      const civilite  = data.civilite || 'Madame, Monsieur';
+      const entreprise = (data.entreprise || document.getElementById('l-entreprise')?.value || '').trim();
+      const entrepriseAdresse = (data.entreprise_adresse || document.getElementById('l-entreprise-adresse')?.value || '').trim();
       const date      = data.date || '';
       const destLignes = (data.destinataire_lignes && data.destinataire_lignes.length)
         ? data.destinataire_lignes
-        : ['Madame / Monsieur le Responsable', 'Recrutement', data.entreprise, data.entreprise_adresse].filter(Boolean);
+        : [civilite + ' le Responsable', 'Recrutement', data.entreprise, data.entreprise_adresse].filter(Boolean);
 
-      // Lettre brute (ex. chargée depuis l'historique) : pas de données
-      // structurées → on affiche simplement le texte, comme avant.
       if (!data.corps && !data.objet) {
         return `<div class="lettre-raw">${escHtml(data.lettre || '')}</div>`;
       }
 
+      const corps = data.corps || '';
+      let paragraphs = corps.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      if (paragraphs.length === 0 && corps.trim()) paragraphs = [corps.replace(/\n/g, ' ').trim()];
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+
+      // ── Premier paragraphe = salutation (Madame, Monsieur,) ──
+      let salutationHTML = '';
+      let corpsParagraphs = paragraphs;
+      if (paragraphs.length > 0 && /^(madame|monsieur|bonjour|cher|chère)/i.test(paragraphs[0])) {
+        salutationHTML = `<div class="lp-pro-salutation">${escHtml(paragraphs[0])}</div>`;
+        corpsParagraphs = paragraphs.slice(1);
+      }
+      const corpsBodyHTML = corpsParagraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+
+      if (selectedTemplate === 'professionnel') {
+        const initials = nom ? nom.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
+
+        const senderInfoItems = [
+          email ? `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="fa-solid fa-envelope"></i></span><span>${escHtml(email)}</span></div>` : '',
+          telephone ? `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="fa-solid fa-phone"></i></span><span>${escHtml(telephone)}</span></div>` : '',
+          adresse ? `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="fa-solid fa-location-dot"></i></span><span>${escHtml(adresse)}</span></div>` : '',
+          data.ville ? `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="fa-solid fa-map-marker"></i></span><span>${escHtml(data.ville)}</span></div>` : ''
+        ].filter(Boolean).join('');
+
+        const destFirst = destLignes[0] || civilite + ' le Responsable';
+        const destRest = destLignes.slice(1);
+
+        const recipientInfoItems = [
+          `<div class="lp-pro-dest-label">${escHtml('À l\'attention du ' + destFirst)}</div>`,
+          entreprise ? `<div class="lp-pro-company">${escHtml(entreprise)}</div>` : '',
+          ...destRest.filter(l => l !== destFirst).map(l => `<div>${escHtml(String(l))}</div>`)
+        ].filter(Boolean).join('');
+
+        return `
+        <div class="lp-pro">
+          <div class="lp-pro-inner">
+            <div class="lp-pro-header">
+              <div class="lp-pro-col lp-pro-col-left">
+                <div class="lp-pro-name"><span class="lp-pro-avatar">${initials}</span>${escHtml(nom || 'Prénom NOM')}</div>
+                <div class="lp-pro-info">${senderInfoItems}</div>
+              </div>
+              <div class="lp-pro-col lp-pro-col-right">
+                <div class="lp-pro-info">${recipientInfoItems}</div>
+                ${date ? `<div class="lp-pro-date"><span class="lp-pro-info-icon"><i class="fa-solid fa-calendar-days"></i></span><span>${escHtml(date)}</span></div>` : ''}
+              </div>
+            </div>
+            <hr class="lp-pro-separator">
+            <div class="lp-pro-objet"><span class="lp-pro-objet-label">Objet : </span>${escHtml('Candidature au poste de ' + (data.objet || ''))}</div>
+            <div class="lp-pro-body">
+              ${salutationHTML || `<div class="lp-pro-salutation">${escHtml(civilite)},</div>`}
+              ${corpsBodyHTML || bodyHTML}
+            </div>
+            <div class="lp-pro-signature">${escHtml(nom || '')}</div>
+          </div>
+        </div>`;
+      }
+
+      // ── Modèle Classique (existant) ──
       const senderHTML = [
         `<div class="lp-name">${escHtml(nom || 'Prénom NOM')}</div>`,
         titre ? `<div>${escHtml(titre)}</div>` : '',
@@ -464,11 +724,6 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         date ? `<div>${escHtml(date)}</div>` : '',
         ...destLignes.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(String(l))}</div>`)
       ].join('');
-
-      const corps = data.corps || '';
-      let paragraphs = corps.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-      if (paragraphs.length === 0 && corps.trim()) paragraphs = [corps.replace(/\n/g, ' ').trim()];
-      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
 
       return `
       <div class="lettre-paper-inner">
@@ -496,7 +751,9 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 
       // Aperçu (mise en page identique au PDF téléchargé)
       const lettre = data.lettre || data.raw || '';
-      document.getElementById('lettre-text').innerHTML = buildLettrePreviewHTML(data);
+      const lettreTextEl = document.getElementById('lettre-text');
+      lettreTextEl.className = selectedTemplate === 'professionnel' ? 'lp-pro' : 'lettre-paper';
+      lettreTextEl.innerHTML = buildLettrePreviewHTML(data);
       window._lettreText = lettre;
 
       // Copy button
@@ -545,6 +802,32 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
           setLoading(btn, false);
         }
       });
+    });
+
+    document.getElementById('btn-reset-correct').addEventListener('click', () => {
+      document.getElementById('lettre-to-correct').value = '';
+      const previewWrapper = document.getElementById('lettre-correct-preview-wrapper');
+      const textarea = document.getElementById('lettre-to-correct');
+      const label = document.getElementById('label-lettre-to-correct');
+      if (previewWrapper) previewWrapper.style.display = 'none';
+      if (textarea) textarea.style.display = '';
+      if (label) label.textContent = 'Collez votre lettre de motivation *';
+      document.getElementById('correct-placeholder').classList.remove('hidden');
+      document.getElementById('correct-result').classList.add('hidden');
+      document.getElementById('correct-skeleton').classList.add('hidden');
+      const correctResultCol = document.getElementById('correct-result-col');
+      if (correctResultCol) correctResultCol.classList.remove('hidden');
+      const correctGrid = document.querySelector('#tab-correct-content .grid-2');
+      const correctFormPanel = document.getElementById('correct-form-panel');
+      if (correctGrid && correctFormPanel) {
+        correctFormPanel.classList.remove('hidden');
+        correctGrid.classList.remove('correct-single');
+        const insertedEl = correctGrid.querySelector('#correct-result');
+        if (insertedEl && correctResultCol) correctResultCol.appendChild(insertedEl);
+      }
+      localStorage.removeItem(jmKey('last_lettre_correction'));
+      window._lastCorrectionData = null;
+      showToast('Formulaire réinitialisé', 'success');
     });
 
     function displayCorrection(data) {
@@ -598,7 +881,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
 <button class="btn btn-sm btn-secondary" id="btn-copy-corrected"> Copier</button>
 </div>
       </div>
-      <div id="lettre-corrige-content" class="lettre-paper">${buildCorrectionPreviewHTML(data)}</div>
+      <div id="lettre-corrige-content" class="${selectedTemplate === 'professionnel' ? 'lp-pro' : 'lettre-paper'}">${buildCorrectionPreviewHTML(data)}</div>
     </div>` : ''}`;
 
       if (data.texte_corrige) {
@@ -637,6 +920,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
     // Reproduit la mise en page du PDF téléchargé (downloadLettre) : expéditeur
     // à gauche, date + destinataire à droite, objet, salutation puis corps en
     // paragraphes. Repli sur le texte brut si l'en-tête n'est pas reconnu.
+    // Supporte les deux modèles (classique / professionnel).
     function buildCorrectionPreviewHTML(data) {
       const texteBrut = Array.isArray(data.texte_corrige)
         ? data.texte_corrige.join('\n\n')
@@ -650,6 +934,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       const salutationIdx = rawLines.findIndex(l => /^(madame|monsieur|bonjour|cher|chère)/i.test(l));
 
       if (salutationIdx <= 0) {
+        if (selectedTemplate === 'professionnel') return buildProFromRaw(texteBrut);
         return `<div class="lettre-raw">${escHtml(texteBrut.trim())}</div>`;
       }
 
@@ -667,34 +952,73 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         (inRight ? destinataire : sender).push(line);
       });
 
-      const senderHTML = sender.map((l, i) =>
-        i === 0 ? `<div class="lp-name">${escHtml(l)}</div>` : `<div>${escHtml(l)}</div>`
-      ).join('');
-
-      const recipientHTML = [
-        ...dates.map(l => `<div>${escHtml(l)}</div>`),
-        ...destinataire.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(l)}</div>`)
-      ].join('');
-
-      let objetHTML = '';
-      if (objetLine) {
-        const sepIdx = objetLine.indexOf(':');
-        objetHTML = `<div class="lp-objet"><span class="lp-objet-label">Objet : </span>${escHtml(objetLine.slice(sepIdx + 1).trim())}</div>`;
-      }
-
       const bodyStartLines = rawLines.slice(salutationIdx);
-      const salutationHTML = bodyStartLines.length && /^(madame|monsieur|bonjour|cher|chère)/i.test(bodyStartLines[0])
-        ? `<p>${escHtml(bodyStartLines[0])}</p>`
-        : '';
-      const corpsLines = salutationHTML ? bodyStartLines.slice(1) : bodyStartLines;
+      const salutationText = bodyStartLines.length && /^(madame|monsieur|bonjour|cher|chère)/i.test(bodyStartLines[0])
+        ? bodyStartLines[0] : '';
+      const corpsLines = salutationText ? bodyStartLines.slice(1) : bodyStartLines;
 
       const corpsText = corpsLines.join('\n');
       let paragraphs = corpsText.split(/\n\s*\n/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
       if (paragraphs.length === 0 && corpsText.trim()) {
         paragraphs = [corpsText.replace(/\n/g, ' ').trim()];
       }
-      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
 
+      if (selectedTemplate === 'professionnel') {
+        const nom = sender[0] || '';
+        const initials = nom ? nom.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
+        const senderInfoItems = sender.slice(1).map(l => {
+          const lower = l.toLowerCase();
+          let icon = 'fa-solid fa-circle-info';
+          if (lower.includes('@') || lower.includes('email')) icon = 'fa-solid fa-envelope';
+          else if (lower.includes('tel') || lower.match(/\+?\d/)) icon = 'fa-solid fa-phone';
+          else icon = 'fa-solid fa-location-dot';
+          return `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="${icon}"></i></span><span>${escHtml(l)}</span></div>`;
+        }).join('');
+        const destFirst = destinataire[0] || 'Responsable des Ressources Humaines';
+        const recipientInfoItems = [
+          `<div class="lp-pro-dest-label">${escHtml('À l\u2019attention du ' + destFirst)}</div>`,
+          ...destinataire.slice(1).map(l => `<div>${escHtml(l)}</div>`)
+        ].join('');
+        const dateStr = dates[0] || '';
+        const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+        const salHTML = salutationText ? `<div class="lp-pro-salutation">${escHtml(salutationText)}</div>` : '';
+        let objHTML = '';
+        if (objetLine) {
+          const sepIdx = objetLine.indexOf(':');
+          objHTML = `<div class="lp-pro-objet"><span class="lp-pro-objet-label">Objet : </span>${escHtml(objetLine.slice(sepIdx + 1).trim())}</div>`;
+        }
+        return `
+        <div class="lp-pro"><div class="lp-pro-inner">
+          <div class="lp-pro-header">
+            <div class="lp-pro-col lp-pro-col-left">
+              <div class="lp-pro-name"><span class="lp-pro-avatar">${initials}</span>${escHtml(nom || 'Prénom NOM')}</div>
+              <div class="lp-pro-info">${senderInfoItems}</div>
+            </div>
+            <div class="lp-pro-col lp-pro-col-right">
+              <div class="lp-pro-info">${recipientInfoItems}</div>
+              ${dateStr ? `<div class="lp-pro-date"><span class="lp-pro-info-icon"><i class="fa-solid fa-calendar-days"></i></span><span>${escHtml(dateStr)}</span></div>` : ''}
+            </div>
+          </div>
+          <hr class="lp-pro-separator">
+          ${objHTML}
+          <div class="lp-pro-body">${salHTML}${bodyHTML}</div>
+        </div></div>`;
+      }
+
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+      const salutationHTML = salutationText ? `<p>${escHtml(salutationText)}</p>` : '';
+      let objetHTML = '';
+      if (objetLine) {
+        const sepIdx = objetLine.indexOf(':');
+        objetHTML = `<div class="lp-objet"><span class="lp-objet-label">Objet : </span>${escHtml(objetLine.slice(sepIdx + 1).trim())}</div>`;
+      }
+      const senderHTML = sender.map((l, i) =>
+        i === 0 ? `<div class="lp-name">${escHtml(l)}</div>` : `<div>${escHtml(l)}</div>`
+      ).join('');
+      const recipientHTML = [
+        ...dates.map(l => `<div>${escHtml(l)}</div>`),
+        ...destinataire.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(l)}</div>`)
+      ].join('');
       const headerHTML = (senderHTML || recipientHTML)
         ? `<div class="lp-header">
           ${senderHTML ? `<div class="lp-sender">${senderHTML}</div>` : ''}
@@ -708,6 +1032,12 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         ${objetHTML}
         <div class="lp-body">${salutationHTML}${bodyHTML}</div>
       </div>`;
+    }
+
+    function buildProFromRaw(text) {
+      const paragraphs = text.split(/\n\s*\n/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+      return `<div class="lp-pro"><div class="lp-pro-inner"><div class="lp-pro-body">${bodyHTML}</div></div></div>`;
     }
 
     // Export PDF de la lettre corrigée : texte vectoriel natif jsPDF.
@@ -735,6 +1065,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
         const marginR = 20;
         const contentW = pageWidth - marginL - marginR;
         const rightX = pageWidth - marginR;
+        const blue = [30, 58, 95];
 
         doc.setTextColor(20, 20, 20);
 
@@ -798,7 +1129,9 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
           senderLines.forEach((line, i) => {
             if (i === 0) {
               doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+              if (selectedTemplate === 'professionnel') doc.setTextColor(blue[0], blue[1], blue[2]);
               doc.text(line, marginL, leftY);
+              doc.setTextColor(20, 20, 20);
               leftY += 7;
             } else {
               doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
@@ -812,22 +1145,35 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
           rightLines.forEach((line, i) => {
             const isDate = isDateLine(line);
             const isFirstDestinataireLine = !isDate && i === dateLines.length;
+            if (isFirstDestinataireLine && selectedTemplate === 'professionnel') {
+              doc.setTextColor(blue[0], blue[1], blue[2]);
+            }
             doc.setFont('helvetica', isFirstDestinataireLine ? 'bold' : 'normal');
             doc.setFontSize(isDate ? 10 : 9.5);
             doc.text(line, rightX, rightY, { align: 'right' });
+            doc.setTextColor(20, 20, 20);
             rightY += isDate ? 8 : 5.5;
           });
 
           y = Math.max(leftY, rightY) + 6;
+
+          if (selectedTemplate === 'professionnel') {
+            doc.setDrawColor(blue[0], blue[1], blue[2]);
+            doc.setLineWidth(0.6);
+            doc.line(marginL, y, rightX, y);
+            y += 8;
+          }
 
           // ---- Objet (pleine largeur, sous les deux colonnes) ----
           if (objetLine) {
             const sepIdx = objetLine.indexOf(':');
             const label = 'Objet : ';
             const rest = objetLine.slice(sepIdx + 1).trim();
+            if (selectedTemplate === 'professionnel') doc.setTextColor(blue[0], blue[1], blue[2]);
             doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
             doc.text(label, marginL, y);
             const w = doc.getTextWidth(label);
+            doc.setTextColor(20, 20, 20);
             doc.setFont('helvetica', 'normal');
             doc.text(rest, marginL + w, y);
             y += 10;
@@ -908,7 +1254,7 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       const date      = data.date || '';
       const destLignes = (data.destinataire_lignes && data.destinataire_lignes.length)
         ? data.destinataire_lignes
-        : ['Madame / Monsieur le Responsable', 'Recrutement', data.entreprise, data.entreprise_adresse].filter(Boolean);
+        : [(data.civilite || 'Madame, Monsieur') + ' le Responsable', 'Recrutement', data.entreprise, data.entreprise_adresse].filter(Boolean);
 
       doc.setTextColor(20, 20, 20);
 
@@ -973,6 +1319,15 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       const filename = (nom || 'Ma_Lettre').replace(/\s+/g, '_') + '_Lettre.pdf';
       doc.save(filename);
     };
+
+    // Recharger le template choisi
+    const savedTemplate = localStorage.getItem(jmKey('lettre_template'));
+    if (savedTemplate) {
+      selectedTemplate = savedTemplate;
+      document.querySelectorAll('#template-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.template === savedTemplate);
+      });
+    }
 
     // Recharger la dernière lettre au chargement de la page pour persistance
     const lastLettre = localStorage.getItem(jmKey('last_lettre'));
@@ -1157,12 +1512,92 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
       try {
         const text = await window.importFile(file);
         document.getElementById('lettre-to-correct').value = text;
+        showImportedLetterPreview(text);
         showToast('Lettre importée avec succès !', 'success');
       } catch (err) {
         showToast('Erreur : ' + err.message, 'error');
       } finally {
         status.style.display = 'none';
       }
+    };
+
+    /* ── Afficher le preview de la lettre importée (remplace le textarea) ── */
+    function showImportedLetterPreview(text) {
+      const textarea = document.getElementById('lettre-to-correct');
+      const previewWrapper = document.getElementById('lettre-correct-preview-wrapper');
+      const previewEl = document.getElementById('lettre-correct-preview');
+      const label = document.getElementById('label-lettre-to-correct');
+      if (!textarea || !previewWrapper || !previewEl) return;
+
+      const rawLines = text.split('\n').map(l => l.trim());
+      const salutationIdx = rawLines.findIndex(l => /^(madame|monsieur|bonjour|cher|chère)/i.test(l));
+
+      let previewHTML = '';
+      if (salutationIdx > 0) {
+        const headerLines = rawLines.slice(0, salutationIdx).filter(Boolean);
+        const senderLines = [];
+        const destinataireLines = [];
+        const dates = [];
+        let objetLine = null;
+        let inRight = false;
+
+        const isObjetLine = l => /^objet\s*:/i.test(l);
+        const isDateLine = l => /,\s*le\s+\d/i.test(l) || /^\d{1,2}\s+[a-zéû]+\s+\d{4}$/i.test(l);
+        const isDestinataireStart = l => /^(à l[''']attention|madame\s*\/\s*monsieur|monsieur\s+le|madame\s+la)/i.test(l);
+
+        headerLines.forEach(line => {
+          if (isObjetLine(line)) { objetLine = line; return; }
+          if (isDestinataireStart(line)) inRight = true;
+          if (isDateLine(line)) { dates.push(line); return; }
+          (inRight ? destinataireLines : senderLines).push(line);
+        });
+
+        const senderHTML = senderLines.map((l, i) =>
+          i === 0 ? `<div class="lp-name">${escHtml(l)}</div>` : `<div>${escHtml(l)}</div>`
+        ).join('');
+        const recipientHTML = [
+          ...dates.map(l => `<div>${escHtml(l)}</div>`),
+          ...destinataireLines.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(l)}</div>`)
+        ].join('');
+        let objetHTML = '';
+        if (objetLine) {
+          const sepIdx = objetLine.indexOf(':');
+          objetHTML = `<div class="lp-objet"><span class="lp-objet-label">Objet : </span>${escHtml(objetLine.slice(sepIdx + 1).trim())}</div>`;
+        }
+
+        const salutation = rawLines[salutationIdx];
+        const bodyLines = rawLines.slice(salutationIdx + 1);
+        const bodyText = bodyLines.join('\n');
+        let paragraphs = bodyText.split(/\n\s*\n/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+        if (paragraphs.length === 0 && bodyText.trim()) paragraphs = [bodyText.replace(/\n/g, ' ').trim()];
+        const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+
+        const headerHTML = (senderHTML || recipientHTML)
+          ? `<div class="lp-header">${senderHTML ? `<div class="lp-sender">${senderHTML}</div>` : ''}${recipientHTML ? `<div class="lp-recipient">${recipientHTML}</div>` : ''}</div>`
+          : '';
+
+        previewHTML = `<div class="lettre-paper-inner">${headerHTML}${objetHTML}<div class="lp-body"><p>${escHtml(salutation)}</p>${bodyHTML}</div></div>`;
+      } else {
+        let paragraphs = text.split(/\n\s*\n/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+        if (paragraphs.length === 0 && text.trim()) paragraphs = [text.replace(/\n/g, ' ').trim()];
+        previewHTML = `<div class="lettre-paper-inner"><div class="lp-body">${paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('')}</div></div>`;
+      }
+
+      previewEl.innerHTML = previewHTML;
+      textarea.style.display = 'none';
+      previewWrapper.style.display = 'block';
+      if (label) label.textContent = 'Aperçu de la lettre importée';
+    }
+
+    /* ── Revenir au mode édition (textarea) ── */
+    window.toggleEditImportedLetter = function() {
+      const textarea = document.getElementById('lettre-to-correct');
+      const previewWrapper = document.getElementById('lettre-correct-preview-wrapper');
+      const label = document.getElementById('label-lettre-to-correct');
+      if (textarea) textarea.style.display = '';
+      if (previewWrapper) previewWrapper.style.display = 'none';
+      if (label) label.textContent = 'Collez votre lettre de motivation *';
+      if (textarea) textarea.focus();
     };
   </script>
 

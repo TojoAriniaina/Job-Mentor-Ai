@@ -34,6 +34,7 @@ class LettreController {
         $cv                 = $input['cv']                 ?? '';
         $offre              = $input['offre']              ?? '';
         $ton                = $input['ton']                ?? 'formel';
+        $civilite           = $input['civilite']           ?? 'Madame, Monsieur';
         $nom                = $input['nom']                ?? '';
         $adresse            = $input['adresse']            ?? '';
         $telephone          = $input['telephone']          ?? '';
@@ -62,14 +63,14 @@ class LettreController {
         if ($entreprise_adresse) $destinataire .= $entreprise_adresse;
 
         $prompt  = "Rédige uniquement le CORPS d'une lettre de motivation (français), ton $tonDesc, 150-200 mots.\n\n";
-        $prompt .= "Le corps doit commencer par \"Madame, Monsieur,\" et se terminer par une formule de politesse ";
-        $prompt .= "(ex: \"Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.\").\n";
+        $prompt .= "Le corps doit commencer par \"$civilite,\" et se terminer par une formule de politesse ";
+        $prompt .= "(ex: \"Dans l'attente de votre retour, je vous prie d'agréer, $civilite, mes salutations distinguées.\").\n";
         $prompt .= "Structure interne du corps (3 paragraphes séparés par \\n\\n) :\n";
         $prompt .= "1. Accroche et motivation pour rejoindre cette entreprise.\n";
         $prompt .= "2. Compétences et expériences en lien direct avec l'offre.\n";
         $prompt .= "3. Disponibilité pour un entretien + formule de politesse finale.\n\n";
         $prompt .= "Ne mets JAMAIS d'adresse, de date, de nom d'entreprise en en-tête, ni de nom/signature à la fin : ";
-        $prompt .= "uniquement le texte qui va de \"Madame, Monsieur,\" à la formule de politesse.\n\n";
+        $prompt .= "uniquement le texte qui va de \"$civilite,\" à la formule de politesse.\n\n";
         $prompt .= "DONNÉES :\n";
         $prompt .= "Profil candidat : $cv\n";
         $prompt .= "Offre d'emploi : $offre\n\n";
@@ -86,7 +87,7 @@ class LettreController {
             if (!$json_data) throw new \Exception("Erreur de formatage JSON de l'IA.");
 
             $destinataireLignes = array_filter([
-                'Madame / Monsieur le Responsable',
+                "$civilite le Responsable",
                 'Recrutement',
                 $entreprise ?: null,
                 $entreprise_adresse ?: null,
@@ -96,6 +97,7 @@ class LettreController {
             $json_data['adresse']              = $adresse;
             $json_data['telephone']            = $telephone;
             $json_data['ville']                = $ville;
+            $json_data['civilite']             = $civilite;
             $json_data['entreprise']            = $entreprise;
             $json_data['entreprise_adresse']    = $entreprise_adresse;
             $json_data['date']                  = $lieuDate;
