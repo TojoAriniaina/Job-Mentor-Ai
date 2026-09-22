@@ -12,7 +12,7 @@ Liste de travail restant, classée par priorité.
 - [ ] **Jeton CSRF sur les routes en session** — protection actuelle = cookie `SameSite=Lax` seulement.
 - [ ] **Bibliothèques CDN à héberger en local** — pdf.js, tesseract.js, pdfmake, jsPDF sont chargés depuis un CDN : l'import OCR et les exports PDF tombent sans réseau.
 - [ ] **Quota ElevenLabs** — la synthèse vocale du module Oral répond 401 `quota_exceeded` au-delà du quota ; prévoir un message explicite côté utilisateur plutôt qu'un échec silencieux.
-- [ ] **Vérifier les règles `.htaccess` sous Apache** — durcies (indexes, points cachés, docs racine, PHP hors `public/`, dossiers sensibles) mais jamais testées avec un vrai Apache ; à valider en levant le serveur local.
+- [x] **Vérifier les règles `.htaccess` sous Apache** — contrôlé sur une instance Apache temporaire (docroot = racine du projet, port de test, arrêtée après contrôle) : `.env`, `.env.example`, `AGENTS.md`, `database.sql`, `logs/*.log`, `composer.json`/`.lock`, `src/`, `config/`, `bootstrap/`, `vendor/`, `tools/` répondent tous **403** ; `/public/index.php` et les assets 200, `/api/auth/check` 200 en JSON, route inconnue 404 ; en-têtes `nosniff`, `X-Frame-Options`, `Referrer-Policy` présents et HSTS correctement absent en HTTP. À re-contrôler sur le serveur réel après tout changement de ces règles.
 
 ## Priorité moyenne — amélioration recommandée
 

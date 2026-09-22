@@ -131,7 +131,7 @@ Un compte admin peut ensuite promouvoir d'autres comptes directement depuis l'in
 
 - [ ] Docroot pointant sur `public/` plutôt que sur la racine du projet (le `.htaccess` racine ne devient qu'une ceinture de secours).
 - [ ] HTTPS en place : le module Oral (Web Speech API) et le microphone exigent un contexte sécurisé ; le cookie de session passe alors automatiquement en `secure`.
-- [ ] `.env` recréé avec des **clés propres à la production** — ne pas réutiliser les clés de développement, et ne jamais les mettre dans le dépôt.
+- [ ] `.env` recréé avec des **clés propres à la production** — ne pas réutiliser les clés de développement, et ne jamais les mettre dans le dépôt. Vérifier qu'il est bien lu : sans fichier, `config/app.php` retombe sur `localhost` / `root` / sans mot de passe / `jobmentor_db`, ce qui fait tourner l'application sur une base de développement sans le moindre message d'erreur.
 - [ ] `APP_KEY` générée (`openssl rand -hex 32`). Changer cette clé rend indécryptables les clés API déjà enregistrées en base : les utilisateurs doivent les ressaisir.
 - [ ] `APP_URL` renseigné, et `og:image` / `og:url` dans `public/frontend/index.html` pointant vers le vrai domaine (ils portent aujourd'hui un domaine de démonstration).
 - [ ] `display_errors` toujours à `0`, et `logs/php_errors.log` consulté après chaque parcours. Attention : les journaux contiennent des extraits de texte saisis par les utilisateurs — à ne pas exposer ni commité.
