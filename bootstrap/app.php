@@ -20,9 +20,15 @@ ini_set('error_log', $logDir . '/php_errors.log');
 
 // ── Session ────────────────────────────────────────────────────
 if (session_status() === PHP_SESSION_NONE) {
+    $https = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+
     ini_set('session.use_strict_mode', 1);
+    ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_samesite', 'Lax');
+    // Cookie réservé à HTTPS dès que la requête est servie en HTTPS (reverse proxy inclus).
+    ini_set('session.cookie_secure', $https ? '1' : '0');
     session_start();
 }
 

@@ -7,11 +7,18 @@ class EncryptService {
 
     private static function key(): string {
         if (self::$key !== null) return self::$key;
-        $raw = defined('APP_KEY') ? APP_KEY : '';
-        if (empty($raw)) {
-            throw new \RuntimeException('APP_KEY non configurée dans .env');
+        $raw = defined('APP_KEY') ? trim(APP_KEY) : '';
+        if ($raw === '') {
+            throw new \RuntimeException('APP_KEY manquante dans .env — générez-la avec : openssl rand -hex 32');
         }
-        self::$key = hex2bin($raw);
+        // Sans ce contrôle, une APP_KEY non hexadécimale devient hex2bin() === false,
+        // donc une clé vide : le AES-256-CBC est alors chiffré avec une clé entièrement
+        // nulle et identique pour toute installation mal configurée.
+        $key = preg_match('/^[0-9a-f]{64}$/', $raw) === 1 ? hex2bin($raw) : false;
+        if ($key === false) {
+            throw new \RuntimeException('APP_KEY invalide — attendu 64 caractères hexadécimaux (openssl rand -hex 32)');
+        }
+        self::$key = $key;
         return self::$key;
     }
 

@@ -28,7 +28,13 @@ class UserController {
         $apiKey   = trim($input['api_key'] ?? '');
         $provider = $input['provider'] ?? 'openrouter';
 
-        $encrypted = EncryptService::encrypt($apiKey);
+        try {
+            $encrypted = EncryptService::encrypt($apiKey);
+        } catch (\Throwable $e) {
+            error_log('[UserController] ' . $e->getMessage());
+            $this->json(['success' => false, 'error' => "Chiffrement impossible : vérifiez APP_KEY dans .env"], 500);
+            return;
+        }
         $this->userModel->saveApiKey($userId, $encrypted, $provider);
         $this->json(['success' => true]);
     }

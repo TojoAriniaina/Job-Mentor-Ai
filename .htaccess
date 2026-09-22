@@ -1,15 +1,20 @@
 RewriteEngine On
 
+# Pas de listing de répertoire (le projet est parfois exposé tel quel sous XAMPP)
+Options -Indexes
+
 # ── Blocage des fichiers sensibles ────────────────────────────
-<FilesMatch "\.(env|git|htaccess|log|sql)$">
+# Points cachés : à bloquer à tous les niveaux (.env, .env.example, .git…)
+<FilesMatch "^\.">
     Require all denied
 </FilesMatch>
-<Files "composer.json">
+<FilesMatch "\.(log|sql)$">
     Require all denied
-</Files>
-<Files "composer.lock">
-    Require all denied
-</Files>
+</FilesMatch>
+
+# Fichiers de documentation / configuration : uniquement à la racine du projet,
+# pour ne rien casser dans public/frontend/ (assets, json éventuels).
+RewriteRule ^[^/]+\.(md|txt|json|lock|example|bak|sh|ini|yml|yaml)$ - [F,L]
 
 # ── Blocage des dossiers sensibles ───────────────────────────
 RewriteRule ^src/ - [F,L]
@@ -17,7 +22,13 @@ RewriteRule ^bootstrap/ - [F,L]
 RewriteRule ^config/ - [F,L]
 RewriteRule ^logs/ - [F,L]
 RewriteRule ^vendor/ - [F,L]
+RewriteRule ^tools/ - [F,L]
 RewriteRule ^database\.sql$ - [F,L]
+
+# Les scripts PHP ne doivent être exécutés que depuis public/.
+# Sans cette règle, un fichier posé à la racine (script de validation, debug)
+# reste accessible et exécutable par n'importe quel visiteur.
+RewriteRule ^[^/]+\.php$ - [F,L]
 
 # ── Pas de cache sur les assets (évite les anciens utils.js/api.js en cache) ──
 <FilesMatch "\.(js|css|html)$">
@@ -30,6 +41,9 @@ RewriteRule ^database\.sql$ - [F,L]
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+    # HSTS : uniquement sur les réponses HTTPS, sans sous-domaines, pour ne pas
+    # se verrouiller tout seul tant que le certificat n'est pas en place.
+    Header always set Strict-Transport-Security "max-age=15552000" env=HTTPS
 </IfModule>
 
 # ── Static files : servir directement ───────────────────────────
