@@ -1,0 +1,11 @@
+{
+    "name": "jobmentor/ai",
+    "description": "Coach de carrière intelligent propulsé par l'IA",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "require": {}
+}

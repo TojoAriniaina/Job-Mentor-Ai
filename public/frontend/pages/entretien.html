@@ -1,0 +1,959 @@
+﻿<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Simulation d'Entretien — My Job Mentor</title>
+  <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
+  <meta content="Entraînez-vous avec un recruteur IA interactif." name="description" />
+  <link href="../css/style.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    /* Spécifique à ce module de Chat */
+    .ai-avatar {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--teal), var(--blue));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 1.5rem;
+      box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
+    }
+
+    .btn.recording {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .ai-avatar.thinking {
+      animation: thinkingPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes thinkingPulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    .ai-avatar.speaking {
+      animation: speakingPulse 1s ease-in-out infinite;
+      box-shadow: 0 0 30px rgba(20, 184, 166, 0.6);
+    }
+    @keyframes speakingPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(20,184,166,0.3); }
+      50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(20,184,166,0.6); }
+    }
+
+    /* ── Speaking visualizer (grand cercle au centre du chat) ── */
+    .speaking-visualizer {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 1.5rem auto;
+      animation: vizFadeIn 0.3s ease-out;
+    }
+    .speaking-visualizer.active { display: flex; }
+
+    @keyframes vizFadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .speaking-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--blue));
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 5px;
+      padding: 0 0 25px 0;
+      box-shadow: 0 0 40px rgba(20,184,166,0.5);
+      animation: circlePulse 1.5s ease-in-out infinite;
+      cursor: pointer;
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .speaking-circle:hover {
+      box-shadow: 0 0 50px rgba(20,184,166,0.7);
+      transform: scale(1.05);
+    }
+    .speaking-circle.paused-state {
+      animation: none;
+      box-shadow: 0 0 20px rgba(20,184,166,0.3);
+      opacity: 0.7;
+    }
+
+    @keyframes circlePulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(20,184,166,0.3); }
+      50% { box-shadow: 0 0 60px rgba(20,184,166,0.7); }
+    }
+
+    .eq-bar {
+      width: 6px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 3px;
+      animation: eqBounce var(--dur) ease-in-out infinite alternate;
+    }
+
+    @keyframes eqBounce {
+      from { height: var(--h1); }
+      to { height: var(--h2); }
+    }
+
+    /* ── Auto-VAD status indicator ── */
+    .auto-vad-status {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem auto;
+      font-size: 0.85rem;
+      color: var(--teal-light);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .auto-vad-status.visible { display: flex; opacity: 1; }
+    .auto-vad-status.listening { color: var(--teal-light); animation: statusPulse 2s ease-in-out infinite; }
+    .auto-vad-status.countdown { color: #fdba74; animation: none; }
+    @keyframes statusPulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+    .glass-card.listening-mode {
+      border-color: rgba(20,184,166,0.3) !important;
+      box-shadow: 0 0 20px rgba(20,184,166,0.1);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="bg-mesh"></div>
+  <div class="toast-container" id="toast-container"></div>
+  <!-- Navbar -->
+  <nav class="navbar">
+<a class="nav-logo" href="../index.html">
+<img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+<span class="nav-logo-brand">AI&amp;DEV Academy</span>
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
+      <li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file-lines"></i></span> CV</a></li>
+      <li><a href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope-open-text"></i></span> Lettre</a></li>
+      <li><a class="active" href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-user-tie"></i></span>
+          Entretien</a></li>
+      <li><a href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
+    </ul>
+    <div class="nav-cta">
+      <button class="btn-nav btn-nav-ghost" id="btn-config"> API</button>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    </div>
+  </nav>
+
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal-container">
+      <div class="modal-header" style="margin-bottom: 1rem;">
+        <h2 class="modal-title"> Mes Archives</h2>
+        <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
+      </div>
+
+      <div style="margin-bottom: 0.5rem;">
+        <div style="font-weight:600; font-size:0.85rem; color:var(--text-secondary);">Mes entretiens sauvegardés</div>
+      </div>
+
+      <div id="history-list" style="max-height: 400px; overflow-y: auto; padding: 5px;">
+        <!-- JS filled -->
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-transcript">
+    <div class="modal-container" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="transcript-title"><i class="fa-solid fa-file-lines"></i> Détails de l'entretien</h2>
+        <button class="modal-close"
+          onclick="document.getElementById('modal-transcript').classList.remove('active')">&times;</button>
+      </div>
+      <div id="transcript-body"
+        style="max-height: 500px; overflow-y: auto; padding: 20px; white-space: pre-wrap; line-height: 1.6; font-size: 0.95rem; color: var(--text-secondary);">
+      </div>
+    </div>
+  </div>
+
+  <div class="app-wrapper">
+    <div class="page-header" style="background-image: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.55) 65%, rgba(10,10,13,0.97) 100%), url('../assets/img/entretien-header.jpg'); background-size: cover; background-position: center 30%;">
+      <div class="container">
+        <span class="badge badge-teal animate-fade-up"> Simulation
+          d'Entretien</span>
+        <h1 class="page-title animate-fade-up delay-1">
+          Préparez-vous avec <span class="gradient-text-teal">l'IA Recruteur</span>
+        </h1>
+        <p class="page-subtitle animate-fade-up delay-2">
+          Un échange interactif en temps réel pour tester vos réflexes et structurer vos réponses avant le grand jour.
+        </p>
+      </div>
+    </div>
+    <div class="container" style="padding-bottom:80px">
+      <div
+        style="max-width:1100px; margin:0 auto;">
+
+        <!-- ══ Carte Centrale : Conversation IA ══ -->
+        <div class="glass-card p-4 animate-fade-up delay-3"
+          style="display:flex; flex-direction:column; border-top: 2px solid rgba(20,184,166,0.4);">
+          <!-- En-tête -->
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem;">
+            <div class="ai-avatar pulse"
+              style="width:40px; height:40px; font-size:1.1rem; flex-shrink:0; margin:0; box-shadow:0 0 14px rgba(20,184,166,0.4);">
+              
+            </div>
+            <div>
+              <div
+                style="font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--teal-light);">
+                 Conversation avec l'IA
+              </div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:1px;">Recruteur virtuel en temps réel
+              </div>
+            </div>
+          </div>
+          <!-- Fenêtre chat -->
+          <div class="speaking-visualizer" id="speaking-visualizer">
+            <div class="speaking-circle" id="speaking-circle"></div>
+          </div>
+          <!-- Indicateur état micro automatique -->
+          <div id="auto-vad-status" class="auto-vad-status">
+            <i class="fa-solid fa-microphone"></i>
+            <span id="auto-vad-text"></span>
+          </div>
+          <!-- Historique conversation visible -->
+          <div id="chat-log" style="max-height:400px;overflow-y:auto;padding:0.5rem;display:none"></div>
+        </div>
+
+        <!-- ══ Bouton pour ouvrir les notes ══ -->
+        <div style="text-align:center; margin-top:1.5rem;">
+          <button class="btn btn-secondary" id="btn-toggle-notes" style="background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 3px 12px rgba(20,184,166,0.3);">
+             <i class="fa-solid fa-note-sticky"></i> Notes
+          </button>
+        </div>
+
+        <!-- ══ Section Notes (cachée par défaut) ══ -->
+        <div class="glass-card p-4 animate-fade-up delay-3 hidden" id="notes-section"
+          style="display:flex; flex-direction:column; border-top: 2px solid rgba(20,184,166,0.4); margin-top:1.5rem;">
+          <!-- En-tête -->
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem;">
+            <div
+              style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--teal), var(--blue)); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; box-shadow:0 0 14px rgba(20,184,166,0.4);">
+              
+            </div>
+            <div>
+              <label for="notes-area" id="notes-area-label"
+                style="font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--teal-light); display:block; margin:0;">
+                Notes
+              </label>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:1px;">Vos points clés &amp; questions à
+                poser</div>
+            </div>
+          </div>
+          <!-- Zone de texte -->
+          <textarea id="notes-area" class="form-control"
+            placeholder="• Points clés à retenir&#10;• Questions à poser au recruteur&#10;• Vos forces à mettre en avant&#10;• Chiffres et exemples concrets..."
+            style="flex:1; min-height:320px; resize:none; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); font-size:0.9rem; line-height:1.7; margin-bottom:1rem; border-radius:var(--radius-md);"></textarea>
+          <!-- Bouton export -->
+          <button class="btn btn-primary btn-full" id="btn-save-notes-pdf" title="Télécharger mes notes en .pdf"
+            style="background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 3px 12px rgba(20,184,166,0.3);">
+             Enregistrer mes notes (.pdf)
+          </button>
+        </div>
+
+
+      </div>
+
+      <!-- ══ Barre d'actions pleine largeur ══ -->
+      <div class="glass-card p-3 animate-fade-up delay-3" style="max-width:1100px; margin:1.5rem auto 0;">
+
+        <!-- Ligne 1 : Démarrer -->
+        <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+          <button class="btn btn-primary" id="btn-next"
+            style="max-width:220px; background:linear-gradient(135deg, var(--teal), var(--blue)); box-shadow:0 4px 15px rgba(20,184,166,0.3)">
+             Démarrer l'entretien
+          </button>
+          <button class="btn btn-primary" id="btn-finish" style="display:none;max-width:220px;background:linear-gradient(135deg, #8b5cf6, #6c3ce6);box-shadow:0 4px 15px rgba(139,92,246,0.3)">
+             <i class="fa-solid fa-stop"></i> Terminer l'entretien
+          </button>
+        </div>
+
+        <div style="text-align:center">
+          <button class="btn btn-primary" id="btn-save-interview" title="Sauvegarder cet entretien dans vos archives"
+            style="display:none; margin-bottom:0.75rem; max-width:280px; background:linear-gradient(135deg, var(--teal), var(--blue)); border:none; box-shadow:0 4px 15px rgba(20,184,166,0.3);">
+             <i class="fa-solid fa-floppy-disk"></i> Sauvegarder cet entretien
+          </button>
+        </div>
+
+        <!-- Ligne 2 : Archives + Effacer + Réinitialiser -->
+        <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="btn-history-interview" title="Historique">
+             <i class="fa-solid fa-clock-rotate-left"></i> Mes Archives
+          </button>
+          <button class="btn btn-secondary" id="btn-reset" title="Réinitialiser l'entretien"
+            style="border-color:rgba(251,146,60,0.4); color:#fdba74;">
+             <i class="fa-solid fa-rotate-left"></i> Réinitialiser
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  </div>
+
+
+  <script src="../js/config.js"></script>
+  <script src="../js/particles.js"></script>
+  <script src="../js/utils.js"></script>
+  <script type="module">
+    import { getQuestion, sendAnswer, fetchAudio } from "../js/ai.js";
+    import { callAPI, postAPI } from "../js/api.js";
+
+    // === SYSTÈME DE DEBUG ===
+    // Pour activer : tapez DEBUG_ENTRETIEN = true dans la console
+    // Pour désactiver : DEBUG_ENTRETIEN = false
+    window.DEBUG_ENTRETIEN = false;
+    console.log("%c[ENTRETIEN] Debug desactive. Pour activer : DEBUG_ENTRETIEN = true", "color:#14b8a6;font-style:italic");
+    function dbg(msg, ...args) {
+      if (!window.DEBUG_ENTRETIEN) return;
+      const t = performance.now();
+      console.log(`%c[ENTRETIEN ${t.toFixed(0)}ms] ${msg}`, 'color:#14b8a6;font-weight:bold', ...args);
+    }
+    function dbgStart(label) {
+      if (!window.DEBUG_ENTRETIEN) return 0;
+      const t = performance.now();
+      console.log(`%c[ENTRETIEN] >> ${label} démarré`, 'color:#14b8a6;font-style:italic', t.toFixed(0) + 'ms');
+      return t;
+    }
+    function dbgEnd(label, startTime) {
+      if (!window.DEBUG_ENTRETIEN) return;
+      const elapsed = (performance.now() - startTime).toFixed(0);
+      console.log(`%c[ENTRETIEN] << ${label} terminé en ${elapsed}ms`, 'color:#f59e0b;font-weight:bold');
+    }
+
+    // ── Pré-charger l'audio de la première question dès le chargement ──
+    const FIRST_QUESTION = "... Bonjour ! Je suis ravi de vous recevoir pour cet entretien. Pour commencer, pouvez-vous vous présenter et me parler de votre parcours ?";
+    let preloadedFirstAudio = null;
+    fetchAudio(FIRST_QUESTION).then(a => { preloadedFirstAudio = a; }).catch(() => {});
+
+    // ── Speaking visualizer (grand cercle equalizer) ──
+    function createEqBars() {
+      const circle = document.getElementById('speaking-circle');
+      circle.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'eq-bar';
+        bar.style.setProperty('--dur', `${0.4 + Math.random() * 0.4}s`);
+        bar.style.setProperty('--h1', `${15 + Math.random() * 10}px`);
+        bar.style.setProperty('--h2', `${40 + Math.random() * 35}px`);
+        circle.appendChild(bar);
+      }
+    }
+
+    window.setSpeakingVisualizer = function (show, state) {
+      const viz = document.getElementById('speaking-visualizer');
+      if (!viz) return;
+      const circle = document.getElementById('speaking-circle');
+      if (show) {
+        createEqBars();
+        viz.classList.add('active');
+        circle.classList.remove('paused-state');
+      } else {
+        viz.classList.remove('active');
+        circle.classList.remove('paused-state');
+      }
+    };
+
+    // ── Pause IA : clic sur le cercle speaking-circle ──
+    document.getElementById('speaking-circle').addEventListener('click', () => {
+      if (typeof window.aiSpeechToggle === 'function') {
+        window.aiSpeechToggle();
+        const circle = document.getElementById('speaking-circle');
+        const bars = circle.querySelectorAll('.eq-bar');
+        if (window.aiSpeech.paused) {
+          circle.classList.add('paused-state');
+          bars.forEach(b => b.style.animationPlayState = 'paused');
+        } else {
+          circle.classList.remove('paused-state');
+          bars.forEach(b => b.style.animationPlayState = 'running');
+        }
+      }
+    });
+
+    // ── Écriture silencieuse de la conversation dans les notes ──
+    function appendToNotes(role, text) {
+      if (!text || !text.trim()) return;
+      const notesArea = document.getElementById('notes-area');
+      if (notesArea) {
+        const timestamp = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const sep = notesArea.value ? '\n\n' : '';
+        notesArea.value += sep + role + ' — ' + timestamp + '\n' + text;
+        localStorage.setItem(jmKey('last_notes'), notesArea.value);
+      }
+      // Afficher dans le chat log visible
+      const chatLog = document.getElementById('chat-log');
+      if (chatLog) {
+        chatLog.style.display = 'block';
+        const isRecruteur = role === 'Recruteur';
+        const msg = document.createElement('div');
+        const wordCount = text.trim().split(/\s+/).length;
+        msg.style.cssText = `margin-bottom:12px;padding:10px 14px;border-radius:12px;font-size:0.88rem;line-height:1.6;${isRecruteur ? 'max-width:85%;background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.2);margin-right:auto' : `max-width:${Math.min(85, Math.max(30, wordCount * 2.5))}%;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);margin-left:auto`}`;
+        const label = document.createElement('div');
+        label.style.cssText = `font-size:0.72rem;font-weight:700;color:${isRecruteur ? 'var(--teal-light)' : 'var(--purple-light)'};margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px`;
+        label.textContent = role;
+        const content = document.createElement('div');
+        content.style.cssText = 'color:var(--text-primary)';
+        content.textContent = text;
+        msg.appendChild(label);
+        msg.appendChild(content);
+        chatLog.appendChild(msg);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+    }
+
+    const btnNext = document.querySelector("#btn-next");
+    const btnReset = document.querySelector("#btn-reset");
+    const btnSaveInterview = document.querySelector("#btn-save-interview");
+    const btnFinish = document.querySelector("#btn-finish");
+
+    let recognition = null;
+    let isRecording = false;
+    let finalTranscript = '';
+    let shouldRestart = false;
+    let autoVad = null;
+    let interviewActive = false;
+
+    function stopAllListening() {
+      interviewActive = false;
+      shouldRestart = false;
+      if (recognition) { try { recognition.stop(); } catch(e) {} }
+      if (autoVad) { autoVad.stop(); autoVad = null; }
+      hideVadStatus();
+      if (typeof window.aiSpeechStop === 'function') {
+        window.aiSpeechStop();
+      } else {
+        if (window.aiSpeech && window.aiSpeech.audio) {
+          try { window.aiSpeech.audio.pause(); } catch(e) {}
+          window.aiSpeech.audio = null;
+        }
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    // ── Auto-VAD : détection de silence par Web Audio API ──
+    class AutoVAD {
+      constructor({ silenceDelay = 4000, threshold = 0.01, onSilence = null }) {
+        this.silenceDelay = silenceDelay;
+        this.threshold = threshold;
+        this.onSilence = onSilence;
+        this.stream = null;
+        this.audioCtx = null;
+        this.analyser = null;
+        this.running = false;
+        this.silenceStart = null;
+        this.rafId = null;
+      }
+
+      async start() {
+        this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = this.audioCtx.createMediaStreamSource(this.stream);
+        this.analyser = this.audioCtx.createAnalyser();
+        this.analyser.fftSize = 512;
+        source.connect(this.analyser);
+        this.running = true;
+        this.silenceStart = null;
+        this._monitor();
+      }
+
+      _monitor() {
+        if (!this.running) return;
+        const data = new Float32Array(this.analyser.fftSize);
+        this.analyser.getFloatTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+        const rms = Math.sqrt(sum / data.length);
+
+        if (rms > this.threshold) {
+          this.silenceStart = null;
+        } else {
+          if (!this.silenceStart) this.silenceStart = Date.now();
+          if (Date.now() - this.silenceStart >= this.silenceDelay) {
+            this.stop();
+            if (this.onSilence) this.onSilence();
+            return;
+          }
+        }
+        this.rafId = requestAnimationFrame(() => this._monitor());
+      }
+
+      stop() {
+        this.running = false;
+        if (this.rafId) { cancelAnimationFrame(this.rafId); this.rafId = null; }
+        if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+        if (this.audioCtx && this.audioCtx.state !== 'closed') { this.audioCtx.close(); this.audioCtx = null; }
+      }
+    }
+
+    // ── Indicateur d'état du micro automatique ──
+    function showVadStatus(state, text) {
+      const el = document.getElementById('auto-vad-status');
+      const txt = document.getElementById('auto-vad-text');
+      el.style.display = 'flex';
+      el.className = 'auto-vad-status visible ' + state;
+      txt.textContent = text;
+      const card = document.querySelector('.glass-card');
+      if (card) card.classList.add('listening-mode');
+    }
+
+    function hideVadStatus() {
+      const el = document.getElementById('auto-vad-status');
+      el.style.display = 'none';
+      el.className = 'auto-vad-status';
+      const card = document.querySelector('.glass-card');
+      if (card) card.classList.remove('listening-mode');
+      if (autoVad) { autoVad.stop(); autoVad = null; }
+    }
+
+    // ── Démarrer l'écoute automatique (VAD + reconnaissance vocale) ──
+    async function startAutoListen() {
+      try {
+        const _t0 = dbgStart("startAutoListen");
+        if (autoVad) { autoVad.stop(); autoVad = null; }
+        if (recognition) { shouldRestart = false; try { recognition.stop(); } catch(e) {} }
+
+        autoVad = new AutoVAD({
+          silenceDelay: 4000,
+          onSilence: () => onAutoSilence()
+        });
+        await autoVad.start();
+
+        let waitMs = 800;
+        while (window.aiSpeech && window.aiSpeech.audio) {
+          await new Promise(r => setTimeout(r, 200));
+          waitMs += 200;
+          if (waitMs > 5000) break;
+        }
+        await new Promise(r => setTimeout(r, 500));
+
+        finalTranscript = "";
+        if (!recognition) recognition = initRecognition();
+        shouldRestart = true;
+        if (recognition) {
+          try { recognition.start(); } catch(e) {}
+        }
+
+        dbgEnd("startAutoListen", _t0);
+        showVadStatus('listening', 'Micro actif — parlez quand vous êtes prêt');
+      } catch (e) {
+        showToast('Accès micro refusé. Autorisez le micro dans votre navigateur.', 'error');
+      }
+    }
+
+    function onAutoSilence() {
+      dbg("onAutoSilence declenche");
+      showVadStatus('countdown', 'Silence detecte — verification...');
+      shouldRestart = false;
+      if (recognition) { try { recognition.stop(); } catch(e) {} }
+
+      const capturedText = finalTranscript.trim();
+      finalTranscript = '';
+
+      setTimeout(() => {
+        if (!capturedText) {
+          if (!interviewActive) return;
+          dbg("Transcript vide — re-ecoute demarree");
+          showToast("Je n'ai pas detecte de reponse. Parlez plus fort ou verifiez votre micro.", "warning");
+          startAutoListen();
+          return;
+        }
+        hideVadStatus();
+        handleAnswer(capturedText);
+      }, 800);
+    }
+
+    function initRecognition() {
+      if (!SpeechRecognition) {
+        showToast('Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome.', 'error');
+        return null;
+      }
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = false;
+      rec.lang = 'fr-FR';
+
+      rec.onstart = () => {
+        isRecording = true;
+        btnNext.disabled = true;
+      };
+
+      rec.onresult = (e) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            finalTranscript += e.results[i][0].transcript + ' ';
+          }
+        }
+      };
+
+      rec.onend = () => {
+        if (shouldRestart && interviewActive) {
+          try { rec.start(); } catch(e) {}
+          return;
+        }
+        isRecording = false;
+        btnNext.disabled = false;
+      };
+
+      rec.onerror = (e) => {
+        if (e.error === 'no-speech' && shouldRestart) {
+          return;
+        }
+        if (e.error === 'not-allowed') {
+          showToast('Accès micro refusé. Autorisez le micro dans votre navigateur.', 'error');
+          shouldRestart = false;
+          hideVadStatus();
+        }
+        console.warn('Speech error:', e.error);
+      };
+
+      return rec;
+    }
+
+    async function handleAnswer(text) {
+      if (!interviewActive) return;
+      btnNext.disabled = true;
+      hideVadStatus();
+      try {
+      const _tH = dbgStart("handleAnswer");
+        appendToNotes('Candidat', text);
+
+        const data = await sendAnswer(text, (msg, role) => {
+          if (interviewActive) appendToNotes('Recruteur', msg);
+        });
+        dbgEnd("handleAnswer LLM+TTS", _tH);
+
+        if (!interviewActive) return;
+        if (data.end) {
+          btnNext.style.display = "none";
+          btnFinish.style.display = "none";
+          document.getElementById('btn-save-interview').style.display = 'inline-flex';
+          document.getElementById('notes-section').classList.remove('hidden');
+          document.getElementById('btn-toggle-notes').style.display = 'none';
+        } else {
+          startAutoListen();
+        }
+      } catch (e) {
+        showToast("Erreur d'analyse : " + e.message, "error");
+      } finally {
+        btnNext.disabled = false;
+      }
+    }
+
+    // Clic sur Démarrer / Suivant
+    btnNext.addEventListener("click", async () => {
+      btnNext.disabled = true;
+      stopAllListening();
+      if (typeof window.aiSpeechStart === 'function') window.aiSpeechStart();
+      interviewActive = true;
+
+      const _tQ = dbgStart("btnNext click");
+      try {
+        await getQuestion(preloadedFirstAudio, (q) => {
+          if (interviewActive) appendToNotes('Recruteur', q);
+        });
+        dbgEnd("btnNext getQuestion+TTS", _tQ);
+        if (!interviewActive) return;
+        preloadedFirstAudio = null;
+        btnNext.style.display = "none";
+        btnFinish.style.display = "inline-flex";
+        btnSaveInterview.style.display = "inline-flex";
+        startAutoListen();
+      } catch (e) {
+        showToast("Erreur : " + e.message, "error");
+      } finally {
+        btnNext.disabled = false;
+      }
+    });
+
+    // Clic sur Terminer l'entretien
+    btnFinish.addEventListener("click", async () => {
+      if (!await showConfirmModal("Terminer l'entretien maintenant ?", { title: "Terminer", confirmText: "Terminer", danger: false })) return;
+
+      // Arrêt atomique IMMÉDIAT
+      stopAllListening();
+
+      // Nettoyage UI immédiat
+      btnFinish.style.display = "none";
+      btnNext.style.display = "none";
+      document.getElementById("notes-section").classList.remove("hidden");
+      document.getElementById("btn-toggle-notes").style.display = "none";
+      document.getElementById("chat-log").innerHTML = "";
+      document.getElementById("chat-log").style.display = "none";
+
+      // Sauvegarde automatique en arrière-plan
+      try {
+        const res = await postAPI("entretien/save", { job_title: "Entretien général" });
+        if (res && res.success) {
+          showToast("Entretien terminé et sauvegardé dans vos archives !", "success");
+        } else {
+          showToast("Entretien terminé. " + (res?.error || "Erreur lors de la sauvegarde automatique."), "warning");
+        }
+      } catch (e) {
+        showToast("Entretien terminé. Erreur de sauvegarde : " + e.message, "warning");
+      }
+
+      // Reset serveur en arrière-plan
+      postAPI("entretien/reset", {}).catch(() => {});
+    });
+
+// Cli sur Reinitialiser
+btnReset.addEventListener("click", async () => {
+  if (!await showConfirmModal("Voulez-vous vraiment reinitialiser l'entretien ?", { title: "Reinitialiser", confirmText: "Reinitialiser", danger: true })) return;
+
+  // Arrêt atomique IMMÉDIAT
+  stopAllListening();
+  finalTranscript = "";
+  isRecording = false;
+
+  // Nettoyage UI immédiat (avant l'appel API)
+  btnNext.innerHTML = " Démarrer l'entretien";
+  btnNext.style.display = "";
+  btnFinish.style.display = "none";
+  btnSaveInterview.style.display = "none";
+  const chatLog = document.getElementById("chat-log");
+  if (chatLog) { chatLog.innerHTML = ""; chatLog.style.display = "none"; }
+  const notesArea = document.getElementById("notes-area");
+  if (notesArea) { notesArea.value = ""; localStorage.removeItem(jmKey("last_notes")); }
+  document.getElementById("notes-section").classList.add("hidden");
+  document.getElementById("btn-toggle-notes").style.display = "";
+  document.getElementById("speaking-visualizer").classList.remove("active");
+  document.getElementById("auto-vad-status").style.display = "none";
+  document.getElementById("auto-vad-status").className = "auto-vad-status";
+  preloadedFirstAudio = null;
+  fetchAudio(FIRST_QUESTION).then(a => { preloadedFirstAudio = a; }).catch(() => {});
+  showToast("Entretien reinitialise. Vous pouvez repartir de zero !", "success");
+
+  // Reset serveur en arrière-plan (non-bloquant)
+  postAPI("entretien/reset", {}).catch(() => {});
+});
+
+    // Clic sur Sauvegarder cet entretien
+    btnSaveInterview.addEventListener("click", async () => {
+      const jobTitle = (prompt("Quel est le poste visé pour cet entretien ?", "") || "").trim();
+
+      btnSaveInterview.disabled = true;
+      const originalLabel = btnSaveInterview.innerHTML;
+      btnSaveInterview.innerHTML = ' Sauvegarde en cours...';
+
+      try {
+        const res = await postAPI("entretien/save", { job_title: jobTitle });
+        if (res && res.success) {
+          showToast("Entretien sauvegardé dans vos archives !", "success");
+          btnSaveInterview.style.display = "none";
+        } else {
+          showToast(res?.error || "Erreur lors de la sauvegarde.", "error");
+          btnSaveInterview.disabled = false;
+          btnSaveInterview.innerHTML = originalLabel;
+        }
+      } catch (e) {
+        showToast("Erreur : " + e.message, "error");
+        btnSaveInterview.disabled = false;
+        btnSaveInterview.innerHTML = originalLabel;
+      }
+    });
+
+    // --- Toggle Notes ---
+    document.getElementById('btn-toggle-notes').addEventListener('click', () => {
+      const notesSection = document.getElementById('notes-section');
+      notesSection.classList.toggle('hidden');
+    });
+
+    // --- Persistance des notes (pendant la session uniquement) ---
+    const notesArea = document.getElementById('notes-area');
+    // Ne PAS restaurer les anciennes notes au chargement → départ propre
+    localStorage.removeItem(jmKey('last_notes'));
+
+    notesArea.addEventListener('input', () => {
+      localStorage.setItem(jmKey('last_notes'), notesArea.value);
+    });
+
+
+    // Enregistrer mes notes — téléchargement .pdf (via impression navigateur)
+
+    document.getElementById('btn-save-notes-pdf').addEventListener('click', () => {
+      const notes = document.getElementById('notes-area').value.trim();
+      if (!notes) {
+        showToast('Vos notes sont vides. Écrivez quelque chose avant d\'enregistrer.', 'warning');
+        return;
+      }
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('fr-FR');
+      const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+      // Ouvrir une fenêtre d'impression dédiée
+      const printWin = window.open('', '_blank', 'width=800,height=600');
+      const escapedNotes = notes
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <title>Notes Entretien — My Job Mentor</title>
+          <style>
+            body { font-family: Georgia, serif; max-width: 720px; margin: 40px auto; color: #1a1a1a; line-height: 1.8; }
+            h1 { font-size: 1.4rem; border-bottom: 2px solid #0d9488; padding-bottom: 8px; color: #0d9488; }
+            .meta { font-size: 0.85rem; color: #555; margin-bottom: 2rem; }
+            .content { font-size: 1rem; white-space: pre-wrap; }
+            @media print { body { margin: 20px; } }
+          </style>
+        </head>
+        <body>
+          <h1>Notes — Entretien My Job Mentor</h1>
+          <div class="meta">Date : ${dateStr} à ${timeStr}</div>
+          <div class="content">${escapedNotes}</div>
+          <script>window.onload = () => { window.print(); window.close(); }<\/script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+      printWin.focus();
+      setTimeout(() => { try { printWin.close(); } catch(e) {} }, 2000);
+      showToast('Fenêtre PDF ouverte — choisissez "Enregistrer en PDF".', 'success');
+    });
+
+    /* ── Historique Entretiens ── */
+    const getHistoryModal = () => document.getElementById('modal-history');
+    const getHistoryList = () => document.getElementById('history-list');
+
+    document.getElementById('btn-history-interview').addEventListener('click', () => {
+      openHistoryModal();
+    });
+
+    window.closeHistoryModal = function () {
+      getHistoryModal().classList.remove('active');
+    }
+
+    window.openHistoryModal = function () {
+      getHistoryModal().classList.add('active');
+      loadHistory();
+    }
+
+    async function loadHistory() {
+      const list = getHistoryList();
+      list.innerHTML = `
+        <div class="text-center p-5">
+          
+          <p class="text-secondary">Chargement...</p>
+        </div>`;
+
+      try {
+        const response = await fetch(`${window.API_BASE}/entretien/list`, { credentials: 'include' });
+        const data = await response.json();
+
+        if (!data.success) throw new Error(data.error);
+
+        const items = data.history;
+
+        if (!items || items.length === 0) {
+          list.innerHTML = `
+            <div class="text-center p-5">
+              
+              <p class="text-secondary"><i class="fa-solid fa-inbox"></i> Aucun entretien sauvegardé.</p>
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = items.map(item => {
+          return `
+            <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default; border-color:rgba(255,255,255,0.05)">
+              <div style="overflow:hidden">
+                <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${escHtml(item.job_title)}</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary)">
+                  ${new Date(item.created_at).toLocaleDateString('fr-FR')} • Score: ${item.global_score}%
+                </div>
+              </div>
+              <div style="display:flex;gap:8px; margin-left:15px">
+                <button class="btn btn-sm btn-primary" onclick="viewInterviewTranscript(${item.id})" title="Voir">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="deleteInterviewHistory(${item.id})" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Supprimer">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (e) {
+        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${escHtml(e.message)}</p>`;
+      }
+    }
+
+    window.viewInterviewTranscript = async function (id) {
+      try {
+        const response = await fetch(`${window.API_BASE}/entretien/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('transcript-title').textContent = data.data.job_title;
+          // Parser le JSON du transcript en affichage structuré
+          let transcriptHTML = '';
+          try {
+            let transcript = data.data.transcript;
+            if (typeof transcript === 'string') transcript = JSON.parse(transcript);
+            if (Array.isArray(transcript)) {
+              transcriptHTML = transcript.map((item, i) => `
+                <div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--glass-border)">
+                  <div style="font-weight:700;font-size:0.9rem;color:var(--purple-light);margin-bottom:6px">Question ${i + 1}</div>
+                  <div style="padding:8px 12px;background:rgba(20,184,166,0.08);border-radius:8px;margin-bottom:8px;font-size:0.88rem;line-height:1.6;color:var(--text-primary)">${escHtml(item.question || '')}</div>
+                  <div style="font-weight:700;font-size:0.82rem;color:var(--teal-light);margin-bottom:4px">Réponse</div>
+                  <div style="padding:8px 12px;background:rgba(108,99,255,0.08);border-radius:8px;margin-bottom:8px;font-size:0.88rem;line-height:1.6;color:var(--text-primary)">${escHtml(item.answer || '')}</div>
+                  ${item.feedback ? `<div style="font-weight:700;font-size:0.82rem;color:#fcd34d;margin-bottom:4px">Feedback</div>
+                  <div style="padding:8px 12px;background:rgba(252,211,77,0.08);border-radius:8px;font-size:0.85rem;line-height:1.6;color:var(--text-secondary);font-style:italic">${escHtml(item.feedback)}</div>` : ''}
+                </div>
+              `).join('');
+            } else {
+              transcriptHTML = `<div style="white-space:pre-wrap;line-height:1.7">${escHtml(String(transcript))}</div>`;
+            }
+          } catch (e) {
+            transcriptHTML = `<div style="white-space:pre-wrap;line-height:1.7">${escHtml(String(data.data.transcript || ''))}</div>`;
+          }
+          document.getElementById('transcript-body').innerHTML = transcriptHTML;
+          document.getElementById('modal-transcript').classList.add('active');
+        }
+      } catch (e) {
+        showToast('Erreur lors du chargement', 'error');
+      }
+    }
+
+    window.deleteInterviewHistory = async function (id) {
+      if (!await showConfirmModal('Supprimer cet entretien définitivement ?', { title: 'Supprimer l\'entretien', confirmText: 'Supprimer', danger: true })) return;
+      try {
+        const response = await fetch(`${window.API_BASE}/entretien/delete/${id}`, { method: 'POST', credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          showToast('Entretien supprimé', 'success');
+          openHistoryModal();
+        }
+      } catch (e) {
+        showToast('Erreur lors de la suppression', 'error');
+      }
+    }
+  </script>
+</body>
+
+</html>

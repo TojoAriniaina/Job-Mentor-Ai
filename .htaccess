@@ -1,0 +1,40 @@
+RewriteEngine On
+
+# ── Blocage des fichiers sensibles ────────────────────────────
+<FilesMatch "\.(env|git|htaccess|log|sql)$">
+    Require all denied
+</FilesMatch>
+<Files "composer.json">
+    Require all denied
+</Files>
+<Files "composer.lock">
+    Require all denied
+</Files>
+
+# ── Blocage des dossiers sensibles ───────────────────────────
+RewriteRule ^src/ - [F,L]
+RewriteRule ^bootstrap/ - [F,L]
+RewriteRule ^config/ - [F,L]
+RewriteRule ^logs/ - [F,L]
+RewriteRule ^vendor/ - [F,L]
+RewriteRule ^database\.sql$ - [F,L]
+
+# ── Pas de cache sur les assets (évite les anciens utils.js/api.js en cache) ──
+<FilesMatch "\.(js|css|html)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+</FilesMatch>
+
+# ── Headers sécurité ──────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── Static files : servir directement ───────────────────────────
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# ── Tout le reste → front controller ───────────────────────────
+RewriteRule ^(.*)$ public/index.php [QSA,L]

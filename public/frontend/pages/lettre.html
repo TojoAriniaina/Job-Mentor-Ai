@@ -1,0 +1,1882 @@
+﻿<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lettre de Motivation — My Job Mentor</title>
+  <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
+<meta content="Générez une lettre de motivation percutante et personnalisée grâce à l'intelligence artificielle." name="description"/>
+<link href="../css/style.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="bg-mesh"></div>
+<div class="toast-container" id="toast-container"></div>
+<!-- Navbar -->
+<nav class="navbar">
+<a class="nav-logo" href="../index.html">
+<img src="../assets/img/logo-transparent-light.png" alt="My Job Mentor" class="nav-logo-img"/>
+<span class="nav-logo-brand">AI&amp;DEV Academy</span>
+</a>
+<ul class="nav-links" id="nav-links">
+<li><a href="../index.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span> Accueil</a></li>
+<li><a href="cv.html"><span class="nav-icon"><i class="fa-solid fa-file-lines"></i></span> CV</a></li>
+<li><a class="active" href="lettre.html"><span class="nav-icon"><i class="fa-solid fa-envelope-open-text"></i></span> Lettre</a></li>
+<li><a href="entretien.html"><span class="nav-icon"><i class="fa-solid fa-user-tie"></i></span> Entretien</a></li>
+<li><a href="oral.html"><span class="nav-icon"><i class="fa-solid fa-microphone-lines"></i></span> Oral</a></li>
+</ul>
+<div class="nav-cta">
+<button class="btn-nav btn-nav-ghost" id="btn-config"> API</button>
+<button class="nav-toggle" id="nav-toggle" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+</div>
+</nav>
+<div class="app-wrapper">
+<div class="page-header" style="background-image: linear-gradient(180deg, rgba(10,10,13,0.45) 0%, rgba(10,10,13,0.55) 65%, rgba(10,10,13,0.97) 100%), url('../assets/img/lettre-header.jpg'); background-size: cover; background-position: center 40%;">
+<div class="container">
+<span class="badge badge-blue animate-fade-up"> Lettre de Motivation</span>
+<h1 class="page-title animate-fade-up delay-1">
+          Une lettre qui<br/><span class="gradient-text" style="background:linear-gradient(90deg,var(--blue),var(--teal-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Fait
+            la différence</span>
+</h1>
+<p class="page-subtitle animate-fade-up delay-2">
+          Générez, corrigez et personnalisez votre lettre de motivation en quelques secondes avec l'IA.
+        </p>
+</div>
+</div>
+<div class="container" style="padding-bottom:80px">
+<div class="tabs mb-4 animate-fade-up delay-3" id="lettre-tabs">
+<button class="tab-btn active" data-tab="gen"> Générer</button>
+<button class="tab-btn" data-tab="correct"> Corriger</button>
+</div>
+<!-- ══ TAB: Générer ══════════════════════════════════════ -->
+<div class="tab-content active" id="tab-gen-content">
+<div class="grid grid-2" style="gap:2rem;align-items:stretch" id="lettre-generate-grid">
+<!-- Formulaire -->
+<div class="glass-card p-4 animate-fade-up h-full" id="lettre-form-panel">
+<h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"> Informations</h2>
+<!-- Stepper -->
+<div class="stepper" id="lettre-stepper">
+  <div class="stepper-item" data-step="1">
+    <div class="stepper-circle"><span>1</span></div>
+    <div class="stepper-label">Profil</div>
+  </div>
+  <div class="stepper-line"></div>
+  <div class="stepper-item" data-step="2">
+    <div class="stepper-circle"><span>2</span></div>
+    <div class="stepper-label">L'offre</div>
+  </div>
+  <div class="stepper-line"></div>
+  <div class="stepper-item" data-step="3">
+    <div class="stepper-circle"><span>3</span></div>
+    <div class="stepper-label">Coordonnées</div>
+  </div>
+  <div class="stepper-line"></div>
+  <div class="stepper-item" data-step="4">
+    <div class="stepper-circle"><span>4</span></div>
+    <div class="stepper-label">Style</div>
+  </div>
+</div>
+<!-- Étape 1 : Votre profil -->
+<div class="form-step" data-step="1">
+<div class="form-group">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+  <label class="form-label" for="l-cv" style="margin-bottom:0">Votre profil / CV (résumé) *</label>
+  <button type="button" id="btn-import-cv" onclick="document.getElementById('cv-file-input').click()"
+    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;font-size:0.78rem;font-weight:600;
+           border:1.5px solid var(--primary,#6c63ff);border-radius:8px;background:transparent;
+           color:var(--primary,#6c63ff);cursor:pointer;white-space:nowrap;transition:all .2s"
+    onmouseover="this.style.background='var(--primary,#6c63ff)';this.style.color='#fff'"
+    onmouseout="this.style.background='transparent';this.style.color='var(--primary,#6c63ff)'">
+     <i class="fa-solid fa-file-arrow-up"></i> Importer un CV
+  </button>
+  <input type="file" id="cv-file-input" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="importCVFile(event)"/>
+</div>
+<textarea class="form-control" id="l-cv" placeholder="Développeur Full Stack avec 3 ans d'expérience en React et Node.js. Diplômé d'un Master Informatique. Maîtrise de Docker, PostgreSQL..." rows="5"></textarea>
+<div id="cv-import-status" style="display:none;font-size:0.8rem;margin-top:5px;color:var(--primary,#6c63ff)">
+   <span id="cv-import-msg">Lecture du fichier...</span>
+</div>
+</div>
+<div class="step-nav">
+  <button type="button" class="btn btn-secondary btn-step-prev">Précédent</button>
+  <button type="button" class="btn btn-primary btn-step-next">Suivant</button>
+</div>
+</div>
+<!-- Étape 2 : L'offre -->
+<div class="form-step" data-step="2" style="display:none">
+<div class="form-group">
+<label class="form-label" for="l-offre">Offre d'emploi *</label>
+<textarea class="form-control" id="l-offre" placeholder="Nous recherchons un Développeur Full Stack passionné pour rejoindre notre équipe...
+
+Missions : développement de nouvelles fonctionnalités, code review...
+Profil recherché : 3+ ans d'expérience, React, Node.js..." rows="5"></textarea>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-entreprise">Nom de l'entreprise</label>
+<input class="form-control" id="l-entreprise" placeholder="TechCorp, Google, LVMH..." type="text"/>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-entreprise-adresse">Adresse de l'entreprise <span style="font-size:0.75rem;color:var(--text-secondary)">(optionnel)</span></label>
+<input class="form-control" id="l-entreprise-adresse" placeholder="Rue Ravoninahitriniarivo, Antananarivo" type="text" autocomplete="off"/>
+</div>
+<div class="step-nav">
+  <button type="button" class="btn btn-secondary btn-step-prev">Précédent</button>
+  <button type="button" class="btn btn-primary btn-step-next">Suivant</button>
+</div>
+</div>
+<!-- Étape 3 : Vos coordonnées -->
+<div class="form-step" data-step="3" style="display:none">
+<div class="form-group">
+<label class="form-label" for="l-nom">Votre nom complet</label>
+<input class="form-control" id="l-nom" placeholder="Marie Dupont" type="text" autocomplete="off"/>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-poste">Titre du poste</label>
+<input class="form-control" id="l-poste" placeholder="Développeur Frontend" type="text" autocomplete="off"/>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-email">Email</label>
+<input class="form-control" id="l-email" placeholder="marie.dupont@gmail.com" type="email" autocomplete="off"/>
+</div>
+<div class="form-group">
+<label class="form-label" for="l-adresse">Votre adresse</label>
+<input class="form-control" id="l-adresse" placeholder="Lot II A 47, Antananarivo 101" type="text" autocomplete="off"/>
+</div>
+<div class="form-group" style="display:flex;gap:10px">
+<div style="flex:1">
+  <label class="form-label" for="l-telephone">Téléphone</label>
+  <input class="form-control" id="l-telephone" placeholder="+261 34 00 000 00" type="text" autocomplete="off"/>
+</div>
+<div style="flex:1">
+  <label class="form-label" for="l-ville">Ville</label>
+  <input class="form-control" id="l-ville" placeholder="Antananarivo" type="text" autocomplete="off"/>
+</div>
+</div>
+<div class="step-nav">
+  <button type="button" class="btn btn-secondary btn-step-prev">Précédent</button>
+  <button type="button" class="btn btn-primary btn-step-next">Suivant</button>
+</div>
+</div>
+<!-- Étape 4 : Style -->
+<div class="form-step" data-step="4" style="display:none">
+<div class="form-group">
+<label class="form-label">Ton de la lettre</label>
+<div class="tabs" id="ton-tabs" style="margin-top:4px">
+<button class="tab-btn active" data-ton="formel" id="ton-formel"> Formel</button>
+<button class="tab-btn" data-ton="dynamique" id="ton-dynamique"> Dynamique</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">Destinataire</label>
+<div class="tabs" id="civilite-tabs" style="margin-top:4px">
+<button class="tab-btn active" data-civilite="Madame, Monsieur" id="civ-both"> Madame, Monsieur</button>
+<button class="tab-btn" data-civilite="Madame" id="civ-mme"> Madame</button>
+<button class="tab-btn" data-civilite="Monsieur" id="civ-mr"> Monsieur</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">Modèle de lettre</label>
+<div class="tabs" id="template-tabs" style="margin-top:4px">
+<button class="tab-btn active" data-template="classique" id="tpl-classique"> Classique</button>
+<button class="tab-btn" data-template="professionnel" id="tpl-pro"> Professionnel</button>
+</div>
+</div>
+            <div class="step-nav" style="margin-top:1.5rem;margin-bottom:0">
+              <button type="button" class="btn btn-secondary btn-step-prev">Précédent</button>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:10px">
+              <button class="btn btn-primary" id="btn-gen-lettre" style="flex:4"> Générer ma lettre</button>
+              <button class="btn btn-secondary" id="btn-history-lettre-form" title="Mes archives" style="flex:1">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </button>
+              <button class="btn btn-secondary" id="btn-reset-lettre" title="Réinitialiser le formulaire" style="flex:1">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+            </div>
+</div>
+</div>
+<!-- Résultat -->
+<div class="h-full">
+<div class="glass-card p-4 h-full" id="lettre-placeholder" style="text-align:center;padding:3rem 2rem">
+<div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"></div>
+<h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Votre lettre apparaîtra ici</h3>
+<p class="text-secondary text-sm">Remplissez le formulaire et cliquez sur "Générer"</p>
+</div>
+<div class="glass-card p-4 h-full hidden" id="lettre-skeleton">
+<div class="skeleton-block">
+<div class="skeleton skeleton-line w-45"></div>
+<div class="skeleton skeleton-line w-90" style="margin-top:0.6rem"></div>
+<div class="skeleton skeleton-line w-90"></div>
+<div class="skeleton skeleton-line w-75"></div>
+<div class="skeleton skeleton-line w-90"></div>
+<div class="skeleton skeleton-line w-60"></div>
+</div>
+<p class="text-secondary text-sm text-center" style="margin-top:0.5rem"> Rédaction de votre lettre en cours...</p>
+</div>
+<div class="hidden" id="lettre-result">
+<!-- Score -->
+<div class="glass-card p-4 mb-3" id="lettre-score-card">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<h3 style="font-size:1rem;font-weight:700"> Lettre générée</h3>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-sm btn-secondary" id="btn-edit-lettre" title="Revenir au formulaire">
+                    <i class="fa-solid fa-pen"></i> Modifier</button>
+                  <button class="btn btn-sm btn-success" id="btn-save-lettre-db" style="background:var(--teal); border:none"> Enregistrer</button>
+                  <button class="btn btn-sm btn-primary" onclick="downloadLettrePDF()"> PDF</button>
+                  <button class="btn btn-sm btn-secondary" id="btn-copy-lettre" title="Copier"><i class="fa-solid fa-copy"></i></button>
+                </div>
+</div>
+</div>
+<!-- Aperçu lettre (mise en page identique au PDF téléchargé) -->
+<div class="glass-card p-4 mb-3" id="lettre-text-card">
+<h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"> Aperçu de la lettre</h3>
+<div class="lettre-paper" id="lettre-text">
+</div>
+</div>
+<!-- Points forts -->
+<div class="glass-card p-4 mb-3" id="lettre-strengths" style="display:none"></div>
+<!-- Suggestions -->
+<div class="glass-card p-4" id="lettre-suggestions" style="display:none"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- ══ TAB: Corriger ════════════════════════════════════ -->
+<div class="tab-content" id="tab-correct-content">
+<div class="grid grid-2" style="gap:2rem">
+<div class="glass-card p-4 animate-fade-up h-full" id="correct-form-panel">
+<h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem"> Correction de votre lettre</h2>
+<div class="form-group">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+  <label class="form-label" for="lettre-to-correct" style="margin-bottom:0" id="label-lettre-to-correct">Collez votre lettre de motivation *</label>
+  <button type="button" id="btn-import-letter-correct" onclick="document.getElementById('letter-file-input-correct').click()"
+    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;font-size:0.78rem;font-weight:600;
+           border:1.5px solid var(--primary,#6c63ff);border-radius:8px;background:transparent;
+           color:var(--primary,#6c63ff);cursor:pointer;white-space:nowrap;transition:all .2s"
+    onmouseover="this.style.background='var(--primary,#6c63ff)';this.style.color='#fff'"
+    onmouseout="this.style.background='transparent';this.style.color='var(--primary,#6c63ff)'">
+     <i class="fa-solid fa-file-arrow-up"></i> Importer une lettre
+  </button>
+  <input type="file" id="letter-file-input-correct" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="handleImportLetterCorrect(event)"/>
+</div>
+<textarea class="form-control" id="lettre-to-correct" placeholder="Collez ici votre lettre de motivation pour obtenir une correction complète...
+
+Madame, Monsieur,
+
+Je me permets de vous contacter afin de candidater au poste de..." rows="16"></textarea>
+<div id="lettre-correct-preview-wrapper" style="display:none">
+  <div id="lettre-correct-preview" class="lettre-paper"></div>
+  <button type="button" id="btn-edit-imported-letter" onclick="toggleEditImportedLetter()"
+    style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;margin-top:8px;font-size:0.78rem;font-weight:600;
+           border:1.5px solid var(--teal,#14b8a6);border-radius:8px;background:transparent;
+           color:var(--teal,#14b8a6);cursor:pointer;transition:all .2s"
+    onmouseover="this.style.background='var(--teal,#14b8a6)';this.style.color='#fff'"
+    onmouseout="this.style.background='transparent';this.style.color='var(--teal,#14b8a6)'">
+     <i class="fa-solid fa-pen"></i> Modifier
+  </button>
+</div>
+<div id="letter-import-status-correct" style="display:none;font-size:0.8rem;margin-top:5px;color:var(--primary,#6c63ff)">
+   <span id="letter-import-msg-correct">Lecture du fichier...</span>
+</div>
+</div>
+<div style="display:flex;gap:10px;margin-top:10px">
+<button class="btn btn-primary" id="btn-correct-lettre" style="flex:4" disabled> <i class="fa-solid fa-wand-magic-sparkles"></i> Améliorer ma lettre</button>
+<button class="btn btn-secondary" id="btn-reset-correct" title="Réinitialiser" style="flex:1">
+  <i class="fa-solid fa-rotate-left"></i>
+</button>
+</div>
+</div>
+<div class="h-full" id="correct-result-col">
+<div class="glass-card p-4 h-full" id="correct-placeholder" style="text-align:center;padding:3rem 2rem">
+<div style="font-size:3.5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite"></div>
+<h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem">Analyse en attente</h3>
+<p class="text-secondary text-sm">Importez ou collez votre lettre pour lancer l'analyse</p>
+</div>
+<div class="glass-card p-4 h-full hidden" id="correct-skeleton">
+<div class="skeleton-block">
+<div class="skeleton skeleton-line w-60"></div>
+<div class="skeleton skeleton-line w-90" style="margin-top:0.6rem"></div>
+<div class="skeleton skeleton-line w-75"></div>
+<div class="skeleton skeleton-line w-90"></div>
+</div>
+<p class="text-secondary text-sm text-center" style="margin-top:0.5rem"> Analyse de votre lettre en cours...</p>
+</div>
+<div class="hidden" id="correct-analysis"></div>
+<div class="hidden" id="correct-result"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+  <style>
+    /* ── Onglet Générer : résultat pleine largeur à la place du formulaire ── */
+    #lettre-generate-grid.lettre-generated { grid-template-columns: 1fr; }
+    #lettre-generate-grid.lettre-generated #lettre-form-panel { display: none; }
+    #lettre-generate-grid.lettre-generated > div:last-child { max-width: 820px; width: 100%; margin: 0 auto; }
+    /* ── Onglet Corriger : résultats pleine largeur à la place du formulaire ── */
+    #tab-correct-content .grid-2.correct-single { grid-template-columns: 1fr; }
+    #lettre-corrige-content { max-width: 794px; margin: 0 auto; }
+    /* ── Aperçu « papier » de la lettre (mise en page du PDF) ── */
+    .lettre-paper {
+      background: #fff;
+      color: #111;
+      border-radius: 4px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      padding: 2.2rem 2.5rem;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      width: 100%;
+    }
+    .lettre-paper-inner {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .lp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2rem;
+      margin-bottom: 2.2rem;
+      width: 100%;
+    }
+    .lp-sender,
+    .lp-recipient {
+      font-size: 0.9rem;
+      flex: 1;
+      min-width: 0;
+    }
+    .lp-sender {
+      text-align: left;
+    }
+    .lp-recipient {
+      text-align: right;
+    }
+    .lp-name {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.15rem;
+    }
+    .lp-dest-first {
+      font-weight: 700;
+    }
+    .lp-objet {
+      margin-bottom: 1.4rem;
+      font-size: 0.95rem;
+    }
+    .lp-objet-label {
+      font-weight: 700;
+    }
+    .lp-body p {
+      margin: 0 0 1rem 0;
+      text-align: justify;
+    }
+    .lp-signature {
+      text-align: right;
+      font-weight: 700;
+      margin-top: 1.5rem;
+    }
+    .lettre-raw {
+      white-space: pre-wrap;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+    }
+    /* ── Modèle Professionnel ── */
+    .lp-pro {
+      background: #fff;
+      color: #1a1a2e;
+      border-radius: 4px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      padding: 2.5rem 2.8rem;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+    .lp-pro .lp-pro-inner {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .lp-pro .lp-pro-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .lp-pro .lp-pro-col {
+      flex: 1;
+      min-width: 0;
+    }
+    .lp-pro .lp-pro-col-left {
+      text-align: left;
+    }
+    .lp-pro .lp-pro-col-right {
+      text-align: right;
+    }
+    .lp-pro .lp-pro-name {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #1e3a5f;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .lp-pro .lp-pro-col-right .lp-pro-name {
+      justify-content: flex-end;
+    }
+    .lp-pro .lp-pro-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e3a5f, #2d6cb4);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .lp-pro .lp-pro-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.82rem;
+      color: #444;
+    }
+    .lp-pro .lp-pro-info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .lp-pro .lp-pro-col-right .lp-pro-info-item {
+      justify-content: flex-end;
+    }
+    .lp-pro .lp-pro-info-icon {
+      color: #2d6cb4;
+      width: 14px;
+      text-align: center;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+    }
+    .lp-pro .lp-pro-dest-label {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 0.4rem;
+      font-style: italic;
+    }
+    .lp-pro .lp-pro-company {
+      font-weight: 700;
+      color: #1e3a5f;
+      font-size: 0.92rem;
+    }
+    .lp-pro .lp-pro-date {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      color: #555;
+      margin-top: 0.8rem;
+    }
+    .lp-pro .lp-pro-col-right .lp-pro-date {
+      justify-content: flex-end;
+    }
+    .lp-pro .lp-pro-separator {
+      border: none;
+      height: 2px;
+      background: linear-gradient(90deg, #2d6cb4, #5ba3e6, #2d6cb4);
+      margin: 0 0 1.6rem 0;
+      border-radius: 1px;
+    }
+    .lp-pro .lp-pro-objet {
+      margin-bottom: 1.4rem;
+      font-size: 0.9rem;
+    }
+    .lp-pro .lp-pro-objet-label {
+      font-weight: 700;
+      color: #1e3a5f;
+    }
+    .lp-pro .lp-pro-body p {
+      margin: 0 0 1rem 0;
+      text-align: justify;
+      color: #222;
+    }
+    .lp-pro .lp-pro-salutation {
+      margin-bottom: 1.2rem;
+      font-weight: 500;
+    }
+    .lp-pro .lp-pro-signature {
+      text-align: right;
+      font-weight: 700;
+      margin-top: 2rem;
+      color: #1e3a5f;
+    }
+    @media (max-width: 640px) {
+      .lp-pro .lp-pro-header {
+        flex-direction: column;
+        gap: 1.2rem;
+      }
+      .lp-pro .lp-pro-col-right .lp-pro-name,
+      .lp-pro .lp-pro-col-right .lp-pro-info-item,
+      .lp-pro .lp-pro-col-right .lp-pro-date {
+        justify-content: flex-start;
+      }
+    }
+    @media (max-width: 640px) {
+      .lp-header {
+        flex-direction: column;
+        gap: 1.2rem;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+        font-family: Georgia, serif;
+      }
+
+      .navbar,
+      .tabs,
+      #lettre-score-card,
+      #lettre-strengths,
+      #lettre-suggestions,
+      .page-header,
+      #bg-canvas,
+      .bg-mesh {
+        display: none !important;
+      }
+
+      #lettre-text-card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        background: none !important;
+      }
+
+      .lettre-paper {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+
+      #lettre-text {
+        color: #000;
+        font-size: 11pt;
+        line-height: 1.8;
+      }
+
+      #lettre-result {
+        display: block !important;
+      }
+    }
+  </style>
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title"> Mes Archives</h2>
+        <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
+      </div>
+      <div id="history-list" style="max-height: 400px; overflow-y: auto; padding: 5px;">
+        <!-- Sera rempli par JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/ai.js" type="module"></script>
+  <script src="../js/particles.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/stepper.js"></script>
+  <script>
+    jmInitStepper('lettre-stepper', 'lettre-form-panel', 4);
+    let selectedTon = 'formel';
+    let selectedCivilite = 'Madame, Monsieur';
+    let selectedTemplate = 'classique';
+
+    // Tabs
+    document.querySelectorAll('#lettre-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#lettre-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab + '-content').classList.add('active');
+      });
+    });
+
+    // Ton selector
+    document.querySelectorAll('#ton-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('#ton-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedTon = btn.dataset.ton;
+      });
+    });
+
+    // Civilité selector
+    document.querySelectorAll('#civilite-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('#civilite-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCivilite = btn.dataset.civilite;
+      });
+    });
+
+    // Template selector
+    document.querySelectorAll('#template-tabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.querySelectorAll('#template-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedTemplate = btn.dataset.template;
+        localStorage.setItem(jmKey('lettre_template'), selectedTemplate);
+      });
+    });
+
+    // Generate
+    document.getElementById('btn-gen-lettre').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-gen-lettre');
+      const cv = document.getElementById('l-cv').value.trim();
+      const offre = document.getElementById('l-offre').value.trim();
+      if (!cv || !offre) { showToast('Veuillez renseigner votre profil et l\'offre', 'warning'); return; }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Rédaction en cours...');
+        document.getElementById('lettre-placeholder').classList.add('hidden');
+        document.getElementById('lettre-result').classList.add('hidden');
+        document.getElementById('lettre-skeleton').classList.remove('hidden');
+        try {
+          const result = await window.AI.generateCoverLetter({
+            cv,
+            offre,
+            ton: selectedTon,
+            civilite: selectedCivilite,
+            nom:               document.getElementById('l-nom').value.trim(),
+            poste:             document.getElementById('l-poste')?.value.trim() || '',
+            email:             document.getElementById('l-email')?.value.trim() || '',
+            adresse:           document.getElementById('l-adresse').value.trim(),
+            telephone:         document.getElementById('l-telephone').value.trim(),
+            ville:             document.getElementById('l-ville').value.trim(),
+            entreprise:        document.getElementById('l-entreprise').value.trim(),
+            entreprise_adresse:document.getElementById('l-entreprise-adresse').value.trim(),
+          });
+          displayLettre(result);
+          showToast('Lettre générée !', 'success');
+        } catch (e) {
+          showToast('Erreur : ' + e.message, 'error');
+          document.getElementById('lettre-skeleton').classList.add('hidden');
+          document.getElementById('lettre-placeholder').classList.remove('hidden');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    document.getElementById('btn-reset-lettre').addEventListener('click', () => {
+      ['l-cv', 'l-offre', 'l-entreprise', 'l-nom', 'l-poste', 'l-email', 'l-adresse', 'l-telephone', 'l-ville', 'l-entreprise-adresse'].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.value = '';
+      });
+
+      // Remettre le nom du compte connecté
+      try {
+        const raw = localStorage.getItem(jmKey('profile'));
+        if (raw) {
+          const p = JSON.parse(raw);
+          const nomField = document.getElementById('l-nom');
+          if (nomField && p.nom) nomField.value = p.nom;
+        }
+      } catch(e) {}
+
+      selectedTon = 'formel';
+      document.querySelectorAll('#ton-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.ton === 'formel');
+      });
+
+      selectedCivilite = 'Madame, Monsieur';
+      document.querySelectorAll('#civilite-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.civilite === 'Madame, Monsieur');
+      });
+
+      document.getElementById('lettre-result').classList.add('hidden');
+      document.getElementById('lettre-skeleton').classList.add('hidden');
+      document.getElementById('lettre-placeholder').classList.remove('hidden');
+      document.getElementById('lettre-generate-grid').classList.remove('lettre-generated');
+      document.getElementById('lettre-text').textContent = '';
+      document.getElementById('lettre-strengths').style.display = 'none';
+      document.getElementById('lettre-strengths').innerHTML = '';
+      document.getElementById('lettre-suggestions').style.display = 'none';
+      document.getElementById('lettre-suggestions').innerHTML = '';
+      localStorage.removeItem(jmKey('last_lettre'));
+      window._lettreText = '';
+      showToast('Formulaire réinitialisé', 'success');
+    });
+
+    // Revenir au formulaire sans perdre la lettre déjà générée (juste pour la modifier)
+    document.getElementById('btn-edit-lettre').addEventListener('click', () => {
+      document.getElementById('lettre-generate-grid').classList.remove('lettre-generated');
+      document.getElementById('lettre-form-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // ── buildLettrePreviewHTML : aperçu identique au PDF téléchargé ──
+    // Reproduit la mise en page de downloadLettrePDF() : expéditeur à gauche,
+    // date + destinataire à droite, objet, corps en paragraphes, signature.
+    function buildLettrePreviewHTML(data) {
+      const profile = (typeof getStoredProfile === 'function') ? getStoredProfile() : {};
+      const nom       = (data.nom       || document.getElementById('l-nom')?.value       || '').trim();
+      const adresse   = (data.adresse   || document.getElementById('l-adresse')?.value   || '').trim();
+      const telephone = (data.telephone || document.getElementById('l-telephone')?.value || '').trim();
+      const email     = (data.email || profile.email || document.getElementById('l-email')?.value || '').trim();
+      const titre     = (data.poste || profile.titre || document.getElementById('l-poste')?.value || '').trim();
+      const civilite  = data.civilite || 'Madame, Monsieur';
+      const entreprise = (data.entreprise || document.getElementById('l-entreprise')?.value || '').trim();
+      const entrepriseAdresse = (data.entreprise_adresse || document.getElementById('l-entreprise-adresse')?.value || '').trim();
+      const date      = data.date || '';
+      const destLignes = (data.destinataire_lignes && data.destinataire_lignes.length)
+        ? data.destinataire_lignes
+        : [civilite + ' le Responsable', 'Recrutement', data.entreprise, data.entreprise_adresse].filter(Boolean);
+
+      if (!data.corps && !data.objet) {
+        const raw = data.lettre || '';
+        if (!raw.trim()) return `<div class="lettre-raw"></div>`;
+
+        const lines = raw.split('\n').map(l => l.trim());
+        const isDateLine = l => /,\s*le\s+\d/i.test(l);
+        const isDestStart = l => /^(madame|monsieur|à l[''']attention)/i.test(l);
+        const isObjetLine = l => /^objet\s*:/i.test(l);
+
+        const senderLines = [];
+        const destLines = [];
+        const bodyLines = [];
+        let dateStr = '';
+        let objetStr = '';
+        let section = 'sender';
+        let salutationFound = false;
+
+        for (const line of lines) {
+          if (!line) {
+            if (section === 'dest' || section === 'date') continue;
+            continue;
+          }
+          if (isObjetLine(line)) {
+            objetStr = line.replace(/^Objet\s*:\s*/i, '').replace(/^Candidature au poste de\s*/i, '');
+            section = 'body';
+            continue;
+          }
+          if (section === 'sender' && isDateLine(line)) {
+            dateStr = line;
+            section = 'dest';
+            continue;
+          }
+          if (section === 'sender' && isDestStart(line)) {
+            section = 'dest';
+          }
+          if (section === 'dest') {
+            if (isDateLine(line) && !dateStr) { dateStr = line; continue; }
+            destLines.push(line);
+            continue;
+          }
+          if (section === 'body') {
+            bodyLines.push(line);
+          } else {
+            senderLines.push(line);
+          }
+        }
+
+        const senderHTML = senderLines.map(l => {
+          const isName = senderLines.indexOf(l) === 0;
+          return isName ? `<div style="font-weight:700">${escHtml(l)}</div>` : `<div>${escHtml(l)}</div>`;
+        }).join('');
+
+        const recipientHTML = [
+          dateStr ? `<div>${escHtml(dateStr)}</div>` : '',
+          ...destLines.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(l)}</div>`)
+        ].join('');
+
+        const bodyText = bodyLines.join('\n');
+        const paragraphs = bodyText.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+        const bodyHTML = (paragraphs.length > 0 ? paragraphs : [bodyText.replace(/\n/g, ' ').trim()])
+          .filter(Boolean).map(p => `<p>${escHtml(p)}</p>`).join('');
+
+        return `
+        <div class="lettre-paper-inner">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;margin-bottom:2.2rem">
+            <div style="flex:1;min-width:0;text-align:left">${senderHTML}</div>
+            <div style="flex:1;min-width:0;text-align:right">${recipientHTML}</div>
+          </div>
+          ${objetStr ? `<div class="lp-objet"><span class="lp-objet-label">Objet : </span>${escHtml(objetStr)}</div>` : ''}
+          <div class="lp-body">${bodyHTML}</div>
+        </div>`;
+      }
+
+      const corps = data.corps || '';
+      let paragraphs = corps.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      if (paragraphs.length === 0 && corps.trim()) paragraphs = [corps.replace(/\n/g, ' ').trim()];
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+
+      // ── Premier paragraphe = salutation (Madame, Monsieur,) ──
+      let salutationHTML = '';
+      let corpsParagraphs = paragraphs;
+      if (paragraphs.length > 0 && /^(madame|monsieur|bonjour|cher|chère)/i.test(paragraphs[0])) {
+        salutationHTML = `<div class="lp-pro-salutation">${escHtml(paragraphs[0])}</div>`;
+        corpsParagraphs = paragraphs.slice(1);
+      }
+      const corpsBodyHTML = corpsParagraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+
+      if (selectedTemplate === 'professionnel') {
+        const initials = nom ? nom.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
+
+        const senderInfoItems = [
+          email ? `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="fa-solid fa-envelope"></i></span><span>${escHtml(email)}</span></div>` : '',
+          telephone ? `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="fa-solid fa-phone"></i></span><span>${escHtml(telephone)}</span></div>` : '',
+          adresse ? `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="fa-solid fa-location-dot"></i></span><span>${escHtml(adresse)}</span></div>` : '',
+          data.ville ? `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="fa-solid fa-map-marker"></i></span><span>${escHtml(data.ville)}</span></div>` : ''
+        ].filter(Boolean).join('');
+
+        const destFirst = destLignes[0] || civilite + ' le Responsable';
+        const destRest = destLignes.slice(1);
+
+        const recipientInfoItems = [
+          `<div class="lp-pro-dest-label">${escHtml('À l\'attention du ' + destFirst)}</div>`,
+          entreprise ? `<div class="lp-pro-company">${escHtml(entreprise)}</div>` : '',
+          ...destRest.filter(l => l !== destFirst).map(l => `<div>${escHtml(String(l))}</div>`)
+        ].filter(Boolean).join('');
+
+        return `
+        <div class="lp-pro">
+          <div class="lp-pro-inner">
+            <div class="lp-pro-header">
+              <div class="lp-pro-col lp-pro-col-left">
+                <div class="lp-pro-name"><span class="lp-pro-avatar">${initials}</span>${escHtml(nom || 'Prénom NOM')}</div>
+                <div class="lp-pro-info">${senderInfoItems}</div>
+              </div>
+              <div class="lp-pro-col lp-pro-col-right">
+                <div class="lp-pro-info">${recipientInfoItems}</div>
+                ${date ? `<div class="lp-pro-date"><span>${escHtml(date)}</span></div>` : ''}
+              </div>
+            </div>
+            <hr class="lp-pro-separator">
+            <div class="lp-pro-objet"><span class="lp-pro-objet-label">Objet : </span>${escHtml('Candidature au poste de ' + (data.objet || ''))}</div>
+            <div class="lp-pro-body">
+              ${salutationHTML || `<div class="lp-pro-salutation">${escHtml(civilite)},</div>`}
+              ${corpsBodyHTML || bodyHTML}
+            </div>
+            <div class="lp-pro-signature">${escHtml(nom || '')}</div>
+          </div>
+        </div>`;
+      }
+
+      // ── Modèle Classique (existant) ──
+      const senderHTML = [
+        `<div class="lp-name">${escHtml(nom || 'Prénom NOM')}</div>`,
+        titre ? `<div>${escHtml(titre)}</div>` : '',
+        ...[telephone, email, adresse].filter(Boolean).map(l => `<div>${escHtml(l)}</div>`)
+      ].join('');
+
+      const recipientHTML = [
+        date ? `<div>${escHtml(date)}</div>` : '',
+        ...destLignes.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(String(l))}</div>`)
+      ].join('');
+
+      return `
+      <div class="lettre-paper-inner">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;margin-bottom:2.2rem">
+          <div style="flex:1;min-width:0;text-align:left">${senderHTML}</div>
+          <div style="flex:1;min-width:0;text-align:right">${recipientHTML}</div>
+        </div>
+        <div class="lp-objet"><span class="lp-objet-label">Objet : </span>${escHtml('Candidature au poste de ' + (data.objet || ''))}</div>
+        <div class="lp-body">${bodyHTML}</div>
+        <div class="lp-signature">${escHtml(nom || '')}</div>
+      </div>`;
+    }
+
+    function displayLettre(data) {
+      // Sauvegarder pour persistance entre les pages
+      localStorage.setItem(jmKey('last_lettre'), JSON.stringify(data));
+      // Garder les données structurées (objet, corps, destinataire...) pour l'export PDF
+      window._lastLettreData = data;
+
+      document.getElementById('lettre-skeleton').classList.add('hidden');
+      document.getElementById('lettre-placeholder').classList.add('hidden');
+      const lettreResult = document.getElementById('lettre-result');
+      lettreResult.classList.remove('hidden');
+      lettreResult.style.display = 'flex';
+      lettreResult.style.flexDirection = 'column';
+      lettreResult.style.height = '100%';
+      lettreResult.classList.add('result-reveal');
+      document.getElementById('lettre-generate-grid').classList.add('lettre-generated');
+
+      // Aperçu (mise en page identique au PDF téléchargé)
+      const lettre = data.lettre || data.raw || '';
+      const lettreTextEl = document.getElementById('lettre-text');
+      lettreTextEl.className = selectedTemplate === 'professionnel' ? 'lp-pro' : 'lettre-paper';
+      lettreTextEl.innerHTML = buildLettrePreviewHTML(data);
+      window._lettreText = lettre;
+
+      // Copy button
+      document.getElementById('btn-copy-lettre').onclick = () => {
+        const letterEl = document.getElementById('lettre-text');
+        const html = letterEl ? letterEl.innerHTML : lettre;
+        copyRichToClipboard(html, lettre, document.getElementById('btn-copy-lettre'));
+      };
+
+      // Points forts
+      const strengthsEl = document.getElementById('lettre-strengths');
+      if (data.points_forts?.length) {
+        strengthsEl.style.display = 'block';
+        strengthsEl.innerHTML = `
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--teal-light)"> Points forts de votre lettre</h3>
+      ${data.points_forts.map(p => `<div class="feedback-item positive"><span></span><span>${escHtml(p)}</span></div>`).join('')}`;
+      }
+
+      // Suggestions
+      const suggestionsEl = document.getElementById('lettre-suggestions');
+      if (data.suggestions?.length) {
+        suggestionsEl.style.display = 'block';
+        suggestionsEl.innerHTML = `
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"> Suggestions</h3>
+      ${data.suggestions.map(s => `<div class="feedback-item improvement"><span></span><span>${escHtml(s)}</span></div>`).join('')}`;
+      }
+    }
+
+    // Correct
+    document.getElementById('btn-correct-lettre').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-correct-lettre');
+      const text = document.getElementById('lettre-to-correct').value.trim();
+      if (!text) { showToast('Veuillez coller votre lettre', 'warning'); return; }
+
+      requireAPI(async () => {
+        setLoading(btn, true, 'Amélioration en cours...');
+        document.getElementById('correct-placeholder').classList.add('hidden');
+        document.getElementById('correct-result').classList.add('hidden');
+        document.getElementById('correct-analysis').classList.add('hidden');
+        document.getElementById('correct-skeleton').classList.remove('hidden');
+        try {
+          const result = await window.AI.correctLetter(text);
+          result.texte_original = text;
+          displayCorrection(result);
+          showToast('Lettre améliorée avec succès !', 'success');
+        } catch (e) {
+          showToast('Erreur : ' + e.message, 'error');
+          document.getElementById('correct-skeleton').classList.add('hidden');
+          document.getElementById('correct-analysis').classList.remove('hidden');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+    });
+
+    document.getElementById('btn-reset-correct').addEventListener('click', () => {
+      document.getElementById('lettre-to-correct').value = '';
+      const previewWrapper = document.getElementById('lettre-correct-preview-wrapper');
+      const textarea = document.getElementById('lettre-to-correct');
+      const label = document.getElementById('label-lettre-to-correct');
+      if (previewWrapper) previewWrapper.style.display = 'none';
+      if (textarea) textarea.style.display = '';
+      if (label) label.textContent = 'Collez votre lettre de motivation *';
+      document.getElementById('correct-placeholder').classList.remove('hidden');
+      document.getElementById('correct-result').classList.add('hidden');
+      document.getElementById('correct-analysis').classList.add('hidden');
+      document.getElementById('correct-skeleton').classList.add('hidden');
+      const correctResultCol = document.getElementById('correct-result-col');
+      if (correctResultCol) correctResultCol.classList.remove('hidden');
+      const correctGrid = document.querySelector('#tab-correct-content .grid-2');
+      const correctFormPanel = document.getElementById('correct-form-panel');
+      if (correctGrid && correctFormPanel) {
+        correctFormPanel.classList.remove('hidden');
+        correctGrid.classList.remove('correct-single');
+        const insertedEl = correctGrid.querySelector('#correct-result');
+        if (insertedEl && correctResultCol) correctResultCol.appendChild(insertedEl);
+      }
+      localStorage.removeItem(jmKey('last_lettre_correction'));
+      window._lastCorrectionData = null;
+      resetAnalysisState();
+      showToast('Formulaire réinitialisé', 'success');
+    });
+
+    /* ── Auto-analyse au collage ou à la saisie dans le textarea ── */
+    function _scheduleAutoAnalysis(delay, showPreview) {
+      clearTimeout(_analysisTimeout);
+      _analysisTimeout = setTimeout(() => {
+        const text = document.getElementById('lettre-to-correct').value.trim();
+        if (text.length >= 20) {
+          if (showPreview) showImportedLetterPreview(text);
+          triggerAnalysis(text);
+        }
+      }, delay);
+    }
+    document.getElementById('lettre-to-correct').addEventListener('paste', () => _scheduleAutoAnalysis(500, true));
+    document.getElementById('lettre-to-correct').addEventListener('input', () => _scheduleAutoAnalysis(1800, false));
+
+    function displayCorrection(data) {
+      localStorage.setItem(jmKey('last_lettre_correction'), JSON.stringify(data));
+      window._lastCorrectionData = data;
+      
+      document.getElementById('correct-skeleton').classList.add('hidden');
+      document.getElementById('correct-placeholder').classList.add('hidden');
+      document.getElementById('correct-analysis').classList.add('hidden');
+      const el = document.getElementById('correct-result');
+      el.classList.remove('hidden');
+      el.classList.add('result-reveal');
+      el.innerHTML = `
+    <div class="glass-card p-3 mb-3" style="text-align:center">
+      <span onclick="toggleCorrectForm()" style="cursor:pointer;color:var(--primary,#6c63ff);font-size:0.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;user-select:none">
+        <i class="fa-solid fa-chevron-down" style="font-size:0.7rem" id="toggle-correct-form-icon"></i>
+        <span id="toggle-correct-form-label">Afficher le formulaire</span>
+      </span>
+    </div>
+
+    ${data.analyse?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;color:#fcd34d;margin-bottom:1rem"> <i class="fa-solid fa-magnifying-glass-chart"></i> Analyse de la lettre</h3>
+      ${data.analyse.map(a => `<div class="feedback-item improvement"><span></span><span>${escHtml(a)}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.ameliorations?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem"> <i class="fa-solid fa-wand-magic-sparkles"></i> Améliorations apportées (${data.ameliorations.length})</h3>
+      ${data.ameliorations.map(a => `
+        <div style="margin-bottom:1.2rem;padding:1rem;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+          ${a.avant ? `<div style="margin-bottom:0.5rem"><strong style="color:#fca5a5;font-size:0.85rem">Avant :</strong><div style="padding:0.5rem;background:rgba(252,165,165,0.05);border-radius:6px;font-size:0.85rem;white-space:pre-wrap;line-height:1.6">${escHtml(a.avant)}</div></div>` : ''}
+          ${a.probleme ? `<div style="margin-bottom:0.5rem;color:var(--text-secondary);font-size:0.85rem"><strong>Problème :</strong> ${escHtml(a.probleme)}</div>` : ''}
+          ${a.apres ? `<div style="margin-bottom:0.5rem"><strong style="color:var(--teal-light,#14b8a6);font-size:0.85rem">Après :</strong><div style="padding:0.5rem;background:rgba(16,185,129,0.05);border-radius:6px;font-size:0.85rem;white-space:pre-wrap;line-height:1.6">${escHtml(a.apres)}</div></div>` : ''}
+          ${a.justification ? `<div style="color:var(--text-secondary);font-size:0.82rem;font-style:italic">${escHtml(a.justification)}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>` : ''}
+
+    ${data.recommandations?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;color:#93c5fd;margin-bottom:1rem"> <i class="fa-solid fa-lightbulb"></i> Recommandations</h3>
+      ${data.recommandations.map(r => `<div class="feedback-item"><span></span><span>${escHtml(r)}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.texte_corrige ? `
+    <div class="glass-card p-4 mb-3">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h3 style="font-size:1rem;font-weight:700"> Version améliorée</h3>
+        <div style="display:flex;gap:8px">
+<button class="btn btn-sm btn-primary" id="btn-save-corrected-db"> <i class="fa-solid fa-archive"></i> Enregistrer</button>
+<button class="btn btn-sm btn-secondary" id="btn-download-corrected" onclick="downloadLettre('lettre-corrige-content')"> PDF</button>
+<button class="btn btn-sm btn-secondary" id="btn-copy-corrected"> Copier</button>
+</div>
+      </div>
+      <div id="lettre-corrige-content" class="${selectedTemplate === 'professionnel' ? 'lp-pro' : 'lettre-paper'}">${buildCorrectionPreviewHTML(data)}</div>
+    </div>` : ''}`;
+
+
+      if (data.texte_corrige) {
+        document.getElementById('btn-copy-corrected').addEventListener('click', function () {
+          const corrEl = document.getElementById('lettre-corrige-content');
+          const html = corrEl ? corrEl.innerHTML : data.texte_corrige;
+          copyRichToClipboard(html, data.texte_corrige, this);
+        });
+        // Sauvegarder en archive
+        document.getElementById('btn-save-corrected-db').addEventListener('click', async function () {
+          const btn = this;
+          try {
+            setLoading(btn, true, 'Enregistrement...');
+            const resp = await fetch(`${window.API_BASE}/lettre/save`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                content: data.texte_corrige,
+                offer: 'Lettre corrigée',
+                score: (window._lastAnalysisData && typeof window._lastAnalysisData.score === 'number') ? window._lastAnalysisData.score : 0,
+                template: selectedTemplate || 'classique'
+              })
+            });
+            const res = await resp.json();
+            if (res.success) {
+              showToast('Lettre enregistrée en archive !', 'success');
+            } else {
+              showToast(res.error || 'Erreur lors de l\'enregistrement', 'error');
+            }
+          } catch (e) {
+            showToast('Erreur : ' + e.message, 'error');
+          } finally {
+            setLoading(btn, false);
+          }
+        });
+      }
+
+      // Place les résultats à la place du formulaire (pleine largeur)
+      const correctGrid = document.querySelector('#tab-correct-content .grid-2');
+      const correctFormPanel = document.getElementById('correct-form-panel');
+      const correctResultCol = document.getElementById('correct-result-col');
+      if (correctGrid && correctFormPanel && correctResultCol) {
+        correctFormPanel.classList.add('hidden');
+        correctResultCol.classList.add('hidden');
+        correctGrid.insertBefore(el, correctFormPanel.nextSibling);
+        correctGrid.classList.add('correct-single');
+      }
+    }
+
+    window.toggleCorrectForm = function () {
+      const panel = document.getElementById('correct-form-panel');
+      const icon = document.getElementById('toggle-correct-form-icon');
+      const label = document.getElementById('toggle-correct-form-label');
+      if (!panel) return;
+      const hidden = panel.classList.toggle('hidden');
+      if (icon) icon.className = hidden ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up';
+      if (label) label.textContent = hidden ? 'Afficher le formulaire' : 'Masquer le formulaire';
+      if (!hidden) {
+        const textarea = document.getElementById('lettre-to-correct');
+        if (textarea) textarea.focus();
+      }
+    };
+
+    // ── buildCorrectionPreviewHTML : aperçu écran de la version corrigée ──
+    // Reproduit la mise en page du PDF téléchargé (downloadLettre) : expéditeur
+    // à gauche, date + destinataire à droite, objet, salutation puis corps en
+    // paragraphes. Repli sur le texte brut si l'en-tête n'est pas reconnu.
+    // Supporte les deux modèles (classique / professionnel).
+    function buildCorrectionPreviewHTML(data) {
+      const texteBrut = Array.isArray(data.texte_corrige)
+        ? data.texte_corrige.join('\n\n')
+        : String(data.texte_corrige || '');
+
+      const isObjetLine = l => /^objet\s*:/i.test(l);
+      const isDateLine = l => /,\s*le\s+\d/i.test(l) || /^\d{1,2}\s+[a-zéû]+\s+\d{4}$/i.test(l);
+      const isDestinataireStart = l => /^(à l['’‘]attention|madame\s*\/\s*monsieur|monsieur\s+le|madame\s+la)/i.test(l);
+
+      const rawLines = texteBrut.split('\n').map(l => l.trim());
+      const salutationIdx = rawLines.findIndex(l => /^(madame|monsieur|bonjour|cher|chère)/i.test(l));
+
+      if (salutationIdx <= 0) {
+        if (selectedTemplate === 'professionnel') return buildProFromRaw(texteBrut);
+        return `<div class="lettre-raw">${escHtml(texteBrut.trim())}</div>`;
+      }
+
+      const headerLines = rawLines.slice(0, salutationIdx).filter(Boolean);
+      const sender = [];
+      const dates = [];
+      const destinataire = [];
+      let objetLine = null;
+      let inRight = false;
+
+      headerLines.forEach(line => {
+        if (isObjetLine(line)) { objetLine = line; return; }
+        if (isDestinataireStart(line)) inRight = true;
+        if (isDateLine(line)) { dates.push(line); return; }
+        (inRight ? destinataire : sender).push(line);
+      });
+
+      const bodyStartLines = rawLines.slice(salutationIdx);
+      const salutationText = bodyStartLines.length && /^(madame|monsieur|bonjour|cher|chère)/i.test(bodyStartLines[0])
+        ? bodyStartLines[0] : '';
+      const corpsLines = salutationText ? bodyStartLines.slice(1) : bodyStartLines;
+
+      const corpsText = corpsLines.join('\n');
+      let paragraphs = corpsText.split(/\n\s*\n/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+      if (paragraphs.length === 0 && corpsText.trim()) {
+        paragraphs = [corpsText.replace(/\n/g, ' ').trim()];
+      }
+
+      if (selectedTemplate === 'professionnel') {
+        const nom = sender[0] || '';
+        const initials = nom ? nom.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
+        const senderInfoItems = sender.slice(1).map(l => {
+          const lower = l.toLowerCase();
+          let icon = 'fa-solid fa-circle-info';
+          if (lower.includes('@') || lower.includes('email')) icon = 'fa-solid fa-envelope';
+          else if (lower.includes('tel') || lower.match(/\+?\d/)) icon = 'fa-solid fa-phone';
+          else icon = 'fa-solid fa-location-dot';
+          return `<div class="lp-pro-info-item"><span class="lp-pro-info-icon"><i class="${icon}"></i></span><span>${escHtml(l)}</span></div>`;
+        }).join('');
+        const destFirst = destinataire[0] || 'Responsable des Ressources Humaines';
+        const recipientInfoItems = [
+          `<div class="lp-pro-dest-label">${escHtml('À l\u2019attention du ' + destFirst)}</div>`,
+          ...destinataire.slice(1).map(l => `<div>${escHtml(l)}</div>`)
+        ].join('');
+        const dateStr = dates[0] || '';
+        const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+        const salHTML = salutationText ? `<div class="lp-pro-salutation">${escHtml(salutationText)}</div>` : '';
+        let objHTML = '';
+        if (objetLine) {
+          const sepIdx = objetLine.indexOf(':');
+          objHTML = `<div class="lp-pro-objet"><span class="lp-pro-objet-label">Objet : </span>${escHtml(objetLine.slice(sepIdx + 1).trim())}</div>`;
+        }
+        return `
+        <div class="lp-pro"><div class="lp-pro-inner">
+          <div class="lp-pro-header">
+            <div class="lp-pro-col lp-pro-col-left">
+              <div class="lp-pro-name"><span class="lp-pro-avatar">${initials}</span>${escHtml(nom || 'Prénom NOM')}</div>
+              <div class="lp-pro-info">${senderInfoItems}</div>
+            </div>
+            <div class="lp-pro-col lp-pro-col-right">
+              <div class="lp-pro-info">${recipientInfoItems}</div>
+              ${dateStr ? `<div class="lp-pro-date"><span>${escHtml(dateStr)}</span></div>` : ''}
+            </div>
+          </div>
+          <hr class="lp-pro-separator">
+          ${objHTML}
+          <div class="lp-pro-body">${salHTML}${bodyHTML}</div>
+        </div></div>`;
+      }
+
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+      const salutationHTML = salutationText ? `<p>${escHtml(salutationText)}</p>` : '';
+      let objetHTML = '';
+      if (objetLine) {
+        const sepIdx = objetLine.indexOf(':');
+        objetHTML = `<div class="lp-objet"><span class="lp-objet-label">Objet : </span>${escHtml(objetLine.slice(sepIdx + 1).trim())}</div>`;
+      }
+      const senderHTML = sender.map((l, i) =>
+        i === 0 ? `<div class="lp-name">${escHtml(l)}</div>` : `<div>${escHtml(l)}</div>`
+      ).join('');
+      const recipientHTML = [
+        ...dates.map(l => `<div>${escHtml(l)}</div>`),
+        ...destinataire.map((l, i) => `<div class="${i === 0 ? 'lp-dest-first' : ''}">${escHtml(l)}</div>`)
+      ].join('');
+      const headerHTML = (senderHTML || recipientHTML)
+        ? `<div class="lp-header">
+          ${senderHTML ? `<div class="lp-sender">${senderHTML}</div>` : ''}
+          ${recipientHTML ? `<div class="lp-recipient">${recipientHTML}</div>` : ''}
+        </div>`
+        : '';
+
+      return `
+      <div class="lettre-paper-inner">
+        ${headerHTML}
+        ${objetHTML}
+        <div class="lp-body">${salutationHTML}${bodyHTML}</div>
+      </div>`;
+    }
+
+    function buildProFromRaw(text) {
+      const paragraphs = text.split(/\n\s*\n/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('');
+      return `<div class="lp-pro"><div class="lp-pro-inner"><div class="lp-pro-body">${bodyHTML}</div></div></div>`;
+    }
+
+    // Export PDF de la lettre corrigée : capture visuelle identique à l'aperçu
+    window.downloadLettre = function() {
+      const data = window._lastCorrectionData;
+      if (!data || !data.texte_corrige) {
+        showToast('Aucune lettre corrigée à exporter.', 'warning');
+        return;
+      }
+      if (!window.jspdf || !window.html2canvas) {
+        showToast('Erreur : librairie PDF non chargée. Vérifiez votre connexion.', 'error');
+        return;
+      }
+
+      const letterEl = document.getElementById('lettre-corrige-content');
+      if (!letterEl || !letterEl.innerHTML.trim()) {
+        showToast('Aucune lettre corrigée à exporter.', 'warning');
+        return;
+      }
+
+      showToast('Génération du PDF...', 'info');
+
+      const { jsPDF } = window.jspdf;
+      const nom = document.getElementById('l-nom')?.value.trim() || 'Ma_Lettre';
+      const filename = nom.replace(/\s+/g, '_') + '_Lettre_Corrigee.pdf';
+
+      const origPadding = letterEl.style.padding;
+      const origBorderRadius = letterEl.style.borderRadius;
+      const origBoxShadow = letterEl.style.boxShadow;
+      letterEl.style.padding = '0';
+      letterEl.style.borderRadius = '0';
+      letterEl.style.boxShadow = 'none';
+
+      html2canvas(letterEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: letterEl.scrollWidth,
+        height: letterEl.scrollHeight
+      }).then(canvas => {
+        letterEl.style.padding = origPadding;
+        letterEl.style.borderRadius = origBorderRadius;
+        letterEl.style.boxShadow = origBoxShadow;
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgW = canvas.width;
+        const imgH = canvas.height;
+
+        const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        const pageW = 210;
+        const pageH = 297;
+        const marginLR = 25;
+        const marginTop = 25;
+        const marginBottom = 10;
+        const contentW = pageW - marginLR * 2;
+        const maxH = pageH - marginTop - marginBottom;
+        const ratioW = contentW / imgW;
+        const ratioH = maxH / imgH;
+        const ratio = Math.min(ratioW, ratioH);
+        const scaledW = imgW * ratio;
+        const scaledH = imgH * ratio;
+
+        pdf.addImage(imgData, 'PNG', marginLR, marginTop, scaledW, scaledH);
+
+        pdf.save(filename);
+        showToast('PDF téléchargé !', 'success');
+      }).catch(err => {
+        console.error('Erreur html2canvas:', err);
+        showToast('Erreur lors de la génération du PDF : ' + err.message, 'error');
+      });
+    }
+
+    // Export PDF de la lettre générée : capture visuelle identique à l'aperçu
+    window.downloadLettrePDF = function () {
+      const data = window._lastLettreData;
+      if (!data) {
+        showToast('Générez d\'abord une lettre avant de l\'exporter.', 'warning');
+        return;
+      }
+      if (!window.jspdf || !window.html2canvas) {
+        showToast('Erreur : librairie PDF non chargée.', 'error');
+        return;
+      }
+
+      const letterEl = document.getElementById('lettre-text');
+      if (!letterEl || !letterEl.innerHTML.trim()) {
+        showToast('Aucune lettre à exporter.', 'warning');
+        return;
+      }
+
+      showToast('Génération du PDF...', 'info');
+
+      const { jsPDF } = window.jspdf;
+      const nom = (data.nom || document.getElementById('l-nom')?.value || 'Ma_Lettre').trim();
+      const filename = nom.replace(/\s+/g, '_') + '_Lettre.pdf';
+
+      const origPadding = letterEl.style.padding;
+      const origBorderRadius = letterEl.style.borderRadius;
+      const origBoxShadow = letterEl.style.boxShadow;
+      letterEl.style.padding = '0';
+      letterEl.style.borderRadius = '0';
+      letterEl.style.boxShadow = 'none';
+
+      html2canvas(letterEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: letterEl.scrollWidth,
+        height: letterEl.scrollHeight
+      }).then(canvas => {
+        letterEl.style.padding = origPadding;
+        letterEl.style.borderRadius = origBorderRadius;
+        letterEl.style.boxShadow = origBoxShadow;
+        const imgData = canvas.toDataURL('image/png');
+        const imgW = canvas.width;
+        const imgH = canvas.height;
+
+        const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        const pageW = 210;
+        const pageH = 297;
+        const marginLR = 25;
+        const marginTop = 25;
+        const marginBottom = 10;
+        const contentW = pageW - marginLR * 2;
+        const maxH = pageH - marginTop - marginBottom;
+        const ratioW = contentW / imgW;
+        const ratioH = maxH / imgH;
+        const ratio = Math.min(ratioW, ratioH);
+        const scaledW = imgW * ratio;
+        const scaledH = imgH * ratio;
+
+        pdf.addImage(imgData, 'PNG', marginLR, marginTop, scaledW, scaledH);
+
+        pdf.save(filename);
+        showToast('PDF téléchargé !', 'success');
+      }).catch(err => {
+        console.error('Erreur html2canvas:', err);
+        showToast('Erreur lors de la génération du PDF.', 'error');
+      });
+    };
+
+    // Recharger le template choisi
+    const savedTemplate = localStorage.getItem(jmKey('lettre_template'));
+    if (savedTemplate) {
+      selectedTemplate = savedTemplate;
+      document.querySelectorAll('#template-tabs .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.template === savedTemplate);
+      });
+    }
+
+    // Recharger la dernière lettre au chargement de la page pour persistance
+    const lastLettre = localStorage.getItem(jmKey('last_lettre'));
+    if (lastLettre) {
+      try {
+        const parsedLettre = JSON.parse(lastLettre);
+        window._lastLettreData = parsedLettre;
+        displayLettre(parsedLettre);
+      } catch (e) {
+        localStorage.removeItem(jmKey('last_lettre'));
+      }
+    }
+
+    const lastCorrection = localStorage.getItem(jmKey('last_lettre_correction'));
+    if (lastCorrection) {
+      try {
+        displayCorrection(JSON.parse(lastCorrection));
+      } catch (e) {
+        localStorage.removeItem(jmKey('last_lettre_correction'));
+      }
+    }
+
+    //  Auto-remplissage du nom depuis le profil de l'utilisateur connecté
+    // On attend que checkAuthStatus() (dans utils.js) ait défini jm_current_user
+    (function autoFillNomFromProfile() {
+      function doFill() {
+        try {
+          // Utiliser jmKey() — lit le profil préfixé par user_id
+          const raw = localStorage.getItem(jmKey('profile'));
+          if (!raw) return;
+          const p = JSON.parse(raw);
+          const nomField = document.getElementById('l-nom');
+          if (nomField && p.nom && !nomField.value) {
+            nomField.value = p.nom;
+          }
+          const emailField = document.getElementById('l-email');
+          if (emailField && p.email && !emailField.value) {
+            emailField.value = p.email;
+          }
+          const titreField = document.getElementById('l-poste');
+          if (titreField && p.titre && !titreField.value) {
+            titreField.value = p.titre;
+          }
+        } catch(e) { /* profil invalide, on ignore */ }
+      }
+      // Lancer immédiatement (cas où utils.js a déjà tout chargé)
+      doFill();
+      // Et aussi après que checkAuthStatus ait fini (petit délai réseau)
+      setTimeout(doFill, 1200);
+    })();
+
+    /* ── Historique Lettres ── */
+    const getHistoryModal = () => document.getElementById('modal-history');
+    const getHistoryList = () => document.getElementById('history-list');
+
+    // Bouton d'archives (toujours visible)
+    document.getElementById('btn-history-lettre-form').addEventListener('click', (e) => {
+      e.preventDefault();
+      openHistoryModal();
+    });
+
+    // Sauvegarde manuelle
+    document.getElementById('btn-save-lettre-db').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-save-lettre-db');
+      const content = document.getElementById('lettre-text').innerText;
+      const offer = document.getElementById('l-offre').value || "Lettre de motivation";
+      const score = (window._lastLettreData && typeof window._lastLettreData.score === 'number') ? window._lastLettreData.score : 0;
+      const template = selectedTemplate || 'classique';
+
+      setLoading(btn, true, 'Enregistrement...');
+      try {
+        const response = await fetch(`${window.API_BASE}/lettre/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, offer, score, template }),
+          credentials: 'include'
+        });
+        const data = await response.json();
+        if (data.success) {
+          showToast('Lettre enregistrée dans vos archives !', 'success');
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (e) {
+        showToast('Erreur : ' + e.message, 'error');
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+
+    window.closeHistoryModal = function() {
+      getHistoryModal().classList.remove('active');
+    }
+
+    window.openHistoryModal = async function () {
+      const modal = getHistoryModal();
+      const list = getHistoryList();
+      modal.classList.add('active');
+      list.innerHTML = `
+        <div class="text-center p-5">
+          
+          <p class="text-secondary">Récupération de vos archives...</p>
+        </div>`;
+      
+      try {
+        const response = await fetch(`${window.API_BASE}/lettre/list`, { credentials: 'include' });
+        const data = await response.json();
+        
+        if (!data.success) throw new Error(data.error);
+        
+        if (!data.history || data.history.length === 0) {
+          list.innerHTML = `
+            <div class="text-center p-5">
+              
+              <p class="text-secondary">Aucune lettre enregistrée pour le moment.</p>
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = data.history.map(l => `
+          <div class="glass-card p-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;cursor:default; border-color:rgba(255,255,255,0.05)">
+            <div style="overflow:hidden">
+              <div style="font-weight:600;color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px">${escHtml(l.job_offer)}</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary)">
+                ${new Date(l.created_at).toLocaleDateString('fr-FR')} • Score: ${l.score}%
+              </div>
+            </div>
+            <div style="display:flex;gap:8px; margin-left:15px">
+              <button class="btn btn-sm btn-primary" onclick="loadSavedLettre(${l.id})" title="Ouvrir">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="deleteSavedLettre(${l.id})" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Supprimer">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        list.innerHTML = `<p class="text-red text-center p-4">Erreur: ${escHtml(e.message)}</p>`;
+      }
+    }
+
+    window.loadSavedLettre = async function (id) {
+      try {
+        const response = await fetch(`${window.API_BASE}/lettre/${id}`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+          const archiveTemplate = data.data.template || 'classique';
+          selectedTemplate = archiveTemplate;
+          localStorage.setItem(jmKey('lettre_template'), archiveTemplate);
+          document.querySelectorAll('#template-tabs .tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.template === archiveTemplate);
+          });
+          displayLettre({
+            lettre: data.data.content,
+            score_pertinence: data.data.score
+          });
+          closeHistoryModal();
+          showToast('Lettre chargée depuis l\'historique', 'success');
+        }
+      } catch (e) {
+        showToast('Erreur lors du chargement', 'error');
+      }
+    }
+
+    window.deleteSavedLettre = async function (id) {
+      if (!confirm('Supprimer cette lettre définitivement ?')) return;
+      try {
+        const response = await fetch(`${window.API_BASE}/lettre/${id}`, { 
+          method: 'POST', // On utilise POST pour delete par convention de l'API existante ou GET ?
+          credentials: 'include' 
+        });
+        // En fait lettre.php n'utilise pas POST pour delete, c'est un paramètre GET ?
+        // Vérifions lettre.php... ah, if action===delete, il prend $_GET['id'].
+        // Mais la méthode doit être POST pour entrer dans le if ($_SERVER['REQUEST_METHOD'] === 'POST').
+        const data = await response.json();
+        if (data.success) {
+          showToast('Lettre supprimée', 'success');
+          openHistoryModal();
+        }
+      } catch (e) {
+        showToast('Erreur lors de la suppression', 'error');
+      }
+    }
+
+    /* ── Import lettre dans l'onglet Corriger ── */
+    window.handleImportLetterCorrect = async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = '';
+
+      const status = document.getElementById('letter-import-status-correct');
+      const msg = document.getElementById('letter-import-msg-correct');
+      status.style.display = 'block';
+      msg.textContent = 'Lecture du fichier...';
+
+      try {
+        const text = await window.importFile(file);
+        document.getElementById('lettre-to-correct').value = text;
+        showImportedLetterPreview(text);
+        showToast('Lettre importée avec succès !', 'success');
+        triggerAnalysis(text);
+      } catch (err) {
+        showToast('Erreur : ' + err.message, 'error');
+      } finally {
+        status.style.display = 'none';
+      }
+    };
+
+    /* ── Afficher le preview de la lettre importée (remplace le textarea) ── */
+    function showImportedLetterPreview(text) {
+      const textarea = document.getElementById('lettre-to-correct');
+      const previewWrapper = document.getElementById('lettre-correct-preview-wrapper');
+      const previewEl = document.getElementById('lettre-correct-preview');
+      const label = document.getElementById('label-lettre-to-correct');
+      if (!textarea || !previewWrapper || !previewEl) return;
+
+      const paragraphs = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      const bodyHTML = paragraphs.map(p => `<p>${escHtml(p.replace(/\n/g, ' '))}</p>`).join('');
+
+      previewEl.innerHTML = `
+        <div class="lettre-paper-inner">
+          <div class="lp-body">${bodyHTML}</div>
+        </div>`;
+
+      textarea.style.display = 'none';
+      previewWrapper.style.display = 'block';
+      if (label) label.textContent = 'Aperçu de la lettre importée';
+    }
+
+    /* ── Analyse automatique après import ou collage ── */
+    let _analysisTimeout = null;
+    let _lastAnalyzedText = '';
+
+    async function triggerAnalysis(text) {
+      if (!text || text.trim().length < 20) return;
+      if (text === _lastAnalyzedText) return;
+      _lastAnalyzedText = text;
+
+      const analysisEl = document.getElementById('correct-analysis');
+      const placeholder = document.getElementById('correct-placeholder');
+      const skeleton = document.getElementById('correct-skeleton');
+      const btn = document.getElementById('btn-correct-lettre');
+
+      placeholder.classList.add('hidden');
+      skeleton.classList.remove('hidden');
+      analysisEl.classList.add('hidden');
+
+      try {
+        const result = await window.AI.analyzeLetter(text);
+        window._lastAnalysisData = result;
+        displayAnalysis(result, text);
+        btn.disabled = false;
+        showToast('Analyse terminée !', 'success');
+      } catch (e) {
+        showToast('Erreur analyse : ' + e.message, 'error');
+        skeleton.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+      } finally {
+        skeleton.classList.add('hidden');
+      }
+    }
+
+    function displayAnalysis(data, originalText) {
+      const el = document.getElementById('correct-analysis');
+      el.classList.remove('hidden');
+      el.classList.add('result-reveal');
+
+      const score = typeof data.score === 'number' ? data.score : 0;
+      const color = scoreColor(score);
+      const details = data.details || {};
+
+      const SCORE_CRITERES = {
+        length_score: ['Longueur', 25],
+        formula_score: ['Formules de politesse', 20],
+        structure_score: ['Structure', 20],
+        variety_score: ['Variété du vocabulaire', 25],
+        no_placeholder_score: ['Texte réservé', 10],
+        duplication_score: ['Absence de duplications', 20]
+      };
+
+      const detailsHTML = Object.entries(details)
+        .filter(([k]) => SCORE_CRITERES[k])
+        .map(([k, v]) => {
+          const [label, max] = SCORE_CRITERES[k];
+          const pct = Math.round((v / max) * 100);
+          const barColor = pct >= 80 ? 'var(--teal,#14b8a6)' : pct >= 50 ? '#fcd34d' : '#fca5a5';
+          return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:0.82rem;color:var(--text-secondary);min-width:140px">${escHtml(label)}</span>
+            <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px"></div>
+            </div>
+            <span style="font-size:0.8rem;color:var(--text-secondary);min-width:30px;text-align:right">${v}/${max}</span>
+          </div>`;
+        }).join('');
+
+      const infos = [];
+      if (typeof details.word_count === 'number') infos.push(`Nombre de mots : <strong>${details.word_count}</strong>`);
+      if (typeof details.paragraph_count === 'number') infos.push(`Paragraphes : <strong>${details.paragraph_count}</strong>`);
+
+      el.innerHTML = `
+    <div class="glass-card p-4 mb-3">
+      <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem">
+        ${createScoreRing(score, color, 80, 7)}
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:700">Score : ${score}/100</h3>
+          <p class="text-secondary text-sm">${score >= 80 ? 'Bonne lettre !' : score >= 50 ? 'Des améliorations sont possibles.' : 'La lettre nécessite des améliorations significatives.'}</p>
+        </div>
+      </div>
+      ${detailsHTML ? `<div style="margin-top:0.5rem">${detailsHTML}</div>` : ''}
+      ${infos.length ? `<p class="text-secondary" style="font-size:0.82rem;margin-top:0.6rem">${infos.join(' &nbsp;•&nbsp; ')}</p>` : ''}
+    </div>
+
+    ${data.points_forts?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;color:var(--teal-light,#14b8a6);margin-bottom:1rem"> <i class="fa-solid fa-check-circle"></i> Points forts (${data.points_forts.length})</h3>
+      ${data.points_forts.map(p => `<div class="feedback-item positive"><span></span><span>${escHtml(p)}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.points_faibles?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;color:#fca5a5;margin-bottom:1rem"> <i class="fa-solid fa-triangle-exclamation"></i> Points à améliorer (${data.points_faibles.length})</h3>
+      ${data.points_faibles.map(p => `<div class="feedback-item critical"><span></span><span>${escHtml(p)}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.anomalies?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;color:#fcd34d;margin-bottom:1rem"> <i class="fa-solid fa-circle-exclamation"></i> Anomalies détectées (${data.anomalies.length})</h3>
+      ${data.anomalies.map(a => `<div class="feedback-item improvement"><span></span><span>${escHtml(a)}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${data.recommandations?.length ? `
+    <div class="glass-card p-4 mb-3">
+      <h3 style="font-size:1rem;font-weight:700;color:#93c5fd;margin-bottom:1rem"> <i class="fa-solid fa-lightbulb"></i> Recommandations</h3>
+      ${data.recommandations.map(r => `<div class="feedback-item improvement"><span></span><span>${escHtml(r)}</span></div>`).join('')}
+    </div>` : ''}
+
+    <div style="text-align:center;margin-top:1rem">
+      <p class="text-secondary text-sm" style="margin-bottom:0.5rem">Cliquez ci-dessous pour que l'IA améliore réellement votre lettre</p>
+    </div>`;
+    }
+
+    function resetAnalysisState() {
+      _lastAnalyzedText = '';
+      window._lastAnalysisData = null;
+      const btn = document.getElementById('btn-correct-lettre');
+      if (btn) btn.disabled = true;
+    }
+
+    /* ── Revenir au mode édition (textarea) ── */
+    window.toggleEditImportedLetter = function() {
+      const textarea = document.getElementById('lettre-to-correct');
+      const previewWrapper = document.getElementById('lettre-correct-preview-wrapper');
+      const label = document.getElementById('label-lettre-to-correct');
+      if (textarea) textarea.style.display = '';
+      if (previewWrapper) previewWrapper.style.display = 'none';
+      if (label) label.textContent = 'Collez votre lettre de motivation *';
+      if (textarea) textarea.focus();
+    };
+  </script>
+
+  <!-- Import CV depuis l'appareil (lazy-load OCR) -->
+  <script>
+    /* Lazy-load pdf.js + tesseract.js (seulement quand l'utilisateur importe un PDF) */
+    let _ocrLibsLoaded = false;
+    async function _ensureOcrLibs() {
+      if (_ocrLibsLoaded) return;
+      const PDF_JS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      const TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      const WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      await Promise.all([_loadScript(PDF_JS), _loadScript(TESS)]);
+      if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER;
+      _ocrLibsLoaded = true;
+    }
+    function _loadScript(src) {
+      return new Promise((ok, fail) => {
+        if (document.querySelector('script[src="'+src+'"]')) { ok(); return; }
+        const s = document.createElement('script'); s.src = src;
+        s.onload = ok; s.onerror = () => fail(new Error('Chargement échoué: ' + src));
+        document.body.appendChild(s);
+      });
+    }
+
+    async function pdfPageToCanvas(page, scale = 2) {
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      return canvas;
+    }
+
+    async function importCVFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = '';
+
+      const status = document.getElementById('cv-import-status');
+      const msg    = document.getElementById('cv-import-msg');
+      status.style.display = 'block';
+      msg.textContent = 'Lecture du fichier…';
+
+      try {
+        let text = '';
+
+        if (file.type === 'text/plain') {
+          text = await file.text();
+
+        } else if (file.name.match(/\.docx?$/i)) {
+          msg.textContent = 'Extraction du texte Word…';
+          const buf = await file.arrayBuffer();
+          if (typeof mammoth !== 'undefined') {
+            const result = await mammoth.extractRawText({ arrayBuffer: buf });
+            text = result.value;
+          } else {
+            showToast('Pour les fichiers Word, utilisez de préférence un PDF.', 'warning');
+            status.style.display = 'none';
+            return;
+          }
+
+        } else if (file.type === 'application/pdf' || file.name.match(/\.pdf$/i)) {
+          await _ensureOcrLibs();
+          msg.textContent = 'Extraction du texte PDF…';
+          const buf = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+
+          // Essai extraction texte natif
+          const pages = [];
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            pages.push(content.items.map(it => it.str).join(' '));
+          }
+          text = pages.join('\n');
+
+          // Si texte vide → PDF scanné → OCR Tesseract sur toutes les pages
+          if (!text.trim()) {
+            msg.textContent = 'PDF scanné détecté — OCR en cours (patience…)';
+            const worker = await Tesseract.createWorker('fra+eng');
+            const ocrPages = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+              msg.textContent = `OCR page ${i}/${pdf.numPages}…`;
+              const page = await pdf.getPage(i);
+              const canvas = await pdfPageToCanvas(page, 2);
+              const { data: { text: ocrText } } = await worker.recognize(canvas);
+              ocrPages.push(ocrText);
+            }
+            await worker.terminate();
+            text = ocrPages.join('\n');
+          }
+
+        } else {
+          showToast('Format non supporté. Utilisez PDF, DOCX ou TXT.', 'warning');
+          status.style.display = 'none';
+          return;
+        }
+
+        text = text.replace(/\s+/g, ' ').trim();
+        if (!text) {
+          showToast('Impossible d\'extraire le texte de ce fichier.', 'error');
+        } else {
+          document.getElementById('l-cv').value = text;
+          showToast('CV importé avec succès ', 'success');
+        }
+
+      } catch (err) {
+        console.error('Import CV error:', err);
+        showToast('Erreur lors de l\'import : ' + err.message, 'error');
+      } finally {
+        status.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
