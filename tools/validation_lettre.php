@@ -1,6 +1,7 @@
 <?php
-// VALIDATION FINALE MODULE LETTRE DE MOTIVATION - Version corrigée
-require __DIR__ . '/vendor/autoload.php';
+// Validation du module lettre de motivation — sans base de données ni appel IA.
+// Exécution : php tools/validation_lettre.php   (ou composer run validate)
+require __DIR__ . '/../vendor/autoload.php';
 use App\Services\AtsScorer;
 
 $atsScorer = new AtsScorer();
@@ -21,6 +22,15 @@ function test(string $name, bool $condition) : void {
     }
 }
 
+// Les anomalies de duplication portent un message suffixé (« Groupe de mots
+// dupliqué : « … » ») : on teste le préfixe plutôt que la chaîne exacte.
+function aDuplique(array $r): bool {
+    foreach ($r['anomalies'] ?? [] as $a) {
+        if (str_contains($a, 'dupliqué') || str_contains($a, 'dupliquée')) return true;
+    }
+    return false;
+}
+
 // === 1. SCORE ORIGINAL ===
 echo "=== 1. SCORE ORIGINAL ===\n";
 $text = "Madame, Monsieur,
@@ -38,7 +48,7 @@ test("length_score est un nombre entre 0-25", $result['length_score'] >= 0 && $r
 test("Score est positif", $result['total'] > 0);
 
 // Vérifier que correct() retire score (code inspection)
-$ctrl = file_get_contents('src/Controllers/LettreController.php');
+$ctrl = file_get_contents(__DIR__ . '/../src/Controllers/LettreController.php');
 // Ligne 551-552 du controller
 test("correct() supprime 'score'", strpos($ctrl, "unset") !== false);
 test("correct() supprime 'score_details'", strpos($ctrl, "unset") !== false && strpos($ctrl, "score_details") !== false);
@@ -60,8 +70,8 @@ Madame, Monsieur,
 Je vous prie d'agréer, Madame, Monsieur,
 l'expression de mes salutations distinguées.";
 $resultA = $atsScorer->calculateLetterQualityScore($textA);
-test("TEST A: 'Tech Solutions Madagascar' 2x => aucune anomalie", 
-    !in_array("Groupe de mots dupliqué", $resultA['anomalies'] ?? []));
+test("TEST A: 'Tech Solutions Madagascar' 2x => aucune anomalie",
+    !aDuplique($resultA));
 
 // TEST B: "Candidature au poste de" 2x => aucune duplication automatique
 $textB = "Madame, Monsieur,
@@ -79,8 +89,8 @@ Madame, Monsieur,
 Je vous prie d'agréer, Madame, Monsieur,
 l'expression de mes salutations distinguées.";
 $resultB = $atsScorer->calculateLetterQualityScore($textB);
-test("TEST B: 'Candidature au poste de' 2x => aucune duplication", 
-    !in_array("Groupe de mots dupliqué", $resultB['anomalies'] ?? []));
+test("TEST B: 'Candidature au poste de' 2x => aucune duplication",
+    !aDuplique($resultB));
 
 // TEST C: "Madame, Monsieur," début + "Madame, Monsieur" formule finale => aucune duplication
 $textC = "Madame, Monsieur,
@@ -91,8 +101,8 @@ Text content here.
 Je vous prie d'agréer, Madame, Monsieur,
 l'expression de mes salutations distinguées.";
 $resultC = $atsScorer->calculateLetterQualityScore($textC);
-test("TEST C: 'Madame, Monsieur' départ + formule finale => aucune anomalie", 
-    !in_array("Groupe de mots dupliqué", $resultC['anomalies'] ?? []));
+test("TEST C: 'Madame, Monsieur' départ + formule finale => aucune anomalie",
+    !aDuplique($resultC));
 
 // TEST D: "Madame, Monsieur, Madame, Monsieur," => duplication détectée
 $textD = "Madame, Monsieur, Madame, Monsieur,
@@ -101,8 +111,8 @@ Text content here.
 Je vous prie d'agréer, Madame, Monsieur, Madame, Monsieur,
 l'expression de mes salutations distinguées.";
 $resultD = $atsScorer->calculateLetterQualityScore($textD);
-test("TEST D: 'Madame, Monsieur, Madame, Monsieur,' => duplication détectée", 
-    isset($resultD['anomalies']) && count($resultD['anomalies']) > 0);
+test("TEST D: 'Madame, Monsieur, Madame, Monsieur,' => duplication détectée",
+    aDuplique($resultD));
 
 // TEST E: phrase complète identique répétée 2x => duplication détectée
 $textE = "Madame, Monsieur,
@@ -111,10 +121,8 @@ I want to apply for the position.
 Je vous prie d'agréer, Madame, Monsieur,
 l'expression de mes salutations distinguées.";
 $resultE = $atsScorer->calculateLetterQualityScore($textE);
-test("TEST E: phrase complète répétée 2x => duplication détectée", 
-    count($resultE['anomalies']) > 0 && 
-    (str_contains(implode(',', $resultE['anomalies']), 'dupliqué') || 
-     str_contains(implode(',', $resultE['anomalies']), 'Ligne dupliquée')));
+test("TEST E: phrase complète répétée 2x => duplication détectée",
+    aDuplique($resultE));
 
 // TEST F: Mots courants répétés => pas de faux positif
 $textF = "Madame, Monsieur,
@@ -127,8 +135,8 @@ Madame, Monsieur,
 Je vous prie d'agréer, Madame, Monsieur,
 l'expression de mes salutations distinguées.";
 $resultF = $atsScorer->calculateLetterQualityScore($textF);
-test("TEST F: Mots courants répétés => pas de faux positif uniquement àcause de ces mots", 
-    !in_array("Groupe de mots dupliqué", $resultF['anomalies'] ?? []));
+test("TEST F: Mots courants répétés => pas de faux positif uniquement àcause de ces mots",
+    !aDuplique($resultF));
 
 // === 3. STRUCTURE ===
 echo "=== 3. STRUCTURE ===\n";
@@ -146,25 +154,33 @@ Compétences techniques :
 - JavaScript
 - HTML/CSS
 
-Expérience professionnelle :
-J'ai travaillé sur plusieurs projets web utilisant PHP et JavaScript.
+Titulaire d'une Licence en Informatique, je me suis spécialisé dans le développement web back-end au cours de deux projets de fin d'études menés en équipe sur une durée de six mois.
 
-Madame, Monsieur,
-Je vous prie d'agréer, Madame, Monsieur,
-l'expression de mes salutations distinguées.";
+J'ai participé à la refonte d'une application de gestion des étudiants en PHP et MySQL, où j'ai pris en charge le module d'inscription et les requêtes d'optimisation des listes.
+
+Votre offre correspond directement à l'environnement dans lequel je souhaite évoluer, car elle réunit le travail en équipe, la norme PSR et la revue de code quotidienne.
+
+Je serais heureux de vous exposer de vive voix mes réalisations et ma disponibilité lors d'un entretien, à la date qui vous conviendra.
+
+Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+Jean RAKOTO";
 $resultStruct = $atsScorer->calculateLetterQualityScore($textStruct);
-test("Structure: paragraph_count ≈ 4", 
-    ($resultStruct['paragraph_count'] ?? 0) >= 3 && ($resultStruct['paragraph_count'] ?? 0) <= 5);
+test("Structure: paragraph_count = 4 (ni l'en-tête, ni l'objet, ni les puces, ni la politesse)",
+    ($resultStruct['paragraph_count'] ?? 0) === 4);
 test("Structure: structure_score ≥ 12", ($resultStruct['structure_score'] ?? 0) >= 12);
 
 // === 4. LONGUEUR ===
 echo "=== 4. LONGUEUR ===\n";
-// Test 311 mots
+// 311 mots au total : la phrase d'ajout est comprise dans le compte, sinon le
+// test mesurait 337 mots et tombait dans le palier de pénalité forte.
+$suffixe = "Madame, Monsieur, je suis developpeur web Antananarivo le 22 septembre 2026 objet Candidature poste developpeur competences php javascript";
+$nbSuffixe = str_word_count($suffixe);
 $words311 = [];
-for ($i = 1; $i <= 311; $i++) {
+for ($i = 1; $i <= 311 - $nbSuffixe; $i++) {
     $words311[] = "mot$i";
 }
-$textLen = implode(" ", $words311) . " Madame, Monsieur, je suis developpeur web Antananarivo le 22 septembre 2026 objet Candidature poste developpeur competences php javascript";
+$textLen = implode(" ", $words311) . " " . $suffixe;
 $resultLen = $atsScorer->calculateLetterQualityScore($textLen);
 test("word_count ≈ 311", abs($resultLen['word_count'] - 311) <= 10);
 test("length_score n'est pas 5 (pénalty fort)", $resultLen['length_score'] >= 10);
@@ -184,9 +200,8 @@ test("Recommandations dans la réponse", strpos($ctrl, "recommandations") !== fa
 
 // === 6. CORRECTION IA ===
 echo "=== 6. CORRECTION IA ===\n";
-$llmCode = file_get_contents('src/Services/LlmService.php');
 // Les règles anti-invention sont dans le prompt de correct(), pas dans LlmService.php directement
-test("LLmService existe et est utilisable", file_exists('src/Services/LlmService.php'));
+test("LLmService existe et est utilisable", file_exists(__DIR__ . '/../src/Services/LlmService.php'));
 // Vérifier que correct() ne retourne pas de score
 test("correct() ne retourne pas de score dans la réponse", 
     strpos($ctrl, "texte_corrige") !== false);
@@ -227,9 +242,12 @@ Je vous prie d'agréer, Madame, Monsieur,
 l'expression de mes salutations distinguées.";
 $resultShort = $atsScorer->calculateLetterQualityScore($textShort);
 test("Lettre courte détectée mais pas pénalisée excessivement", $resultShort['total'] >= 50);
-// Modified check: short letter should have recommendations or weak points
-test("Identifie informations manquantes ou faiblesses", 
-    count($resultShort['recommandations'] ?? []) > 0 || count($resultShort['points_faibles'] ?? []) > 0);
+// calculateLetterQualityScore ne renvoie que le score et ses détails :
+// les « points faibles » et « recommandations » sont produits par LettreController::analyze().
+test("Faiblesses pénalisées dans les détails du score",
+    $resultShort['length_score'] <= 15 && $resultShort['structure_score'] <= 12);
+test("analyze() produit recommandations et points_faibles",
+    strpos($ctrl, '$recommandations[]') !== false && strpos($ctrl, '$points_faibles[]') !== false);
 
 // === 10. OFFRE D'EMPLOI ===
 echo "=== 10. OFFRE D'EMPLOI ===\n";
@@ -274,9 +292,12 @@ Jean RAKOTO";
 
 $resultRef = $atsScorer->calculateLetterQualityScore($refText);
 test("Lettre référence analyse sans erreur critique", count($resultRef['anomalies'] ?? []) < 5);
-test("Lettre référence a des points forts", count($resultRef['points_forts'] ?? []) > 0);
-test("Lettre référence a paragraph_count correct", ($resultRef['paragraph_count'] ?? 0) >= 3 && ($resultRef['paragraph_count'] ?? 0) <= 5);
+test("Lettre référence : en-tête et formule de politesse non comptés comme paragraphes",
+    ($resultRef['paragraph_count'] ?? 0) === 5);
+test("Lettre référence : structure correcte récompensée", ($resultRef['structure_score'] ?? 0) >= 12);
+test("analyze() expose les points forts de la lettre", strpos($ctrl, '$points_forts[]') !== false);
 test("Lettre référence word_count raisonnable", $resultRef['word_count'] > 50);
+test("Lettre référence score global élevé", $resultRef['total'] >= 80);
 
 echo "\n========================================\n";
 echo "VALIDATION FINIE\n";

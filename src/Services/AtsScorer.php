@@ -297,17 +297,37 @@ class AtsScorer {
             '/^(cordialement|salutations|distinguées|respectueuses)\s*$/i',
         ];
 
+        // Formules d'usage : jamais des paragraphes de corps
+        $politenessPatterns = [
+            '/^(madame|monsieur|ma[sd]ame,? monsieur)\b/iu',
+            '/je vous (prie|saurai[s]? gré|serais obligé)/iu',
+            '/veuillez agréer/iu',
+            '/salutations (distinguées|respectueuses|dévouées)/iu',
+            '/^(cordialement|bien cordialement|dans l.attente)/iu',
+        ];
+
         $bodyParagraphs = [];
         foreach ($allBlocks as $block) {
             $trimmed = trim($block);
+            $flat = trim(preg_replace('/\s+/u', ' ', $trimmed));
+
             $isHeader = false;
-            foreach ($headerPatterns as $pattern) {
+            foreach (array_merge($headerPatterns, $politenessPatterns) as $pattern) {
                 if (preg_match($pattern, $trimmed)) {
                     $isHeader = true;
                     break;
                 }
             }
-            if (!$isHeader) {
+            if ($isHeader) continue;
+
+            // Un paragraphe de corps est un bloc développé. Sans ce filtre, nom,
+            // adresse, date, destinataire, objet, listes à puces et formule de
+            // politesse étaient comptés comme des paragraphes : une lettre
+            // classique bien mise en page se voyait pénalisée pour une structure
+            // correcte. Un bloc très long est retenu même sans ponctuation finale,
+            // pour ne pas perdre un paragraphe volontairement sans point.
+            $flatLen = mb_strlen($flat, 'UTF-8');
+            if ($flatLen >= 200 || ($flatLen >= 60 && preg_match('/[.!?]$/u', $flat))) {
                 $bodyParagraphs[] = $block;
             }
         }

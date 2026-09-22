@@ -205,9 +205,10 @@ class LettreController {
             $points_forts[] = "Clôture avec formule de politesse";
         }
 
-        // Structure en paragraphes
+        // Structure en paragraphes : même source que le score (corps de texte
+        // uniquement), pour que le diagnostic et le chiffre affiché ne divergent pas.
         $paragraphs = array_values(array_filter(preg_split('/\n\s*\n/', $text), fn($p) => trim($p) !== ''));
-        $paraCount = count($paragraphs);
+        $paraCount = (int) ($quality['paragraph_count'] ?? 0);
         if ($paraCount >= 3 && $paraCount <= 4) {
             $points_forts[] = "Structure bien organisée ($paraCount paragraphes)";
         } elseif ($paraCount >= 2 && $paraCount <= 5) {
