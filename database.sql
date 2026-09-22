@@ -1,4 +1,5 @@
 -- Création de la base de données (si elle n'existe pas)
+-- NB : remplacez « jobmentor_db » par la valeur de DB_NAME de votre .env si elle diffère.
 CREATE DATABASE IF NOT EXISTS jobmentor_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE jobmentor_db;
 
@@ -34,7 +35,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT(1) NOT NULL DEFAULT
 CREATE TABLE IF NOT EXISTS cv_documents (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NULL, -- NULL si généré anonymement (optionnel)
-    title VARCHAR(255) DEfAULT 'Mon CV',
+    title VARCHAR(255) DEFAULT 'Mon CV',
     json_content JSON NOT NULL, -- Stocke la structure complète du CV (nom, exp, etc.)
     score_ats INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

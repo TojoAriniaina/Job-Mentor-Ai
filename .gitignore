@@ -1,3 +1,25 @@
-.env
-vendor/
-logs/*.log
+# Dépendances Composer (réinstallées par `composer install`)
+/vendor/
+
+# Configuration locale : jamais de secrets dans le dépôt.
+# .env.example est la seule exception, elle ne contient que des clés vides.
+/.env
+/.env.*
+!/.env.example
+
+# Journaux (créés automatiquement par bootstrap/app.php)
+/logs/
+*.log
+
+# Fichiers d'édition / système
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs
+/.idea/
+/.vscode/
+/nbproject/
