@@ -22,7 +22,12 @@ src/                        # PHP source (PSR-4, namespace App\)
 └── Router.php              # Simple router (array of routes → controller@method)
 bootstrap/app.php           # Autoloader Composer + .env + session + $pdo (via $GLOBALS)
 config/app.php              # Custom .env loader (KEY=VALUE only, not vlucas/phpdotenv)
-composer.json               # PSR-4 autoload: App\ → src/
+tools/validation_lettre.php # Assertion script for the letter module (no DB, no LLM)
+.htaccess                   # Project-root guards: -Indexes, deny dotfiles/.log/.sql, deny
+                            # *.md|*.txt|*.json|*.lock at root, deny PHP execution outside public/,
+                            # block src|config|bootstrap|logs|vendor|tools; HSTS on HTTPS only
+composer.json               # PSR-4 autoload: App\ → src/, php+ext requirements, scripts serve/validate
+composer.lock               # Committed (no third-party packages, but pins platform + autoloader)
 database.sql                # MySQL schema + inline migrations (ALTER TABLE ... ADD COLUMN IF NOT EXISTS)
 ```
 
@@ -56,7 +61,7 @@ Legacy `?action=` URLs still work via `Router::mapLegacyAction()`.
 - Login rate limiting: `LoginAttempt` model tracks failures by email+IP, blocks after 5 attempts for 5 minutes.
 
 ## Key gotchas
-- **No `.env` in repo** — copy from README docs. Required: `OPENROUTER_API_KEY`, `LLM_MODEL`, `DB_HOST/USER/PASS/NAME`. Optional: `OPENROUTER_API_KEY_2` (auto-failover on rate limit/quota errors), `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `APP_URL` (absolute URL for Open Graph meta tags), `APP_KEY` (AES-256 encryption key, generate with `openssl rand -hex 32`). Note: config/app.php defaults `LLM_MODEL` to `google/gemini-2.0-flash-001` if missing — set it explicitly in `.env`.
+- **No `.env` in repo** — copy `.env.example`. Required: `OPENROUTER_API_KEY`, `LLM_MODEL`, `DB_HOST/USER/PASS/NAME`, `APP_KEY` (**exactly 64 hex chars**, `openssl rand -hex 32`; `EncryptService` now rejects anything else — a non-hex key used to become `hex2bin() === false`, i.e. an all-zero AES key that silently encrypted every installation's API keys with no secret at all). Optional: `OPENROUTER_API_KEY_2` (auto-failover on rate limit/quota errors), `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `APP_URL` (absolute URL for Open Graph meta tags — note: `index.html` currently hardcodes a demo domain instead of using `APP_URL`). Note: config/app.php defaults `LLM_MODEL` to `google/gemini-2.0-flash-001` if missing — set it explicitly in `.env`.
 - **`.env` loader is custom** (`config/app.php`) — only handles `KEY=VALUE` lines, no multiline, no export prefix.
 - **CORS is centralized** in `public/index.php` — echoes back the request `Origin` header (not `*`) with `Allow-Credentials: true`. If adding a new entry point, keep consistent.
 - **`$pdo` is global** — stored in `$GLOBALS['pdo']` in `bootstrap/app.php`.
@@ -75,7 +80,7 @@ Legacy `?action=` URLs still work via `Router::mapLegacyAction()`.
 Inline migration pattern via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in `database.sql` — run the file again to apply new columns; don't create separate migration files.
 
 ## Verification
-No test framework, linter, or formatter. To verify changes: start the dev server (`php -S localhost:8000 -t public`), exercise the affected endpoints via browser or curl, and check `logs/php_errors.log` for errors. There is no `npm test`, `composer test`, or CI pipeline.
+No test framework, linter, or formatter. There is a hand-written assertion script for the letter module: `php tools/validation_lettre.php` (also `composer run validate`) — 46 checks on `AtsScorer::calculateLetterQualityScore()` and the `analyze()`/`correct()` contracts, no DB and no LLM call; it must print `Tests échoués: 0`. To verify anything else: start the dev server (`php -S localhost:8000 -t public` or `composer run serve`), exercise the affected endpoints via browser or curl, and check `logs/php_errors.log` for errors (the app sets `display_errors=0`, so a PHP fatal prints nothing to the client — if a CLI script exits silently, read that log). There is no `npm test`, `composer test`, or CI pipeline.
 
 ## Language
 All user-facing strings and code comments are in French. Keep new code consistent.
