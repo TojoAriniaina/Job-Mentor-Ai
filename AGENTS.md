@@ -25,7 +25,7 @@ config/app.php              # Custom .env loader (KEY=VALUE only, not vlucas/php
 tools/validation_lettre.php # Assertion script for the letter module (no DB, no LLM)
 .htaccess                   # Project-root guards: -Indexes, deny dotfiles/.log/.sql, deny
                             # *.md|*.txt|*.json|*.lock at root, deny PHP execution outside public/,
-                            # block src|config|bootstrap|logs|vendor|tools; HSTS on HTTPS only
+                            # block src|config|bootstrap|logs|vendor|tools
 composer.json               # PSR-4 autoload: App\ → src/, php+ext requirements, scripts serve/validate
 composer.lock               # Committed (no third-party packages, but pins platform + autoloader)
 database.sql                # MySQL schema + inline migrations (ALTER TABLE ... ADD COLUMN IF NOT EXISTS)

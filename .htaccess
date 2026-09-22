@@ -41,9 +41,6 @@ RewriteRule ^[^/]+\.php$ - [F,L]
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
-    # HSTS : uniquement sur les réponses HTTPS, sans sous-domaines, pour ne pas
-    # se verrouiller tout seul tant que le certificat n'est pas en place.
-    Header always set Strict-Transport-Security "max-age=15552000" env=HTTPS
 </IfModule>
 
 # ── Static files : servir directement ───────────────────────────
