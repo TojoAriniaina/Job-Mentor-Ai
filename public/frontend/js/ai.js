@@ -101,7 +101,7 @@ export async function fetchAudio(text) {
         _dbg(`fetchAudio TTS FAILED: ${(performance.now() - _t).toFixed(0)}ms — ${e.message}`);
         console.warn('[TTS] ElevenLabs echoue:', e.message);
         if (!ttsWarningShown && typeof showToast === 'function') {
-            showToast('Voix ElevenLabs indisponible — voix de secours utilisee.', 'warning');
+            showToast(e.message || 'Voix ElevenLabs indisponible — voix de secours utilisée.', 'warning');
             ttsWarningShown = true;
         }
         return null;

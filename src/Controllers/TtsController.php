@@ -69,12 +69,29 @@ class TtsController {
 
         if ($httpCode !== 200) {
             $decoded = json_decode($audio, true);
-            $errMsg = $decoded['detail']['message'] ?? ("Erreur ElevenLabs (HTTP $httpCode)");
+            $detail = $decoded['detail'] ?? [];
+            $code = $detail['code'] ?? ($detail['status'] ?? '');
+            $errMsg = $detail['message'] ?? ("Erreur ElevenLabs (HTTP $httpCode)");
             $this->log("ERREUR HTTP {$httpCode}: {$errMsg}");
             $this->log("Réponse brute: " . mb_substr($audio, 0, 300));
-            http_response_code(502);
+
+            // Message explicite côté utilisateur plutôt qu'un échec silencieux.
+            $userMsg = 'Synthèse vocale indisponible. La voix du navigateur prend le relais.';
+            $userCode = 'tts_error';
+            $status = 502;
+            if ($code === 'quota_exceeded' || $code === 'gcs_tts_quota_exceeded' || $httpCode === 429) {
+                $userMsg = 'Quota de synthèse vocale ElevenLabs dépassé. La voix du navigateur prend le relais.';
+                $userCode = 'tts_quota';
+                $status = 503;
+            } elseif ($httpCode === 401) {
+                $userMsg = 'Clé API ElevenLabs refusée (quota ou authentification). La voix du navigateur prend le relais.';
+                $userCode = 'tts_auth';
+                $status = 503;
+            }
+
+            http_response_code($status);
             header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $errMsg]);
+            echo json_encode(['success' => false, 'error' => $userMsg, 'code' => $userCode, 'detail' => $errMsg]);
             return;
         }
 
