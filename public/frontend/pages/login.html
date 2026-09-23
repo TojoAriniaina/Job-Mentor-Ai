@@ -596,6 +596,7 @@
           body: JSON.stringify({ email, password })
         });
         const data = await res.json();
+        if (data.csrf) window.JM_CSRF_TOKEN = data.csrf;
         if (!data.success) throw new Error(data.error || 'Identifiants incorrects');
 
         // Si l'onglet "Administrateur" est actif, on exige que le compte soit bien admin
@@ -666,6 +667,7 @@
           body: JSON.stringify({ name, email, password, titre, phone, secteur, photo: regPhotoBase64 })
         });
         const data = await res.json();
+        if (data.csrf) window.JM_CSRF_TOKEN = data.csrf;
         if (!data.success) throw new Error(data.error || 'Erreur inscription');
 
         //  Sauvegarde des données du profil pour auto-remplissage CV

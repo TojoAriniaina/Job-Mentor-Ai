@@ -314,6 +314,7 @@ async function checkAuthStatus() {
   try {
     const res = await fetch(AUTH_API_URL + '/check', { credentials: "include" });
     const data = await res.json();
+    if (data.csrf) window.JM_CSRF_TOKEN = data.csrf;
 
     if (data.success) {
       // ── Détection changement d'utilisateur ──────────────────

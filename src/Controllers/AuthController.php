@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Models\User;
 use App\Models\LoginAttempt;
 use App\Middleware\Auth;
+use App\Middleware\Csrf;
 
 class AuthController {
     private User $userModel;
@@ -77,7 +78,8 @@ class AuthController {
             $this->json([
                 'success' => true,
                 'user' => ['id' => $userId, 'name' => $name, 'email' => $email, 'role' => 'user'],
-                'profile' => $this->buildProfilePayload($user, $email)
+                'profile' => $this->buildProfilePayload($user, $email),
+                'csrf' => Csrf::rotate()
             ]);
         } catch (\PDOException $e) {
             error_log('[AuthController::register] ' . $e->getMessage());
@@ -125,7 +127,8 @@ class AuthController {
             $this->json([
                 'success' => true,
                 'user' => ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'role' => $user['role'] ?? 'user'],
-                'profile' => $this->buildProfilePayload($user)
+                'profile' => $this->buildProfilePayload($user),
+                'csrf' => Csrf::rotate()
             ]);
         } else {
             $this->loginAttempt->registerFailure($email);
@@ -153,12 +156,12 @@ class AuthController {
             $user = $this->userModel->findById($_SESSION['user_id']);
             if (!$user) {
                 session_destroy();
-                $this->json(['success' => false, 'error' => 'Non connecté']);
+                $this->json(['success' => false, 'error' => 'Non connecté', 'csrf' => Csrf::token()]);
                 return;
             }
             if (isset($user['is_active']) && (int) $user['is_active'] === 0) {
                 session_destroy();
-                $this->json(['success' => false, 'error' => 'Ce compte a été désactivé.']);
+                $this->json(['success' => false, 'error' => 'Ce compte a été désactivé.', 'csrf' => Csrf::token()]);
                 return;
             }
             $_SESSION['user_name'] = $user['name'];
@@ -166,10 +169,11 @@ class AuthController {
             $this->json([
                 'success' => true,
                 'user' => ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'photo' => $user['photo'] ?? '', 'role' => $user['role'] ?? 'user'],
-                'profile' => $this->buildProfilePayload($user)
+                'profile' => $this->buildProfilePayload($user),
+                'csrf' => Csrf::token()
             ]);
         } else {
-            $this->json(['success' => false, 'error' => 'Non connecté']);
+            $this->json(['success' => false, 'error' => 'Non connecté', 'csrf' => Csrf::token()]);
         }
     }
 

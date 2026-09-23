@@ -17,3 +17,39 @@
         ? path.substring(0, frontendIdx) + '/frontend'
         : '';
 })();
+
+// ── CSRF : injection globale du jeton X-CSRF-Token ────────────────
+// config.js est chargé en premier sur toutes les pages ; ce wrapper
+// évite de modifier les dizaines d'appels fetch() dispersés. Le jeton
+// est stocké par checkAuthStatus (utils.js) depuis /api/auth/check.
+(function () {
+    var nativeFetch = window.fetch;
+    window.JM_CSRF_TOKEN = '';
+
+    function csrfToken() {
+        if (window.JM_CSRF_TOKEN) return window.JM_CSRF_TOKEN;
+        var m = document.cookie.match(/(?:^|;\s*)csrf_token=([a-f0-9]{64})/);
+        return m ? m[1] : '';
+    }
+
+    window.fetch = function (input, init) {
+        try {
+            if (typeof input === 'string') {
+                init = init || {};
+                var method = (init.method || 'GET').toUpperCase();
+                if (method !== 'GET' && method !== 'HEAD') {
+                    var token = csrfToken();
+                    if (token) {
+                        var u = new URL(input, window.location.href);
+                        if (u.origin === window.location.origin && u.pathname.indexOf('/api/') !== -1) {
+                            var h = new Headers(init.headers || {});
+                            if (!h.has('X-CSRF-Token')) h.set('X-CSRF-Token', token);
+                            init.headers = h;
+                        }
+                    }
+                }
+            }
+        } catch (e) { /* ne jamais casser un fetch légitime */ }
+        return nativeFetch.call(window, input, init);
+    };
+})();

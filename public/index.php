@@ -39,6 +39,7 @@ use App\Controllers\OralController;
 use App\Controllers\UserController;
 use App\Controllers\AdminController;
 use App\Controllers\TtsController;
+use App\Middleware\Csrf;
 
 // ── CORS centralisé ────────────────────────────────────────────
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -46,7 +47,7 @@ if ($origin) {
     header("Access-Control-Allow-Origin: {$origin}");
     header("Access-Control-Allow-Credentials: true");
 }
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -55,6 +56,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 header('Content-Type: application/json');
+
+// ── CSRF : contrôle d'origine + jeton sur tout POST/DELETE ────
+Csrf::protect($_SERVER['REQUEST_METHOD'], $uri);
+Csrf::syncCookie();
 
 // ── Routes ─────────────────────────────────────────────────────
 $router = new Router();

@@ -19,6 +19,7 @@ src/                        # PHP source (PSR-4, namespace App\)
 ├── Models/                 # User, CvDocument, CoverLetter, InterviewHistory, UserNote, OralAnalysis, LoginAttempt
 ├── Services/               # LlmService (OpenRouter), AtsScorer, EncryptService (AES-256 for user API keys)
 ├── Middleware/Auth.php     # require() + requireAdmin() — both re-check DB on every request
+├── Middleware/Csrf.php     # Per-session token; Csrf::protect() runs in the front controller before dispatch
 └── Router.php              # Simple router (array of routes → controller@method)
 bootstrap/app.php           # Autoloader Composer + .env + session + $pdo (via $GLOBALS)
 config/app.php              # Custom .env loader (KEY=VALUE only, not vlucas/phpdotenv)
@@ -38,7 +39,7 @@ php -S localhost:8000 -t public
 ```
 
 ## Frontend loading order
-`config.js` must load first (classic script) — it sets `window.API_BASE` and `window.FRONTEND_BASE` dynamically based on the current URL path; every other script depends on it. `api.js` is **never** loaded via `<script>` tag — it only uses `export` and is `import`ed by `ai.js` (`<script type="module">`). `admin.html` skips `ai.js` entirely. `entretien.html` and `oral.html` also use ES module `<script type="module">` inline to import from `ai.js`/`api.js`. `utils.js` and `particles.js` are classic scripts. Add any shared helpers to `utils.js`; keep ES-module `export`/`import` only inside the ai.js/api.js pair.
+`config.js` must load first (classic script) — it sets `window.API_BASE` and `window.FRONTEND_BASE` dynamically based on the current URL path; every other script depends on it. It also installs the global `window.fetch` CSRF wrapper (adds `X-CSRF-Token` to same-origin `/api/` non-GET calls, from `window.JM_CSRF_TOKEN` or the `csrf_token` cookie) — `checkAuthStatus()` in `utils.js` and the login/register handlers set `window.JM_CSRF_TOKEN` from the server response. `api.js` is **never** loaded via `<script>` tag — it only uses `export` and is `import`ed by `ai.js` (`<script type="module">`). `admin.html` skips `ai.js` entirely. `entretien.html` and `oral.html` also use ES module `<script type="module">` inline to import from `ai.js`/`api.js`. `utils.js` and `particles.js` are classic scripts. Add any shared helpers to `utils.js`; keep ES-module `export`/`import` only inside the ai.js/api.js pair.
 
 ## API routing
 Routes defined in `public/index.php` using `Router` methods. The front controller strips the project folder prefix if present (e.g., `/Job-Mentor-Ai/api/...` → `/api/...`).
@@ -59,11 +60,12 @@ Legacy `?action=` URLs still work via `Router::mapLegacyAction()`.
 - `Auth::require()` returns 401 JSON if unauthenticated. Also re-checks DB on every request via `assertStillActive()` to catch admin deactivation immediately.
 - `Auth::requireAdmin()` checks session role — used for all `/api/admin/*` routes.
 - Login rate limiting: `LoginAttempt` model tracks failures by email+IP, blocks after 5 attempts for 5 minutes.
+- **CSRF**: per-session token in `$_SESSION['csrf_token']` (`src/Middleware/Csrf.php`). `Csrf::protect()` runs in `public/index.php` before dispatch on every POST/DELETE: origin check (Origin/Referer vs host) on ALL state-changing requests, then `X-CSRF-Token` header compared to session — 403 JSON on failure. Exempt from the token layer (no session yet): `/api/auth/login|register|request-reset` (legacy `?action=` equivalents too). Token delivered by `GET /api/auth/check` (even for guests) and by a JS-readable `csrf_token` cookie set on every API response; rotated on login/register.
 
 ## Key gotchas
 - **No `.env` in repo** — copy `.env.example`. Required: `OPENROUTER_API_KEY`, `LLM_MODEL`, `DB_HOST/USER/PASS/NAME`, `APP_KEY` (**exactly 64 hex chars**, `openssl rand -hex 32`; `EncryptService` now rejects anything else — a non-hex key used to become `hex2bin() === false`, i.e. an all-zero AES key that silently encrypted every installation's API keys with no secret at all). Optional: `OPENROUTER_API_KEY_2` (auto-failover on rate limit/quota errors), `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `APP_URL` (absolute URL for Open Graph meta tags — note: `index.html` currently hardcodes a demo domain instead of using `APP_URL`). Note: config/app.php defaults `LLM_MODEL` to `google/gemini-2.0-flash-001` if missing — set it explicitly in `.env`.
 - **`.env` loader is custom** (`config/app.php`) — only handles `KEY=VALUE` lines, no multiline, no export prefix.
-- **CORS is centralized** in `public/index.php` — echoes back the request `Origin` header (not `*`) with `Allow-Credentials: true`. If adding a new entry point, keep consistent.
+- **CORS is centralized** in `public/index.php` — echoes back the request `Origin` header (not `*`) with `Allow-Credentials: true`; `Allow-Headers` includes `X-CSRF-Token`. Any new API entry point must call `Csrf::protect($method, $uri)` before dispatch.
 - **`$pdo` is global** — stored in `$GLOBALS['pdo']` in `bootstrap/app.php`.
 - **Age is calculated server-side** (`AtsScorer::calculateAgeFromBirthdate()`) from DOB — never by the AI.
 - **ATS score is algorithmic** (`AtsScorer`) — keyword matching, skills, experience, structure. LLM provides qualitative analysis only.
