@@ -277,45 +277,11 @@ class LettreController {
         }
 
         // ── C. DÉTECTION D'ANOMALIES TEXTUELLES ──
-
-        // Duplications de phrases ou segments
-        $cleanText = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $text);
-        $cleanText = preg_replace('/\s+/', ' ', trim($cleanText));
-        $allWordsArr = explode(' ', $cleanText);
-
-        // Duplications de segments de 5+ mots consécutifs
-        for ($ngram = 5; $ngram >= 4; $ngram--) {
-            for ($i = 0; $i <= count($allWordsArr) - ($ngram * 2); $i++) {
-                $chunk = implode(' ', array_slice($allWordsArr, $i, $ngram));
-                $rest = implode(' ', array_slice($allWordsArr, $i + $ngram));
-                if (mb_strlen($chunk, 'UTF-8') > 15 && mb_stripos($rest, $chunk, 0, 'UTF-8') !== false) {
-                    $anomalies[] = "Segment dupliqué : « " . mb_substr($chunk, 0, 80, 'UTF-8') . " »";
-                    break;
-                }
-            }
-        }
-
-        // Duplication de formule d'ouverture
-        $openingPattern = "/(?:à l.attention\s+du|madame\s*(?:,\s*monsieur)?|monsieur\s+le|madame\s+la)/iu";
-        preg_match_all($openingPattern, $textLower, $openings);
-        if (count($openings[0]) > 2) {
-            $anomalies[] = "Formule d'ouverture répétée (" . count($openings[0]) . " occurrences)";
-        }
-
-        // Duplication de formule de clôture
-        $closingPattern = "/(?:je\s+(?:vous\s+)?prie\s+d.agréer|salutations?\s+(?:distinguées|cordiales|respectueuses))/iu";
-        preg_match_all($closingPattern, $textLower, $closings);
-        if (count($closings[0]) > 1) {
-            $anomalies[] = "Formule de clôture répétée (" . count($closings[0]) . " occurrences)";
-        }
-
-        // Caractères parasites
-        if (preg_match('/[^\p{L}\p{N}\p{P}\p{Z}\n\r\t]/u', $text)) {
-            $anomalies[] = "Présence de caractères parasites ou invisibles dans le texte";
-        }
-        if (preg_match('/\s{4,}/', $text)) {
-            $anomalies[] = "Espaces multiples excessifs détectés";
-        }
+        // Les duplications (segments, lignes, formules d'ouverture/clôture),
+        // caractères parasites et espaces excessifs sont détectés par
+        // AtsScorer::calculateLetterQualityScore() et déjà fusionnés en amont
+        // avec leurs exclusions (en-tête, objet, politesse normale).
+        // Seule la cohérence sémantique est évaluée ici.
 
         // Informations contradictoires (exemple : "je suis junior" + "mes 10 ans d'expérience")
         $isJunior = (bool) preg_match('/junior|débutant|alternant|stagiaire/iu', $text);
@@ -357,20 +323,9 @@ class LettreController {
             }
         }
 
-        // ── E. PRÉSENTATION ──
-
-        // Duplications évidentes de lignes
-        $lines = array_map('trim', preg_split('/\r?\n/', $text));
-        $lines = array_filter($lines, fn($l) => mb_strlen($l, 'UTF-8') > 5);
-        $lineCounts = array_count_values($lines);
-        foreach ($lineCounts as $line => $count) {
-            if ($count >= 2) {
-                $anomalies[] = "Ligne dupliquée : « " . mb_substr($line, 0, 80, 'UTF-8') . " » (×$count)";
-            }
-        }
-
         // ── Les anomalies sont affichées dans leur propre section,
         // elles ne sont pas répétées dans les points à améliorer.
+        // (Les duplications de lignes sont détectées par AtsScorer, avec exclusions.)
         $anomalies = array_values(array_unique($anomalies));
 
         $this->json([
