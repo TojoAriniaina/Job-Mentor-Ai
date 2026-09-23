@@ -12,6 +12,7 @@ public/                     # Document root (Apache/XAMPP)
 │   ├── index.html
 │   ├── 404.html
 │   ├── pages/              # login, cv, lettre, entretien, oral, admin, dashboard
+│   ├── libs/               # CDN vendored (hors build) : pdfmake, jsPDF, html2canvas, pdf.js, tesseract.js (+core wasm, lang fra/eng .gz), fontawesome, fonts
 │   ├── css/                # style.css (design system) + cv-template.css
 │   └── js/                 # config.js, api.js, ai.js, utils.js, admin.js, particles.js
 src/                        # PHP source (PSR-4, namespace App\)
@@ -69,8 +70,9 @@ Legacy `?action=` URLs still work via `Router::mapLegacyAction()`.
 - **`$pdo` is global** — stored in `$GLOBALS['pdo']` in `bootstrap/app.php`.
 - **Age is calculated server-side** (`AtsScorer::calculateAgeFromBirthdate()`) from DOB — never by the AI.
 - **ATS score is algorithmic** (`AtsScorer`) — keyword matching, skills, experience, structure. LLM provides qualitative analysis only.
-- **PDF export is client-side and lib differs per module** — CV export uses **pdfmake** (`pdfMake.createPdf()`); Lettre export uses **jsPDF directly** (html2canvas was deliberately removed). No server PDF generation.
-- **CV/letter import is OCR'd client-side** — pdf.js + tesseract.js loaded from CDN in `cv.html`/`lettre.html`; files never reach the server, only extracted text does.
+- **PDF export is client-side and lib differs per module** — CV export uses **pdfmake** (`pdfMake.createPdf()`); Lettre export uses **jsPDF** (+ **html2canvas** for the canvas-based paths in `lettre.html`). No server PDF generation.
+- **All front-end libraries are vendored locally** — pdf.js, tesseract.js (worker + wasm core + `fra`/`eng` traineddata), pdfmake, jsPDF, html2canvas, Font Awesome and the Google-font woff2 files live in `public/frontend/libs/` and are referenced by relative path — **no CDN at runtime**, so import/OCR and PDF exports work offline. Tesseract workers must keep the explicit `{ workerPath, corePath, langPath, gzip: true }` options (`tesseract.js-core`'s `-simd-lstm` variant is the one `createWorker` requests by default). If a lib is upgraded, re-run the headless offline check.
+- **CV/letter import is OCR'd client-side** — pdf.js + tesseract.js (local `libs/`); files never reach the server, only extracted text does.
 - **Speech recognition is 100% browser-side** — `entretien.html` and `oral.html` use the Web Speech API (`SpeechRecognition`/`webkitSpeechRecognition`); audio never leaves the browser, only the transcribed text is POSTed.
 - **LLM prompts demand strict JSON output** — all controllers send system prompts like "Réponds UNIQUEMENT en JSON valide, sans markdown"; `LlmService::extractJson()` parses the response. Keep this contract for new AI features.
 - **localStorage is user-scoped** — keys prefixed with `jm_u{userId}_` (logged-in) or `jm_guest_` (anonymous) via `jmKey()` in `utils.js`.
@@ -105,6 +107,7 @@ Le diagnostic initial et la réécriture IA sont deux étapes distinctes.
 ### Analyse initiale côté backend (point d'entrée)
 La méthode `analyze()` doit rester déterministe et sans IA.
 - Elle doit calculer: score, détails du score, points forts, points faibles, recommandations, anomalies détectables automatiquement.
+- Les duplications/répétitions (segments, lignes, formules d'ouverture/clôture) sont détectées UNIQUEMENT par `AtsScorer::calculateLetterQualityScore()` (règles ancorées + listes d'exclusion); `analyze()` fusionne ces anomalies, sans dupliquer de détecteurs locaux — sinon faux positifs sur « Madame, Monsieur » ouverture+clôture.
 - Elle doit notamment pouvoir détecter: répétitions évidentes, duplications, placeholders, longueur, structure, formules de politesse, variété du vocabulaire, formulations génériques, anomalies dans l'en-tête.
 
 ### Frontend behavior (après import/collage)

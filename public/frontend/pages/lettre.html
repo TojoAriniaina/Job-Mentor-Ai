@@ -8,9 +8,9 @@
   <link rel="icon" type="image/png" href="../assets/img/logo-icon-square.png"/>
 <meta content="Générez une lettre de motivation percutante et personnalisée grâce à l'intelligence artificielle." name="description"/>
 <link href="../css/style.css" rel="stylesheet"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="../libs/fontawesome/css/all.min.css" rel="stylesheet"/>
+<script src="../libs/jspdf/jspdf.umd.min.js"></script>
+<script src="../libs/html2canvas/html2canvas.min.js"></script>
 </head>
 <body>
 <canvas id="bg-canvas"></canvas>
@@ -1772,9 +1772,9 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
     let _ocrLibsLoaded = false;
     async function _ensureOcrLibs() {
       if (_ocrLibsLoaded) return;
-      const PDF_JS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-      const TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      const WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const PDF_JS = '../libs/pdfjs/pdf.min.js';
+      const TESS = '../libs/tesseract/tesseract.min.js';
+      const WORKER = '../libs/pdfjs/pdf.worker.min.js';
       await Promise.all([_loadScript(PDF_JS), _loadScript(TESS)]);
       if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER;
       _ocrLibsLoaded = true;
@@ -1843,7 +1843,12 @@ Je me permets de vous contacter afin de candidater au poste de..." rows="16"></t
           // Si texte vide → PDF scanné → OCR Tesseract sur toutes les pages
           if (!text.trim()) {
             msg.textContent = 'PDF scanné détecté — OCR en cours (patience…)';
-            const worker = await Tesseract.createWorker('fra+eng');
+            const worker = await Tesseract.createWorker('fra+eng', 1, {
+              workerPath: '../libs/tesseract/worker.min.js',
+              corePath:   '../libs/tesseract/core',
+              langPath:   '../libs/tesseract/lang',
+              gzip: true,
+            });
             const ocrPages = [];
             for (let i = 1; i <= pdf.numPages; i++) {
               msg.textContent = `OCR page ${i}/${pdf.numPages}…`;

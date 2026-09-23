@@ -4,9 +4,10 @@ import { callAPI, postAPI } from "./api.js";
 let ocrLoaded = false;
 async function ensureOcrLibs() {
     if (ocrLoaded) return;
-    const PDF_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    const TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    const PDF_WORKER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const LIBS = (window.FRONTEND_BASE || '') + '/libs';
+    const PDF_JS_URL = LIBS + '/pdfjs/pdf.min.js';
+    const TESSERACT_URL = LIBS + '/tesseract/tesseract.min.js';
+    const PDF_WORKER_URL = LIBS + '/pdfjs/pdf.worker.min.js';
 
     await Promise.all([
         loadScript(PDF_JS_URL),
@@ -354,7 +355,13 @@ async function importFile(file) {
 
         // PDF scanné → OCR Tesseract
         if (!text.trim() && typeof Tesseract !== 'undefined') {
-            const worker = await Tesseract.createWorker('fra+eng');
+            const TESS = (window.FRONTEND_BASE || '') + '/libs/tesseract';
+            const worker = await Tesseract.createWorker('fra+eng', 1, {
+                workerPath: TESS + '/worker.min.js',
+                corePath:   TESS + '/core',
+                langPath:   TESS + '/lang',
+                gzip: true,
+            });
             const ocrPages = [];
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
