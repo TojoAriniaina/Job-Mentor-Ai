@@ -38,6 +38,7 @@ define('OPENROUTER_API_KEY', getenv('OPENROUTER_API_KEY') ?: '');
 define('OPENROUTER_API_KEY_2', getenv('OPENROUTER_API_KEY_2') ?: '');
 
 define('ELEVENLABS_API_KEY', getenv('ELEVENLABS_API_KEY') ?: '');
+define('ELEVENLABS_API_KEY_2', getenv('ELEVENLABS_API_KEY_2') ?: '');
 define('ELEVENLABS_VOICE_ID', getenv('ELEVENLABS_VOICE_ID') ?: '21m00Tcm4TlvDq8ikWAM');
 
 // Clé de chiffrement AES-256 — générer avec : openssl rand -hex 32
