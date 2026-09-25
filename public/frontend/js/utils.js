@@ -302,9 +302,11 @@ function saveAuthProfile(user, profile) {
 
 async function checkAuthStatus() {
   const isLoginPage = window.location.pathname.endsWith('login.html');
+  // L'accueil public est consultable sans session (cf. mémoire, acteurs)
+  const isLanding = /\/(index\.html)?$/.test(window.location.pathname);
   
-  // Masquer l'interface par défaut (sauf sur la page login)
-  if (!isLoginPage) {
+  // Masquer l'interface par défaut (sauf sur la page login et l'accueil public)
+  if (!isLoginPage && !isLanding) {
     document.body.classList.add('auth-waiting');
   }
 
@@ -341,9 +343,16 @@ async function checkAuthStatus() {
     } else {
       // Déconnecté — purger les anciennes données non liées à un user
       _purgeAllAppData();
-      if (!isLoginPage) {
-        // Rediriger vers login si on n'y est pas déjà
+      if (!isLoginPage && !isLanding) {
+        // Rediriger vers login si on n'y est pas déjà (l'accueil public reste accessible)
         window.location.href = (window.FRONTEND_BASE || '') + '/pages/login.html';
+      }
+      if (isLanding && btnConfig) {
+        btnConfig.textContent = ' Connexion';
+        btnConfig.title = 'Se connecter ou créer un compte';
+        btnConfig.addEventListener('click', () => {
+          window.location.href = (window.FRONTEND_BASE || '') + '/pages/login.html';
+        });
       }
     }
   } catch (e) {
