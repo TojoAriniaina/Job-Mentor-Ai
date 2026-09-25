@@ -136,7 +136,9 @@ class TtsController {
         $this->log("Réponse brute: " . mb_substr($audio, 0, 300));
 
         $reason = 'error';
-        if ($code === 'quota_exceeded' || $code === 'gcs_tts_quota_exceeded' || $httpCode === 429) {
+        if ($code === 'quota_exceeded' || $code === 'gcs_tts_quota_exceeded' || $httpCode === 429 || $httpCode === 402) {
+            // 402 paid_plan_required : les comptes gratuits récents n'ont plus accès
+            // aux voix de bibliothèque via API — une autre clé (ancien compte) peut marcher.
             $reason = 'quota';
         } elseif ($httpCode === 401) {
             $reason = 'auth';
